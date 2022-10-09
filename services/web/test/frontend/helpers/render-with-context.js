@@ -2,7 +2,7 @@
 /* eslint-disable react/prop-types */
 
 import { render } from '@testing-library/react'
-import { renderHook } from '@testing-library/react-hooks'
+import { renderHook } from '@testing-library/react-hooks/dom'
 import { ChatProvider } from '../../../frontend/js/features/chat/context/chat-context'
 import { EditorProviders } from './editor-providers'
 

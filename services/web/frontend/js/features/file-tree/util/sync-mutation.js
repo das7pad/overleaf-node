@@ -1,7 +1,10 @@
-import { postJSON, deleteJSON } from '../../../infrastructure/fetch-json'
+import {
+  projectJWTDeleteJSON,
+  projectJWTPOSTJSON,
+} from '../../../infrastructure/jwt-fetch-json'
 
 export function syncRename(projectId, entityType, entityId, newName) {
-  return postJSON(
+  return projectJWTPOSTJSON(
     `/project/${projectId}/${getEntityPathName(entityType)}/${entityId}/rename`,
     {
       body: {
@@ -12,13 +15,13 @@ export function syncRename(projectId, entityType, entityId, newName) {
 }
 
 export function syncDelete(projectId, entityType, entityId) {
-  return deleteJSON(
+  return projectJWTDeleteJSON(
     `/project/${projectId}/${getEntityPathName(entityType)}/${entityId}`
   )
 }
 
 export function syncMove(projectId, entityType, entityId, toFolderId) {
-  return postJSON(
+  return projectJWTPOSTJSON(
     `/project/${projectId}/${getEntityPathName(entityType)}/${entityId}/move`,
     {
       body: {
@@ -30,7 +33,7 @@ export function syncMove(projectId, entityType, entityId, toFolderId) {
 
 export function syncCreateEntity(projectId, parentFolderId, newEntityData) {
   const { endpoint, ...newEntity } = newEntityData
-  return postJSON(`/project/${projectId}/${endpoint}`, {
+  return projectJWTPOSTJSON(`/project/${projectId}/${endpoint}`, {
     body: {
       parent_folder_id: parentFolderId,
       ...newEntity,

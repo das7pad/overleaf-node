@@ -53,7 +53,7 @@ describe('<LeaveProjectButtton />', function () {
   it('opens the modal and leaves the project', async function () {
     const project = Object.assign({}, trashedAndNotOwnedProject)
     const leaveProjectMock = fetchMock.post(
-      `express:/project/${project.id}/leave`,
+      `express:/api/project/${project.id}/leave`,
       {
         status: 200,
       },
@@ -73,8 +73,8 @@ describe('<LeaveProjectButtton />', function () {
 
     await waitFor(
       () =>
-        expect(leaveProjectMock.called(`/project/${project.id}/leave`)).to.be
-          .true
+        expect(leaveProjectMock.called(`/api/project/${project.id}/leave`)).to
+          .be.true
     )
   })
 })

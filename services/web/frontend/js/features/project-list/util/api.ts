@@ -10,23 +10,23 @@ export function getProjects(sortBy: Sort): Promise<GetProjectsResponseBody> {
 }
 
 export function createTag(tagName: string): Promise<Tag> {
-  return postJSON(`/tag`, {
+  return postJSON(`/api/tag`, {
     body: { name: tagName },
   })
 }
 
 export function renameTag(tagId: string, newTagName: string) {
-  return postJSON(`/tag/${tagId}/rename`, {
+  return postJSON(`/api/tag/${tagId}/rename`, {
     body: { name: newTagName },
   })
 }
 
 export function deleteTag(tagId: string) {
-  return deleteJSON(`/tag/${tagId}`)
+  return deleteJSON(`/api/tag/${tagId}`)
 }
 
 export function addProjectsToTag(tagId: string, projectIds: string[]) {
-  return postJSON(`/tag/${tagId}/projects`, {
+  return postJSON(`/api/tag/${tagId}/projects`, {
     body: {
       projectIds,
     },
@@ -34,11 +34,11 @@ export function addProjectsToTag(tagId: string, projectIds: string[]) {
 }
 
 export function removeProjectFromTag(tagId: string, projectId: string) {
-  return deleteJSON(`/tag/${tagId}/project/${projectId}`)
+  return deleteJSON(`/api/tag/${tagId}/project/${projectId}`)
 }
 
 export function removeProjectsFromTag(tagId: string, projectIds: string[]) {
-  return deleteJSON(`/tag/${tagId}/projects`, {
+  return deleteJSON(`/api/tag/${tagId}/projects`, {
     body: {
       projectIds,
     },
@@ -46,19 +46,19 @@ export function removeProjectsFromTag(tagId: string, projectIds: string[]) {
 }
 
 export function archiveProject(projectId: string) {
-  return postJSON(`/project/${projectId}/archive`)
+  return postJSON(`/api/project/${projectId}/archive`)
 }
 
 export function deleteProject(projectId: string) {
-  return deleteJSON(`/project/${projectId}`)
+  return deleteJSON(`/api/project/${projectId}`)
 }
 
 export function leaveProject(projectId: string) {
-  return postJSON(`/project/${projectId}/leave`)
+  return postJSON(`/api/project/${projectId}/leave`)
 }
 
 export function renameProject(projectId: string, newName: string) {
-  return postJSON(`/project/${projectId}/rename`, {
+  return postJSON(`/api/project/${projectId}/rename`, {
     body: {
       newProjectName: newName,
     },
@@ -66,13 +66,13 @@ export function renameProject(projectId: string, newName: string) {
 }
 
 export function trashProject(projectId: string) {
-  return postJSON(`/project/${projectId}/trash`)
+  return postJSON(`/api/project/${projectId}/trash`)
 }
 
 export function unarchiveProject(projectId: string) {
-  return deleteJSON(`/project/${projectId}/archive`)
+  return deleteJSON(`/api/project/${projectId}/archive`)
 }
 
 export function untrashProject(projectId: string) {
-  return deleteJSON(`/project/${projectId}/trash`)
+  return deleteJSON(`/api/project/${projectId}/trash`)
 }

@@ -1,3 +1,4 @@
+import { postJSON } from '../../../../../infrastructure/fetch-json'
 import ignoredWords from '../../../../../features/dictionary/ignored-words'
 
 // eslint-disable-next-line prefer-regex-literals
@@ -25,15 +26,13 @@ const WORD_REGEX =
 const DEBOUNCE_DELAY = 500
 
 class SpellCheckManager {
-  constructor($scope, $cacheFactory, $http, $q, adapter) {
+  constructor($scope, $cacheFactory, adapter) {
     this.onChange = this.onChange.bind(this)
     this.onSessionChange = this.onSessionChange.bind(this)
     this.onContextMenu = this.onContextMenu.bind(this)
     this.onScroll = this.onScroll.bind(this)
     this.learnWord = this.learnWord.bind(this)
     this.$scope = $scope
-    this.$http = $http
-    this.$q = $q
     this.adapter = adapter
     this.$scope.spellMenu = {
       open: false,
@@ -44,6 +43,7 @@ class SpellCheckManager {
     this.inProgressRequest = null
     this.changedLines = []
     this.firstCheck = true
+    this.isFirstRequest = true
 
     this.$scope.$watch('spellCheckLanguage', (language, oldLanguage) => {
       if (language !== oldLanguage && oldLanguage != null) {
@@ -103,7 +103,7 @@ class SpellCheckManager {
     this.changedLines = Array(this.adapter.getLineCount()).fill(true)
     this.firstCheck = true
     if (this.isSpellCheckEnabled()) {
-      this.runSpellCheckSoon(DEBOUNCE_DELAY)
+      this.runSpellCheckSoon(0)
     }
   }
 
@@ -204,7 +204,9 @@ class SpellCheckManager {
   }
 
   learnWord(highlight) {
-    this.apiRequest('/learn', { word: highlight.word })
+    postJSON('/api/spelling/learn', { body: { word: highlight.word } }).catch(
+      console.error
+    )
     this.adapter.highlightedWordManager.removeWord(highlight.word)
     const language = this.$scope.spellCheckLanguage
     this.cache.put(`${language}:${highlight.word}`, true)
@@ -242,7 +244,11 @@ class SpellCheckManager {
     if (delay == null) {
       delay = 1000
     }
+    if (this.isFirstRequest) {
+      delay = 0
+    }
     const run = () => {
+      this.isFirstRequest = false
       delete this.timeoutId
       this.runSpellCheck()
     }
@@ -307,9 +313,8 @@ class SpellCheckManager {
     if (!words.length) {
       displayResult(highlights)
     } else {
-      this.inProgressRequest = this.apiRequest(
-        '/check',
-        { language, words, skipLearnedWords: true },
+      this.inProgressRequest = this.checkRequest(
+        { language, words },
         (error, result) => {
           delete this.inProgressRequest
           if (error != null || result == null || result.misspellings == null) {
@@ -348,30 +353,15 @@ class SpellCheckManager {
     }
   }
 
-  apiRequest(endpoint, data, callback) {
-    if (callback == null) {
-      callback = function (error, result) {
-        if (error) {
-          console.error(error)
-        }
-      }
-    }
-    data.token = window.user.id
-    data._csrf = window.csrfToken
-    // use angular timeout option to cancel request if doc is changed
-    const requestHandler = this.$q.defer()
-    const options = { timeout: requestHandler.promise }
-    this.$http
-      .post(`/spelling${endpoint}`, data, options)
-      .then(response => {
-        return callback(null, response.data)
-      })
-      .catch(response => {
-        return callback(new Error('api failure'))
-      })
-    // provide a method to cancel the request
-    const abortRequest = () => requestHandler.resolve()
-    return { abort: abortRequest }
+  checkRequest(data, callback) {
+    const c = new AbortController()
+    postJSON('/spelling/api/check', {
+      body: data,
+      signal: c.signal,
+    })
+      .then(blob => callback(null, blob))
+      .catch(callback)
+    return { abort: () => c.abort() }
   }
 
   getWords(rowNumsToCheck) {

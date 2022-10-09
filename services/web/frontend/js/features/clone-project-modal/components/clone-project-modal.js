@@ -1,4 +1,4 @@
-import React, { memo, useCallback, useState } from 'react'
+import { memo, useCallback, useState } from 'react'
 import PropTypes from 'prop-types'
 import CloneProjectModalContent from './clone-project-modal-content'
 import AccessibleModal from '../../../shared/components/accessible-modal'

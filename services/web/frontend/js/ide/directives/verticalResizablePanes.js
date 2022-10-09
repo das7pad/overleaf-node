@@ -1,6 +1,7 @@
 import App from '../../base'
+import { localStorage } from '../../modules/storage'
 
-export default App.directive('verticalResizablePanes', (localStorage, ide) => ({
+export default App.directive('verticalResizablePanes', ide => ({
   restrict: 'A',
   link(scope, element, attrs) {
     const name = attrs.verticalResizablePanes

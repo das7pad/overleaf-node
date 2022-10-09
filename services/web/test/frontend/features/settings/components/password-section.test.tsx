@@ -42,7 +42,7 @@ describe('<PasswordSection />', function () {
   })
 
   it('submits all inputs', async function () {
-    const updateMock = fetchMock.post('/user/password/update', 200)
+    const updateMock = fetchMock.post('/api/user/password/update', 200)
     render(<PasswordSection />)
     submitValidForm()
 
@@ -57,7 +57,7 @@ describe('<PasswordSection />', function () {
   })
 
   it('disables button on invalid form', async function () {
-    const updateMock = fetchMock.post('/user/password/update', 200)
+    const updateMock = fetchMock.post('/api/user/password/update', 200)
     render(<PasswordSection />)
 
     fireEvent.click(
@@ -140,7 +140,7 @@ describe('<PasswordSection />', function () {
   it('shows inflight state and success message', async function () {
     let finishUpdateCall: (value: any) => void = () => {}
     fetchMock.post(
-      '/user/password/update',
+      '/api/user/password/update',
       new Promise(resolve => (finishUpdateCall = resolve))
     )
     render(<PasswordSection />)
@@ -165,14 +165,14 @@ describe('<PasswordSection />', function () {
   })
 
   it('shows server error', async function () {
-    fetchMock.post('/user/password/update', 500)
+    fetchMock.post('/api/user/password/update', 500)
     render(<PasswordSection />)
     submitValidForm()
     await screen.findByText('Something went wrong. Please try again.')
   })
 
   it('shows server error message', async function () {
-    fetchMock.post('/user/password/update', {
+    fetchMock.post('/api/user/password/update', {
       status: 400,
       body: {
         message: 'Your old password is wrong',

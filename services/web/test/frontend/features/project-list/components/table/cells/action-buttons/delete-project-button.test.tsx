@@ -47,7 +47,7 @@ describe('<DeleteProjectButton />', function () {
     window.user_id = trashedProject?.owner?.id
     const project = Object.assign({}, trashedProject)
     const deleteProjectMock = fetchMock.delete(
-      `express:/project/:projectId`,
+      `express:/api/project/:projectId`,
       {
         status: 200,
       },
@@ -67,7 +67,8 @@ describe('<DeleteProjectButton />', function () {
 
     await waitFor(
       () =>
-        expect(deleteProjectMock.called(`/project/${project.id}`)).to.be.true
+        expect(deleteProjectMock.called(`/api/project/${project.id}`)).to.be
+          .true
     )
   })
 })

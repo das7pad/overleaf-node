@@ -61,12 +61,16 @@ const isInViewport = function (element) {
   return elBtm > viewportTop && elTop < viewportBtm
 }
 
-export default App.directive('eventTracking', eventTracking => ({
+const factory = eventTracking => ({
   scope: {
     eventTracking: '@',
     eventSegmentation: '=?',
   },
   link(scope, element, attrs) {
+    if (!eventTracking.enabled) {
+      return
+    }
+
     const sendGA = attrs.eventTrackingGa || false
     const sendMB = attrs.eventTrackingMb || false
     const sendMBFunction = attrs.eventTrackingSendOnce ? 'sendMBOnce' : 'sendMB'
@@ -122,4 +126,7 @@ export default App.directive('eventTracking', eventTracking => ({
       )
     }
   },
-}))
+})
+
+App.directive('eventTracking', factory)
+App.directive('eventTracking2', factory)

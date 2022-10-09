@@ -12,8 +12,13 @@ import _ from 'lodash'
  * Full docs: https://github.com/decaffeinate/decaffeinate/blob/master/docs/suggestions.md
  */
 import App from '../../../base'
+import {
+  projectJWTGetJSON,
+  projectJWTPOSTJSON,
+} from '../../../infrastructure/jwt-fetch-json'
+import getMeta from '../../../utils/meta'
 
-export default App.factory('metadata', function ($http, ide) {
+export default App.factory('metadata', function (ide) {
   const debouncer = {} // DocId => Timeout
 
   const state = { documents: {} }
@@ -23,9 +28,6 @@ export default App.factory('metadata', function ($http, ide) {
   metadata.onBroadcastDocMeta = function (data) {
     if (data.docId != null && data.meta != null) {
       state.documents[data.docId] = data.meta
-      window.dispatchEvent(
-        new CustomEvent('project:metadata', { detail: state.documents })
-      )
     }
   }
 
@@ -60,39 +62,31 @@ export default App.factory('metadata', function ($http, ide) {
   }
 
   metadata.loadProjectMetaFromServer = () =>
-    $http
-      .get(`/project/${window.project_id}/metadata`)
-      .then(function (response) {
-        const { data } = response
+    projectJWTGetJSON(`/project/${getMeta('ol-project_id')}/metadata`).then(
+      data => {
         if (data.projectMeta) {
-          return (() => {
-            const result = []
-            for (const docId in data.projectMeta) {
-              const docMeta = data.projectMeta[docId]
-              result.push((state.documents[docId] = docMeta))
-            }
-            window.dispatchEvent(
-              new CustomEvent('project:metadata', { detail: state.documents })
-            )
-            return result
-          })()
+          for (const [docId, docMeta] of Object.entries(data.projectMeta)) {
+            state.documents[docId] = docMeta
+          }
         }
-      })
+      }
+    )
 
   metadata.loadDocMetaFromServer = docId =>
-    $http
-      .post(`/project/${window.project_id}/doc/${docId}/metadata`, {
-        // Don't broadcast metadata when there are no other users in the
-        // project.
-        broadcast: ide.$scope.onlineUsersCount > 0,
-        _csrf: window.csrfToken,
-      })
-      .then(function (response) {
-        const { data } = response
-        // handle the POST response like a broadcast event when there are no
-        // other users in the project.
-        metadata.onBroadcastDocMeta(data)
-      })
+    projectJWTPOSTJSON(
+      `/project/${getMeta('ol-project_id')}/doc/${docId}/metadata`,
+      {
+        body: {
+          // Don't broadcast metadata when there are no other users in the
+          // project.
+          broadcast: ide.$scope.onlineUsersCount > 0,
+        },
+      }
+    ).then(data => {
+      // handle the POST response like a broadcast event when there are no
+      // other users in the project.
+      metadata.onBroadcastDocMeta(data)
+    })
 
   metadata.scheduleLoadDocMetaFromServer = function (docId) {
     if (ide.$scope.permissionsLevel === 'readOnly') {
@@ -100,6 +94,7 @@ export default App.factory('metadata', function ($http, ide) {
       // The user will not be able to consume the meta data for edits anyways.
       return
     }
+    ide.$scope.editor.sharejs_doc.flush()
     // De-bounce loading labels with a timeout
     const existingTimeout = debouncer[docId]
 
@@ -109,15 +104,10 @@ export default App.factory('metadata', function ($http, ide) {
     }
 
     return (debouncer[docId] = setTimeout(() => {
-      // TODO: wait for the document to be saved?
       metadata.loadDocMetaFromServer(docId)
       return delete debouncer[docId]
-    }, 2000))
+    }, 1000))
   }
-
-  window.addEventListener('editor:metadata-outdated', () => {
-    metadata.scheduleLoadDocMetaFromServer(ide.$scope.editor.sharejs_doc.doc_id)
-  })
 
   return metadata
 })

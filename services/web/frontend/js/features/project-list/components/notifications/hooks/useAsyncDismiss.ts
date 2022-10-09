@@ -5,7 +5,7 @@ function useAsyncDismiss() {
   const { runAsync, ...rest } = useAsync()
 
   const handleDismiss = (id: number | string) => {
-    runAsync(deleteJSON(`/notifications/${id}`)).catch(console.error)
+    runAsync(deleteJSON(`/api/notifications/${id}`)).catch(console.error)
   }
 
   return { handleDismiss, ...rest }

@@ -1,5 +1,5 @@
 import { waitFor } from '@testing-library/react'
-import { act } from '@testing-library/react-hooks'
+import { act } from '@testing-library/react-hooks/dom'
 import { expect } from 'chai'
 import sinon from 'sinon'
 import { renderHookWithEditorContext } from '../../helpers/render-with-context'

@@ -1,4 +1,3 @@
-import { useEffect } from 'react'
 import {
   createFileModalDecorator,
   mockCreateFileModalFetch,
@@ -17,16 +16,6 @@ MinimalFeatures.decorators = [createFileModalDecorator()]
 
 export const WithExtraFeatures = args => {
   useFetchMock(mockCreateFileModalFetch)
-
-  useEffect(() => {
-    const originalValue = window.ExposedSettings.hasLinkUrlFeature
-    window.ExposedSettings.hasLinkUrlFeature = true
-
-    return () => {
-      window.ExposedSettings.hasLinkUrlFeature = originalValue
-    }
-  }, [])
-
   return <FileTreeModalCreateFile {...args} />
 }
 WithExtraFeatures.decorators = [
@@ -39,20 +28,10 @@ export const ErrorImportingFileFromExternalURL = args => {
   useFetchMock(fetchMock => {
     mockCreateFileModalFetch(fetchMock)
 
-    fetchMock.post('express:/project/:projectId/linked_file', 500, {
+    fetchMock.post('express:/jwt/web/project/:projectId/linked_file', 500, {
       overwriteRoutes: true,
     })
   })
-
-  useEffect(() => {
-    const originalValue = window.ExposedSettings.hasLinkUrlFeature
-    window.ExposedSettings.hasLinkUrlFeature = true
-
-    return () => {
-      window.ExposedSettings.hasLinkUrlFeature = originalValue
-    }
-  }, [])
-
   return <FileTreeModalCreateFile {...args} />
 }
 ErrorImportingFileFromExternalURL.decorators = [createFileModalDecorator()]
@@ -61,7 +40,7 @@ export const ErrorImportingFileFromReferenceProvider = args => {
   useFetchMock(fetchMock => {
     mockCreateFileModalFetch(fetchMock)
 
-    fetchMock.post('express:/project/:projectId/linked_file', 500, {
+    fetchMock.post('express:/jwt/web/project/:projectId/linked_file', 500, {
       overwriteRoutes: true,
     })
   })

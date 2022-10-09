@@ -1,6 +1,5 @@
 /* eslint-disable
     camelcase,
-    n/handle-callback-err,
     max-len,
     no-return-assign,
 */
@@ -37,40 +36,62 @@ export default OnlineUsersManager = (function () {
         return this.sendCursorPositionUpdate(position)
       })
 
-      this.$scope.$on('project:joined', () => {
-        return this.ide.socket.emit(
-          'clientTracking.getConnectedUsers',
-          (error, connectedUsers) => {
-            this.$scope.onlineUsers = {}
-            for (const user of Array.from(connectedUsers || [])) {
-              if (user.client_id === this.ide.socket.publicId) {
-                // Don't store myself
-                continue
-              }
-              // Store data in the same format returned by clientTracking.clientUpdated
+      this.storeConnectedUsers = connectedUsers => {
+        this.$scope.onlineUsers = {}
+        for (const user of connectedUsers) {
+          if (user.client_id === this.ide.socket.publicId) {
+            // Don't store myself
+            continue
+          }
 
-              this.$scope.onlineUsers[user.client_id] = {
-                id: user.client_id,
-                user_id: user.user_id,
-                email: user.email,
-                name: `${user.first_name} ${user.last_name}`,
-                doc_id:
-                  user.cursorData != null ? user.cursorData.doc_id : undefined,
-                row: user.cursorData != null ? user.cursorData.row : undefined,
-                column:
-                  user.cursorData != null ? user.cursorData.column : undefined,
-              }
-            }
-            return this.refreshOnlineUsers()
+          // Store data in the same format returned by clientTracking.clientUpdated
+          this.$scope.onlineUsers[user.client_id] = {
+            id: user.client_id,
+            user_id: user.user_id,
+            email: user.email,
+            name: `${user.first_name} ${user.last_name}`,
+            doc_id:
+              user.cursorData != null ? user.cursorData.doc_id : undefined,
+            row: user.cursorData != null ? user.cursorData.row : undefined,
+            column:
+              user.cursorData != null ? user.cursorData.column : undefined,
+          }
+        }
+        this.refreshOnlineUsers()
+      }
+
+      this.getConnectedUsers = () => {
+        this.ide.socket.emit(
+          'clientTracking.getConnectedUsers',
+          (_error, connectedUsers) => {
+            this.storeConnectedUsers(connectedUsers || [])
           }
         )
+      }
+      this.$scope.$on('project:joined', () => {
+        const connectedUsers = this.$scope.connectedUsers
+        this.$scope.connectedUsers = null
+
+        const removeHandler = this.$scope.$on('file-tree:initialized', () => {
+          removeHandler()
+          if (connectedUsers) {
+            this.storeConnectedUsers(connectedUsers)
+          } else {
+            this.getConnectedUsers()
+          }
+        })
       })
 
       this.ide.socket.on('clientTracking.clientUpdated', client => {
         if (client.id !== this.ide.socket.publicId) {
           // Check it's not me!
           return this.$scope.$apply(() => {
-            this.$scope.onlineUsers[client.id] = client
+            if (!this.$scope.onlineUsers[client.id]) {
+              // cache miss, load full details
+              return this.getConnectedUsers()
+            }
+            // incremental update
+            Object.assign(this.$scope.onlineUsers[client.id], client)
             return this.refreshOnlineUsers()
           })
         }
@@ -102,7 +123,10 @@ export default OnlineUsersManager = (function () {
         if (user.name === null || user.name.trim().length === 0) {
           if (user.email) {
             user.name = user.email.trim()
-          } else if (user.user_id === 'anonymous-user') {
+          } else if (
+            user.user_id === 'anonymous-user' ||
+            user.user_id === '00000000-0000-0000-0000-000000000000'
+          ) {
             user.name = 'Anonymous'
           }
         }
@@ -147,29 +171,46 @@ export default OnlineUsersManager = (function () {
       }
     }
 
-    sendCursorPositionUpdate(position) {
-      if (position != null) {
-        this.$scope.currentPosition = position // keep track of the latest position
-      }
-      if (this.cursorUpdateTimeout == null) {
-        return (this.cursorUpdateTimeout = setTimeout(() => {
-          const doc_id = this.$scope.editor.open_doc_id
-          // always send the latest position to other clients
-          this.ide.socket.emit('clientTracking.updatePosition', {
-            row:
-              this.$scope.currentPosition != null
-                ? this.$scope.currentPosition.row
-                : undefined,
-            column:
-              this.$scope.currentPosition != null
-                ? this.$scope.currentPosition.column
-                : undefined,
-            doc_id,
-          })
+    isAlreadySubmittedCursorData(cursorData) {
+      return (
+        this.submittedCursorData &&
+        cursorData.row === this.submittedCursorData.row &&
+        cursorData.column === this.submittedCursorData.column &&
+        cursorData.doc_id === this.submittedCursorData.doc_id
+      )
+    }
 
-          return delete this.cursorUpdateTimeout
-        }, this.cursorUpdateInterval))
+    sendCursorPositionUpdate(position) {
+      let cursorData = {
+        row: position && position.row,
+        column: position && position.column,
+        doc_id: this.$scope.editor.open_doc_id,
       }
+      if (this.isAlreadySubmittedCursorData(cursorData)) {
+        // No update to the position in the doc.
+        return
+      }
+
+      // Keep track of the latest position.
+      this.currentCursorData = cursorData
+
+      if (this.cursorUpdateTimeout) {
+        // Sending is in progress, it will pick up ^.
+        return
+      }
+      this.cursorUpdateTimeout = setTimeout(() => {
+        delete this.cursorUpdateTimeout
+
+        // Always send the latest position to other clients.
+        cursorData = this.currentCursorData
+
+        if (this.isAlreadySubmittedCursorData(cursorData)) {
+          // They changed back to the old position.
+          return
+        }
+        this.submittedCursorData = cursorData
+        this.ide.socket.emit('clientTracking.updatePosition', cursorData)
+      }, this.cursorUpdateInterval)
     }
   }
   OnlineUsersManager.initClass()

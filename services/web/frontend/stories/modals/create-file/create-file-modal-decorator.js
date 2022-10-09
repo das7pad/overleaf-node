@@ -60,7 +60,7 @@ export const mockCreateFileModalFetch = fetchMock =>
         },
       ],
     })
-    .get('express:/project/:projectId/entities', {
+    .get('express:/api/project/:projectId/entities', {
       entities: [
         {
           path: '/foo.tex',
@@ -70,15 +70,15 @@ export const mockCreateFileModalFetch = fetchMock =>
         },
       ],
     })
-    .post('express:/project/:projectId/doc', (path, req) => {
+    .post('express:/jwt/web/project/:projectId/doc', (path, req) => {
       console.log({ path, req })
       return 204
     })
-    .post('express:/project/:projectId/upload', (path, req) => {
+    .post('express:/jwt/web/project/:projectId/upload', (path, req) => {
       console.log({ path, req })
       return 204
     })
-    .post('express:/project/:projectId/linked_file', (path, req) => {
+    .post('express:/jwt/web/project/:projectId/linked_file', (path, req) => {
       console.log({ path, req })
       return 204
     })

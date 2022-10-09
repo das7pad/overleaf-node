@@ -27,7 +27,7 @@ function Common() {
 
   const handleAcceptInvite = (projectId: number | string, token: string) => {
     runAsync(
-      postJSON(`/project/${projectId}/invite/token/${token}/accept`)
+      postJSON(`/api/project/${projectId}/invite/token/${token}/accept`)
     ).catch(console.error)
   }
 

@@ -5,7 +5,7 @@ import { ScopeDecorator } from './decorators/scope'
 export const Success = args => {
   useFetchMock(fetchMock => {
     fetchMock.post(
-      'express:/project/:projectId/clone',
+      'express:/api/project/:projectId/clone',
       { status: 200 },
       { delay: 250 }
     )
@@ -17,7 +17,7 @@ export const Success = args => {
 export const GenericErrorResponse = args => {
   useFetchMock(fetchMock => {
     fetchMock.post(
-      'express:/project/:projectId/clone',
+      'express:/api/project/:projectId/clone',
       { status: 500 },
       { delay: 250 }
     )
@@ -29,7 +29,7 @@ export const GenericErrorResponse = args => {
 export const SpecificErrorResponse = args => {
   useFetchMock(fetchMock => {
     fetchMock.post(
-      'express:/project/:projectId/clone',
+      'express:/api/project/:projectId/clone',
       { status: 400, body: 'The project name is not valid' },
       { delay: 250 }
     )

@@ -50,7 +50,7 @@ describe('<UserNotifications />', function () {
 
     // at least one project is required to show some notifications
     const projects = [{}] as Project[]
-    fetchMock.post(/\/api\/project/, {
+    fetchMock.post('express:/api/project', {
       status: 200,
       body: {
         projects,
@@ -88,11 +88,11 @@ describe('<UserNotifications />', function () {
       await fetchMock.flush(true)
 
       const deleteMock = fetchMock.delete(
-        `/notifications/${reconfiguredNotification._id}`,
+        `/api/notifications/${reconfiguredNotification._id}`,
         200
       )
       const acceptMock = fetchMock.post(
-        `project/${notification.messageOpts.projectId}/invite/token/${notification.messageOpts.token}/accept`,
+        `/api/project/${notification.messageOpts.projectId}/invite/token/${notification.messageOpts.token}/accept`,
         200
       )
 
@@ -141,7 +141,7 @@ describe('<UserNotifications />', function () {
       renderWithinProjectListProvider(Common)
       await fetchMock.flush(true)
       fetchMock.post(
-        `project/${notification.messageOpts.projectId}/invite/token/${notification.messageOpts.token}/accept`,
+        `/api/project/${notification.messageOpts.projectId}/invite/token/${notification.messageOpts.token}/accept`,
         500
       )
 
@@ -174,7 +174,10 @@ describe('<UserNotifications />', function () {
 
       renderWithinProjectListProvider(Common)
       await fetchMock.flush(true)
-      fetchMock.delete(`/notifications/${reconfiguredNotification._id}`, 200)
+      fetchMock.delete(
+        `/api/notifications/${reconfiguredNotification._id}`,
+        200
+      )
 
       screen.getByRole('alert')
       screen.getByText(/your free WFH2020 upgrade came to an end on/i)
@@ -202,7 +205,10 @@ describe('<UserNotifications />', function () {
 
       renderWithinProjectListProvider(Common)
       await fetchMock.flush(true)
-      fetchMock.delete(`/notifications/${reconfiguredNotification._id}`, 200)
+      fetchMock.delete(
+        `/api/notifications/${reconfiguredNotification._id}`,
+        200
+      )
 
       screen.getByRole('alert')
       screen.getByText(/it looks like you’re at/i)
@@ -238,7 +244,10 @@ describe('<UserNotifications />', function () {
 
       renderWithinProjectListProvider(Common)
       await fetchMock.flush(true)
-      fetchMock.delete(`/notifications/${reconfiguredNotification._id}`, 200)
+      fetchMock.delete(
+        `/api/notifications/${reconfiguredNotification._id}`,
+        200
+      )
 
       screen.getByRole('alert')
       screen.getByText(/it looks like you’re at/i)
@@ -296,7 +305,10 @@ describe('<UserNotifications />', function () {
 
       renderWithinProjectListProvider(Common)
       await fetchMock.flush(true)
-      fetchMock.delete(`/notifications/${reconfiguredNotification._id}`, 200)
+      fetchMock.delete(
+        `/api/notifications/${reconfiguredNotification._id}`,
+        200
+      )
 
       screen.getByRole('alert')
       screen.getByText(/you have more than one project called/i)
@@ -325,7 +337,10 @@ describe('<UserNotifications />', function () {
 
       renderWithinProjectListProvider(Common)
       await fetchMock.flush(true)
-      fetchMock.delete(`/notifications/${reconfiguredNotification._id}`, 200)
+      fetchMock.delete(
+        `/api/notifications/${reconfiguredNotification._id}`,
+        200
+      )
 
       screen.getByRole('alert')
       screen.getByText(/your Dropbox account has been unlinked/i)
@@ -355,7 +370,10 @@ describe('<UserNotifications />', function () {
 
       renderWithinProjectListProvider(Common)
       await fetchMock.flush(true)
-      fetchMock.delete(`/notifications/${reconfiguredNotification._id}`, 200)
+      fetchMock.delete(
+        `/api/notifications/${reconfiguredNotification._id}`,
+        200
+      )
 
       screen.getByRole('alert')
       screen.getByText(reconfiguredNotification.html!)
@@ -412,7 +430,7 @@ describe('<UserNotifications />', function () {
         { ...notificationsInstitution, ...institution },
       ])
       render(<Institution />)
-      fetchMock.delete(`/notifications/${institution._id}`, 200)
+      fetchMock.delete(`/api/notifications/${institution._id}`, 200)
 
       screen.getByRole('alert')
       screen.getByText(/has been linked to your/i)
@@ -433,7 +451,7 @@ describe('<UserNotifications />', function () {
         { ...notificationsInstitution, ...institution },
       ])
       render(<Institution />)
-      fetchMock.delete(`/notifications/${institution._id}`, 200)
+      fetchMock.delete(`/api/notifications/${institution._id}`, 200)
 
       screen.getByRole('alert')
       screen.getByText(/you’ve tried to login with/i)
@@ -457,7 +475,7 @@ describe('<UserNotifications />', function () {
         { ...notificationsInstitution, ...institution },
       ])
       render(<Institution />)
-      fetchMock.delete(`/notifications/${institution._id}`, 200)
+      fetchMock.delete(`/api/notifications/${institution._id}`, 200)
 
       screen.getByRole('alert')
       screen.getByText(/which is already registered with/i)
@@ -515,7 +533,7 @@ describe('<UserNotifications />', function () {
     })
 
     it('sends successfully', async function () {
-      fetchMock.post('/user/emails/resend_confirmation', 200)
+      fetchMock.post('/api/user/emails/resend_confirmation', 200)
 
       const resendButton = screen.getByRole('button', { name: /resend/i })
       fireEvent.click(resendButton)
@@ -531,7 +549,7 @@ describe('<UserNotifications />', function () {
     })
 
     it('fails to send', async function () {
-      fetchMock.post('/user/emails/resend_confirmation', 500)
+      fetchMock.post('/api/user/emails/resend_confirmation', 500)
 
       const resendButton = screen.getByRole('button', { name: /resend/i })
       fireEvent.click(resendButton)

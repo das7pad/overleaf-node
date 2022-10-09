@@ -1,30 +1,18 @@
-import { useRef, useEffect } from 'react'
+import { useRef, useEffect, useState } from 'react'
 import PropTypes from 'prop-types'
 import Linkify from 'react-linkify'
+import { loadMathJax } from '../../../MathJaxLoader'
 
 function MessageContent({ content }) {
   const root = useRef(null)
 
+  const [MJHub, setMJHub] = useState(undefined)
   useEffect(() => {
-    if (!(window.MathJax && window.MathJax.Hub)) {
-      return
-    }
-    const MJHub = window.MathJax.Hub
-    const inlineMathConfig =
-      (MJHub.config &&
-        MJHub.config.tex2jax &&
-        MJHub.config.tex2jax.inlineMath) ||
-      []
-    const alreadyConfigured = inlineMathConfig.some(
-      c => c[0] === '$' && c[1] === '$'
-    )
-    if (!alreadyConfigured) {
-      MJHub.Config({
-        tex2jax: {
-          inlineMath: inlineMathConfig.concat([['$', '$']]),
-        },
+    loadMathJax()
+      .then(MathJax => {
+        setMJHub(MathJax.Hub)
       })
-    }
+      .catch(error => console.error('Cannot load MathJaxBundle', error))
   }, [])
 
   useEffect(() => {
@@ -35,12 +23,12 @@ function MessageContent({ content }) {
     }
 
     // MathJax typesetting
-    const MJHub = window.MathJax.Hub
+    if (!MJHub) return
     const timeoutHandler = setTimeout(() => {
       MJHub.Queue(['Typeset', MJHub, root.current])
     }, 0)
     return () => clearTimeout(timeoutHandler)
-  }, [content])
+  }, [content, MJHub])
 
   return (
     <p ref={root}>

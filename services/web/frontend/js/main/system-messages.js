@@ -10,41 +10,49 @@
  * Full docs: https://github.com/decaffeinate/decaffeinate/blob/master/docs/suggestions.md
  */
 import App from '../base'
+import { localStorage } from '../modules/storage'
+import getMeta from '../utils/meta'
+import { jwtGetJSON } from '../infrastructure/jwt-fetch-json'
+
 const MESSAGE_POLL_INTERVAL = 15 * 60 * 1000
 // Controller for messages (array)
-App.controller('SystemMessagesController', ($http, $scope) => {
+App.controller('SystemMessagesController', $scope => {
   $scope.messages = []
-  function pollSystemMessages() {
+  const pollSystemMessages = function () {
     // Ignore polling if tab is hidden or browser is offline
     if (document.hidden || !navigator.onLine) {
       return
     }
-
-    $http
-      .get('/system/messages')
-      .then(response => {
-        // Ignore if content-type is anything but JSON, prevents a bug where
-        // the user logs out in another tab, then a 302 redirect was returned,
-        // which is transparently resolved by the browser to the login (HTML)
-        // page.
-        // This then caused an Angular error where it was attempting to loop
-        // through the HTML as a string
-        if (response.headers('content-type').includes('json')) {
-          $scope.messages = response.data
-        }
+    if (!getMeta('ol-jwtLoggedInUser')) {
+      return
+    }
+    jwtGetJSON({
+      name: 'ol-jwtLoggedInUser',
+      url: '/system/messages',
+      refreshEndpoint: '/api/user/jwt',
+    })
+      .then(messages => {
+        $scope.$applyAsync(() => {
+          $scope.messages = messages
+        })
       })
       .catch(() => {
         // ignore errors
       })
   }
-  pollSystemMessages()
+  const cached = getMeta('ol-systemMessages')
+  if (cached) {
+    $scope.messages = cached
+  } else {
+    setTimeout(pollSystemMessages, 100)
+  }
   setInterval(pollSystemMessages, MESSAGE_POLL_INTERVAL)
 })
 
 export default App.controller(
   'SystemMessageController',
   function ($scope, $sce) {
-    $scope.hidden = $.localStorage(`systemMessage.hide.${$scope.message._id}`)
+    $scope.hidden = localStorage(`systemMessage.hide.${$scope.message._id}`)
     $scope.protected = $scope.message._id === 'protected'
     $scope.htmlContent = $scope.message.content
 
@@ -52,7 +60,7 @@ export default App.controller(
       if (!$scope.protected) {
         // do not allow protected messages to be hidden
         $scope.hidden = true
-        return $.localStorage(`systemMessage.hide.${$scope.message._id}`, true)
+        return localStorage(`systemMessage.hide.${$scope.message._id}`, true)
       }
     })
   }

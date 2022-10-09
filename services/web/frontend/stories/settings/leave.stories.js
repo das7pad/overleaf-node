@@ -30,7 +30,7 @@ export const ModalWithoutPassword = args => {
 export const ModalAuthError = args => {
   setDefaultMeta()
   useFetchMock(fetchMock => {
-    fetchMock.post(/\/user\/delete/, 403)
+    fetchMock.post(/\/api\/user\/delete/, 403)
   })
 
   return <LeaveModal {...args} />
@@ -39,7 +39,7 @@ export const ModalAuthError = args => {
 export const ModalServerError = args => {
   setDefaultMeta()
   useFetchMock(fetchMock => {
-    fetchMock.post(/\/user\/delete/, 500)
+    fetchMock.post(/\/api\/user\/delete/, 500)
   })
 
   return <LeaveModal {...args} />
@@ -48,7 +48,7 @@ export const ModalServerError = args => {
 export const ModalSubscriptionError = args => {
   setDefaultMeta()
   useFetchMock(fetchMock => {
-    fetchMock.post(/\/user\/delete/, {
+    fetchMock.post(/\/api\/user\/delete/, {
       status: 422,
       body: {
         error: 'SubscriptionAdminDeletionError',

@@ -26,7 +26,7 @@ function ResendConfirmationEmailButton({
 
   const handleResendConfirmationEmail = () => {
     runAsync(
-      postJSON('/user/emails/resend_confirmation', {
+      postJSON('/api/user/emails/resend_confirmation', {
         body: {
           email,
         },

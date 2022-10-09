@@ -19,7 +19,7 @@ describe('<RenameProjectModal />', function () {
 
   it('renders the modal and validates new name', async function () {
     const renameProjectMock = fetchMock.post(
-      'express:/project/:projectId/rename',
+      'express:/api/project/:projectId/rename',
       {
         status: 200,
       }
@@ -54,14 +54,16 @@ describe('<RenameProjectModal />', function () {
     await waitFor(
       () =>
         expect(
-          renameProjectMock.called(`/project/${currentProjects[0].id}/rename`)
+          renameProjectMock.called(
+            `/api/project/${currentProjects[0].id}/rename`
+          )
         ).to.be.true
     )
   })
 
   it('shows error message from API', async function () {
     const postRenameMock = fetchMock.post(
-      'express:/project/:projectId/rename',
+      'express:/api/project/:projectId/rename',
       {
         status: 500,
       }

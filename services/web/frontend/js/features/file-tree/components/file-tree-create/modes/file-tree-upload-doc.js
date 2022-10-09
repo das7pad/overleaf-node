@@ -10,8 +10,13 @@ import { useProjectContext } from '../../../../../shared/context/project-context
 
 import '@uppy/core/dist/style.css'
 import '@uppy/dashboard/dist/style.css'
-import { refreshProjectMetadata } from '../../../util/api'
 import ErrorMessage from '../error-message'
+import {
+  clearProjectJWT,
+  getProjectJWT,
+  jwtUrlWeb,
+  refreshProjectJWT,
+} from '../../../../../infrastructure/jwt-fetch-json'
 
 export default function FileTreeUploadDoc() {
   const { parentFolderId, cancel, isDuplicate, droppedFiles, setDroppedFiles } =
@@ -33,13 +38,7 @@ export default function FileTreeUploadDoc() {
     )
 
   const buildEndpoint = (projectId, targetFolderId) => {
-    let endpoint = `/project/${projectId}/upload`
-
-    if (targetFolderId) {
-      endpoint += `?folder_id=${targetFolderId}`
-    }
-
-    return endpoint
+    return `${jwtUrlWeb}/project/${projectId}/folder/${targetFolderId}/upload`
   }
 
   // initialise the Uppy object
@@ -78,9 +77,10 @@ export default function FileTreeUploadDoc() {
         // use the basic XHR uploader
         .use(XHRUpload, {
           endpoint,
-          headers: {
-            'X-CSRF-TOKEN': window.csrfToken,
-          },
+          headers: () => ({
+            Authorization: 'Bearer ' + getProjectJWT(),
+          }),
+          withCredentials: true,
           // limit: maxConnections || 1,
           limit: 1,
           fieldName: 'qqfile', // "qqfile" field inherited from FineUploader
@@ -92,14 +92,6 @@ export default function FileTreeUploadDoc() {
             cancel()
           }
         })
-        // broadcast doc metadata after each successful upload
-        .on('upload-success', (file, response) => {
-          if (response.body.entity_type === 'doc') {
-            window.setTimeout(() => {
-              refreshProjectMetadata(projectId, response.body.entity_id)
-            }, 250)
-          }
-        })
         // handle upload errors
         .on('upload-error', (file, error, response) => {
           switch (response?.status) {
@@ -109,6 +101,15 @@ export default function FileTreeUploadDoc() {
 
             case 403:
               setError('not-logged-in')
+              break
+
+            case 401:
+              clearProjectJWT()
+              refreshProjectJWT()
+                .then(() => {
+                  uppy.retryUpload(file.id)
+                })
+                .catch(() => {})
               break
 
             default:

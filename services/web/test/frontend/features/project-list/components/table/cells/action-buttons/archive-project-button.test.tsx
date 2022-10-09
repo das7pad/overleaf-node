@@ -45,7 +45,7 @@ describe('<ArchiveProjectButton />', function () {
   it('should archive the projects', async function () {
     const project = Object.assign({}, archiveableProject)
     const archiveProjectMock = fetchMock.post(
-      `express:/project/:projectId/archive`,
+      `express:/api/project/:projectId/archive`,
       {
         status: 200,
       },
@@ -65,8 +65,8 @@ describe('<ArchiveProjectButton />', function () {
 
     await waitFor(
       () =>
-        expect(archiveProjectMock.called(`/project/${project.id}/archive`)).to
-          .be.true
+        expect(archiveProjectMock.called(`/api/project/${project.id}/archive`))
+          .to.be.true
     )
   })
 })

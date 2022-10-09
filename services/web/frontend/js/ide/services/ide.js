@@ -14,14 +14,14 @@
  */
 import App from '../../base'
 import EditorWatchdogManager from '../connection/EditorWatchdogManager'
+import { captureException } from '../../infrastructure/error-reporter'
 // We create and provide this as service so that we can access the global ide
 // from within other parts of the angular app.
 App.factory(
   'ide',
-  function ($http, queuedHttp, $modal, $q, $filter, $timeout, eventTracking) {
-    const ide = {}
+  function ($http, $modal, $q, $filter, $timeout, eventTracking) {
+    const ide = window._ide || {}
     ide.$http = $http
-    ide.queuedHttp = queuedHttp
     ide.$q = $q
     ide.$filter = $filter
     ide.$timeout = $timeout
@@ -71,11 +71,7 @@ App.factory(
       } else if (typeof error === 'string') {
         errorObj.message = error
       }
-      return $http.post('/error/client', {
-        error: errorObj,
-        meta,
-        _csrf: window.csrfToken,
-      })
+      captureException(errorObj, { extra: meta })
     }
 
     ide.showGenericMessageModal = (title, message) =>

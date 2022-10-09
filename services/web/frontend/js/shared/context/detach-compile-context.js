@@ -22,6 +22,7 @@ export function DetachCompileProvider({ children }) {
   const {
     animateCompileDropdownArrow: _animateCompileDropdownArrow,
     autoCompile: _autoCompile,
+    buildId: _buildId,
     clearingCache: _clearingCache,
     clsiServerId: _clsiServerId,
     codeCheckFailed: _codeCheckFailed,
@@ -78,6 +79,12 @@ export function DetachCompileProvider({ children }) {
   const [autoCompile] = useDetachStateWatcher(
     'autoCompile',
     _autoCompile,
+    'detacher',
+    'detached'
+  )
+  const [buildId] = useDetachStateWatcher(
+    'buildId',
+    _buildId,
     'detacher',
     'detached'
   )
@@ -347,6 +354,7 @@ export function DetachCompileProvider({ children }) {
     () => ({
       animateCompileDropdownArrow,
       autoCompile,
+      buildId,
       clearCache,
       clearingCache,
       clsiServerId,
@@ -398,6 +406,7 @@ export function DetachCompileProvider({ children }) {
     [
       animateCompileDropdownArrow,
       autoCompile,
+      buildId,
       clearCache,
       clearingCache,
       clsiServerId,

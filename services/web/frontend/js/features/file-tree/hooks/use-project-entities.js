@@ -18,7 +18,7 @@ export function useProjectEntities(projectId) {
       setError(false)
       setData(null)
 
-      getJSON(`/project/${projectId}/entities`, { signal })
+      getJSON(`/api/project/${projectId}/entities`, { signal })
         .then(data => {
           setData(data.entities.sort(alphabetical))
         })

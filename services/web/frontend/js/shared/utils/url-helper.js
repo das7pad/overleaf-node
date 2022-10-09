@@ -1,5 +1,5 @@
 export function buildUrlWithDetachRole(mode) {
-  const url = new URL(window.location)
+  const url = new URL(window.location.href)
   let cleanPathname = url.pathname
     .replace(/\/(detached|detacher)\/?$/, '')
     .replace(/\/$/, '')

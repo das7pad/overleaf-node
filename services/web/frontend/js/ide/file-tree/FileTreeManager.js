@@ -374,6 +374,18 @@ export default FileTreeManager = class FileTreeManager {
     return null
   }
 
+  getEntityPathById(id) {
+    const entity = this.findEntityById(id)
+    if (!entity) {
+      return null
+    }
+    return this.getEntityPath(entity)
+  }
+
+  getRootDocPath() {
+    return this.getEntityPathById(this.$scope.project.rootDoc_id)
+  }
+
   getRootDocDirname() {
     const rootDoc = this.findEntityById(this.$scope.project.rootDoc_id)
     if (rootDoc == null) {
@@ -541,151 +553,6 @@ export default FileTreeManager = class FileTreeManager {
     const nameExists = this.ide.$q.defer()
     nameExists.reject({ data: message })
     return nameExists.promise
-  }
-
-  createDoc(name, parent_folder) {
-    // check if a doc/file/folder already exists with this name
-    if (parent_folder == null) {
-      parent_folder = this.getCurrentFolder()
-    }
-    if (this.existsInThisFolder(parent_folder, name)) {
-      return this.nameExistsError()
-    }
-    // We'll wait for the socket.io notification to actually
-    // add the doc for us.
-    return this.ide.$http.post(`/project/${this.ide.project_id}/doc`, {
-      name,
-      parent_folder_id: parent_folder != null ? parent_folder.id : undefined,
-      _csrf: window.csrfToken,
-    })
-  }
-
-  createFolder(name, parent_folder) {
-    // check if a doc/file/folder already exists with this name
-    if (parent_folder == null) {
-      parent_folder = this.getCurrentFolder()
-    }
-    if (this.existsInThisFolder(parent_folder, name)) {
-      return this.nameExistsError()
-    }
-    // We'll wait for the socket.io notification to actually
-    // add the folder for us.
-    return this.ide.$http.post(`/project/${this.ide.project_id}/folder`, {
-      name,
-      parent_folder_id: parent_folder != null ? parent_folder.id : undefined,
-      _csrf: window.csrfToken,
-    })
-  }
-
-  createLinkedFile(name, parent_folder, provider, data) {
-    // check if a doc/file/folder already exists with this name
-    if (parent_folder == null) {
-      parent_folder = this.getCurrentFolder()
-    }
-    if (this.existsInThisFolder(parent_folder, name)) {
-      return this.nameExistsError()
-    }
-    // We'll wait for the socket.io notification to actually
-    // add the file for us.
-    return this.ide.$http.post(
-      `/project/${this.ide.project_id}/linked_file`,
-      {
-        name,
-        parent_folder_id: parent_folder != null ? parent_folder.id : undefined,
-        provider,
-        data,
-        _csrf: window.csrfToken,
-      },
-      {
-        disableAutoLoginRedirect: true,
-      }
-    )
-  }
-
-  refreshLinkedFile(file) {
-    const parent_folder = this._findParentFolder(file)
-    const provider =
-      file.linkedFileData != null ? file.linkedFileData.provider : undefined
-    if (provider == null) {
-      console.warn(`>> no provider for ${file.name}`, file)
-      return
-    }
-    return this.ide.$http.post(
-      `/project/${this.ide.project_id}/linked_file/${file.id}/refresh`,
-      {
-        _csrf: window.csrfToken,
-      },
-      {
-        disableAutoLoginRedirect: true,
-      }
-    )
-  }
-
-  renameEntity(entity, name, callback) {
-    if (callback == null) {
-      callback = function () {}
-    }
-    if (entity.name === name) {
-      return
-    }
-    if (name.length >= 150) {
-      return
-    }
-    // check if a doc/file/folder already exists with this name
-    const parent_folder = this.getCurrentFolder()
-    if (this.existsInThisFolder(parent_folder, name)) {
-      return this.nameExistsError()
-    }
-    entity.renamingToName = name
-    return this.ide.$http
-      .post(
-        `/project/${this.ide.project_id}/${entity.type}/${entity.id}/rename`,
-        {
-          name,
-          _csrf: window.csrfToken,
-        }
-      )
-      .then(() => (entity.name = name))
-      .finally(() => (entity.renamingToName = null))
-  }
-
-  deleteEntity(entity, callback) {
-    // We'll wait for the socket.io notification to
-    // delete from scope.
-    if (callback == null) {
-      callback = function () {}
-    }
-    return this.ide.queuedHttp({
-      method: 'DELETE',
-      url: `/project/${this.ide.project_id}/${entity.type}/${entity.id}`,
-      headers: {
-        'X-Csrf-Token': window.csrfToken,
-      },
-    })
-  }
-
-  moveEntity(entity, parent_folder) {
-    // Abort move if the folder being moved (entity) has the parent_folder as child
-    // since that would break the tree structure.
-    if (this._isChildFolder(entity, parent_folder)) {
-      return
-    }
-    // check if a doc/file/folder already exists with this name
-    if (this.existsInThisFolder(parent_folder, entity.name)) {
-      throw new Error('file exists in this location')
-    }
-    // Wait for the http response before doing the move
-    this.ide.queuedHttp
-      .post(
-        `/project/${this.ide.project_id}/${entity.type}/${entity.id}/move`,
-        {
-          folder_id: parent_folder.id,
-          _csrf: window.csrfToken,
-        }
-      )
-      .then(() => {
-        this._moveEntityInScope(entity, parent_folder)
-      })
   }
 
   _isChildFolder(parent_folder, child_folder) {

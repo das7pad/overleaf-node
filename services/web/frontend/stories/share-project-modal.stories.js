@@ -159,25 +159,29 @@ function setupFetchMock(fetchMock) {
 
   fetchMock
     // list contacts
-    .get('express:/user/contacts', { contacts }, { delay })
+    .get('express:/api/user/contacts', { contacts }, { delay })
     // change privacy setting
-    .post('express:/project/:projectId/settings/admin', 200, { delay })
+    .post(
+      'express:/jwt/web/project/:projectId/settings/admin/publicAccessLevel',
+      200,
+      { delay }
+    )
     // update project member (e.g. set privilege level)
-    .put('express:/project/:projectId/users/:userId', 200, { delay })
+    .put('express:/jwt/web/project/:projectId/users/:userId', 200, { delay })
     // remove project member
-    .delete('express:/project/:projectId/users/:userId', 200, { delay })
+    .delete('express:/jwt/web/project/:projectId/users/:userId', 200, { delay })
     // transfer ownership
-    .post('express:/project/:projectId/transfer-ownership', 200, {
+    .post('express:/jwt/web/project/:projectId/transfer-ownership', 200, {
       delay,
     })
     // send invite
-    .post('express:/project/:projectId/invite', 200, { delay })
+    .post('express:/jwt/web/project/:projectId/invite', 200, { delay })
     // delete invite
-    .delete('express:/project/:projectId/invite/:inviteId', 204, {
+    .delete('express:/jwt/web/project/:projectId/invite/:inviteId', 204, {
       delay,
     })
     // resend invite
-    .post('express:/project/:projectId/invite/:inviteId/resend', 200, {
+    .post('express:/jwt/web/project/:projectId/invite/:inviteId/resend', 200, {
       delay,
     })
     // send analytics event

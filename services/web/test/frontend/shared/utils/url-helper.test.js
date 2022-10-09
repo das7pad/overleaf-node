@@ -5,12 +5,21 @@ import { buildUrlWithDetachRole } from '../../../../frontend/js/shared/utils/url
 describe('url-helper', function () {
   let locationStub
   describe('buildUrlWithDetachRole', function () {
+    const originalLocation = window.location
+
     beforeEach(function () {
-      locationStub = sinon.stub(window, 'location')
+      Object.defineProperty(window, 'location', {
+        value: {
+          href: '',
+        },
+      })
+      locationStub = sinon.stub(window.location, 'href')
     })
 
     afterEach(function () {
-      locationStub.restore()
+      Object.defineProperty(window, 'location', {
+        value: originalLocation,
+      })
     })
 
     describe('without mode', function () {

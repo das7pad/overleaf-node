@@ -18,6 +18,7 @@ export function useFileTreeSocketListener() {
     dispatchCreateDoc,
     dispatchCreateFile,
     fileTreeData,
+    updateProjectVersion,
   } = useFileTreeData()
   const { selectedEntityIds, selectedEntityParentIds, select, unselect } =
     useFileTreeSelectable()
@@ -40,7 +41,8 @@ export function useFileTreeSocketListener() {
   )
 
   useEffect(() => {
-    function handleDispatchRename(entityId, name) {
+    function handleDispatchRename(entityId, name, v) {
+      updateProjectVersion(v)
       dispatchRename(entityId, name)
     }
     if (socket) socket.on('reciveEntityRename', handleDispatchRename)
@@ -48,10 +50,11 @@ export function useFileTreeSocketListener() {
       if (socket)
         socket.removeListener('reciveEntityRename', handleDispatchRename)
     }
-  }, [socket, dispatchRename])
+  }, [socket, dispatchRename, updateProjectVersion])
 
   useEffect(() => {
-    function handleDispatchDelete(entityId) {
+    function handleDispatchDelete(entityId, _source, v) {
+      updateProjectVersion(v)
       unselect(entityId)
       if (selectedEntityParentIds.has(entityId)) {
         // we're deleting a folder with a selected children so we need to
@@ -79,20 +82,23 @@ export function useFileTreeSocketListener() {
     fileTreeData,
     selectedEntityIds,
     selectedEntityParentIds,
+    updateProjectVersion,
   ])
 
   useEffect(() => {
-    function handleDispatchMove(entityId, toFolderId) {
+    function handleDispatchMove(entityId, toFolderId, v) {
+      updateProjectVersion(v)
       dispatchMove(entityId, toFolderId)
     }
     if (socket) socket.on('reciveEntityMove', handleDispatchMove)
     return () => {
       if (socket) socket.removeListener('reciveEntityMove', handleDispatchMove)
     }
-  }, [socket, dispatchMove])
+  }, [socket, dispatchMove, updateProjectVersion])
 
   useEffect(() => {
-    function handleDispatchCreateFolder(parentFolderId, folder, userId) {
+    function handleDispatchCreateFolder(parentFolderId, folder, v) {
+      updateProjectVersion(v)
       dispatchCreateFolder(parentFolderId, folder)
     }
     if (socket) socket.on('reciveNewFolder', handleDispatchCreateFolder)
@@ -100,17 +106,18 @@ export function useFileTreeSocketListener() {
       if (socket)
         socket.removeListener('reciveNewFolder', handleDispatchCreateFolder)
     }
-  }, [socket, dispatchCreateFolder])
+  }, [socket, dispatchCreateFolder, updateProjectVersion])
 
   useEffect(() => {
-    function handleDispatchCreateDoc(parentFolderId, doc, _source, userId) {
+    function handleDispatchCreateDoc(parentFolderId, doc, v) {
+      updateProjectVersion(v)
       dispatchCreateDoc(parentFolderId, doc)
     }
     if (socket) socket.on('reciveNewDoc', handleDispatchCreateDoc)
     return () => {
       if (socket) socket.removeListener('reciveNewDoc', handleDispatchCreateDoc)
     }
-  }, [socket, dispatchCreateDoc])
+  }, [socket, dispatchCreateDoc, updateProjectVersion])
 
   useEffect(() => {
     function handleDispatchCreateFile(
@@ -118,8 +125,10 @@ export function useFileTreeSocketListener() {
       file,
       _source,
       linkedFileData,
-      userId
+      userId,
+      v
     ) {
+      updateProjectVersion(v)
       dispatchCreateFile(parentFolderId, file)
       if (linkedFileData) {
         selectEntityIfCreatedByUser(file._id, file.name, userId)
@@ -130,5 +139,10 @@ export function useFileTreeSocketListener() {
       if (socket)
         socket.removeListener('reciveNewFile', handleDispatchCreateFile)
     }
-  }, [socket, dispatchCreateFile, selectEntityIfCreatedByUser])
+  }, [
+    socket,
+    dispatchCreateFile,
+    selectEntityIfCreatedByUser,
+    updateProjectVersion,
+  ])
 }

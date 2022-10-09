@@ -1,11 +1,8 @@
-import importOverleafModules from '../macros/import-overleaf-module.macro'
 import { ScopeDecorator } from './decorators/scope'
 
-const [
-  {
-    import: { default: GitBridgeModal },
-  },
-] = importOverleafModules('gitBridge')
+function GitBridgeModal(...args) {
+  return <code>{JSON.stringify(args)}</code>
+}
 
 export const GitBridgeUrlModal = args => <GitBridgeModal {...args} />
 GitBridgeUrlModal.args = {

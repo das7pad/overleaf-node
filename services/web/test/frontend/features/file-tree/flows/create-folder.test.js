@@ -55,7 +55,7 @@ describe('FileTree Create Folder Flow', function () {
     )
 
     const newFolderName = 'Foo Bar In Root'
-    const matcher = /\/project\/\w+\/folder/
+    const matcher = /jwt\/web\/project\/\w+\/folder/
     const response = {
       folders: [],
       fileRefs: [],
@@ -121,7 +121,7 @@ describe('FileTree Create Folder Flow', function () {
     fireEvent.click(expandButton)
 
     const newFolderName = 'Foo Bar In thefolder'
-    const matcher = /\/project\/\w+\/folder/
+    const matcher = /jwt\/web\/project\/\w+\/folder/
     const response = {
       folders: [],
       fileRefs: [],
@@ -190,7 +190,7 @@ describe('FileTree Create Folder Flow', function () {
     )
 
     const newFolderName = 'Foo Bar In thefolder'
-    const matcher = /\/project\/\w+\/folder/
+    const matcher = /jwt\/web\/project\/\w+\/folder/
     const response = {
       folders: [],
       fileRefs: [],

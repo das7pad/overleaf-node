@@ -37,7 +37,7 @@ describe('<EditorCloneProjectModalWrapper />', function () {
 
   it('posts the generated project name', async function () {
     fetchMock.post(
-      'express:/project/:projectId/clone',
+      'express:/api/project/:projectId/clone',
       {
         status: 200,
         body: { project_id: 'cloned-project' },
@@ -81,9 +81,9 @@ describe('<EditorCloneProjectModalWrapper />', function () {
     await fetchMock.flush(true)
     expect(fetchMock.done()).to.be.true
     const [url, options] = fetchMock.lastCall(
-      'express:/project/:projectId/clone'
+      'express:/api/project/:projectId/clone'
     )
-    expect(url).to.equal('/project/project-1/clone')
+    expect(url).to.equal('/api/project/project-1/clone')
 
     expect(JSON.parse(options.body)).to.deep.equal({
       projectName: 'A Cloned Project',
@@ -101,7 +101,7 @@ describe('<EditorCloneProjectModalWrapper />', function () {
   })
 
   it('handles a generic error response', async function () {
-    const matcher = 'express:/project/:projectId/clone'
+    const matcher = 'express:/api/project/:projectId/clone'
 
     fetchMock.postOnce(matcher, {
       status: 500,
@@ -138,7 +138,7 @@ describe('<EditorCloneProjectModalWrapper />', function () {
   })
 
   it('handles a specific error response', async function () {
-    const matcher = 'express:/project/:projectId/clone'
+    const matcher = 'express:/api/project/:projectId/clone'
 
     fetchMock.postOnce(matcher, {
       status: 400,

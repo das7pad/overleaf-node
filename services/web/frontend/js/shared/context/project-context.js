@@ -35,6 +35,9 @@ export const projectShape = {
     _id: PropTypes.string.isRequired,
     email: PropTypes.string.isRequired,
   }),
+  compiler: PropTypes.string.isRequired,
+  imageName: PropTypes.string.isRequired,
+  version: PropTypes.number.isRequired,
 }
 
 ProjectContext.Provider.propTypes = {
@@ -82,6 +85,8 @@ export function ProjectProvider({ children }) {
     publicAccesLevel: publicAccessLevel,
     tokens,
     owner,
+    imageName,
+    compiler,
   } = project || projectFallback
 
   const value = useMemo(() => {
@@ -95,6 +100,8 @@ export function ProjectProvider({ children }) {
       publicAccessLevel,
       tokens,
       owner,
+      imageName,
+      compiler,
     }
   }, [
     _id,
@@ -106,6 +113,8 @@ export function ProjectProvider({ children }) {
     publicAccessLevel,
     tokens,
     owner,
+    imageName,
+    compiler,
   ])
 
   return (

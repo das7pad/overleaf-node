@@ -48,7 +48,7 @@ describe('<InlineTags />', function () {
 
   it('handles removing a project from a tag', async function () {
     fetchMock.delete(
-      `express:/tag/789fff789fff/project/${copyableProject.id}`,
+      `express:/api/tag/789fff789fff/project/${copyableProject.id}`,
       {
         status: 204,
       },
@@ -62,9 +62,12 @@ describe('<InlineTags />', function () {
     await fireEvent.click(removeButton)
     await waitFor(() =>
       expect(
-        fetchMock.called(`/tag/789fff789fff/project/${copyableProject.id}`, {
-          method: 'DELETE',
-        })
+        fetchMock.called(
+          `/api/tag/789fff789fff/project/${copyableProject.id}`,
+          {
+            method: 'DELETE',
+          }
+        )
       )
     )
     expect(screen.queryByText('My Test Tag')).to.not.exist

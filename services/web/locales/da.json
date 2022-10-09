@@ -224,7 +224,6 @@
   "do_not_link_accounts": "Kæd ikke kontoer sammen",
   "account_has_been_link_to_institution_account": "Din __appName__–konto <b>__email__</b> er nu kædet sammen med din instutionelle konto fra <b>__institutionName__</b>.",
   "account_linking": "Kontosammenkædning",
-  "account_with_email_exists": "Der ser ud til allerede at eksistere en <b>__appName__</b>–konto med emailen <b>__email__</b>.",
   "acct_linked_to_institution_acct": "Du kan <b>logge ind</b> i Overleaf igennem din institutionelle indlogning fra <b>__institutionName__</b>.",
   "acct_linked_to_institution_acct_2": "Du kan <0>logge ind</0> i Overleaf igennem din institutionelle indlogning fra <0>__institutionName__</0>.",
   "alternatively_create_new_institution_account": "Alternativt kan du oprette en <b>ny konto</b> med din institutionsemail (<b>__email__</b>), ved at klikke <b>__clickText__</b>.",

@@ -159,7 +159,7 @@ describe('<FileTreeModalCreateFile/>', function () {
   })
 
   it('creates a new file when the form is submitted', async function () {
-    fetchMock.post('express:/project/:projectId/doc', () => 204)
+    fetchMock.post('express:/jwt/web/project/:projectId/doc', () => 204)
 
     renderWithContext(<OpenWithMode mode="doc" />)
 
@@ -171,7 +171,7 @@ describe('<FileTreeModalCreateFile/>', function () {
     await fireEvent.click(submitButton)
 
     expect(
-      fetchMock.called('express:/project/:projectId/doc', {
+      fetchMock.called('express:/jwt/web/project/:projectId/doc', {
         body: {
           parent_folder_id: 'root-folder-id',
           name: 'test.tex',
@@ -182,7 +182,7 @@ describe('<FileTreeModalCreateFile/>', function () {
 
   it('imports a new file from a project', async function () {
     fetchMock
-      .get('path:/user/projects', {
+      .get('path:/api/user/projects', {
         projects: [
           {
             _id: 'test-project',
@@ -198,7 +198,7 @@ describe('<FileTreeModalCreateFile/>', function () {
           },
         ],
       })
-      .get('express:/project/:projectId/entities', {
+      .get('express:/api/project/:projectId/entities', {
         entities: [
           {
             path: '/foo.tex',
@@ -208,7 +208,7 @@ describe('<FileTreeModalCreateFile/>', function () {
           },
         ],
       })
-      .post('express:/project/:projectId/compile', {
+      .post('express:/api/project/:projectId/compile/headless', {
         status: 'success',
         outputFiles: [
           {
@@ -221,7 +221,7 @@ describe('<FileTreeModalCreateFile/>', function () {
           },
         ],
       })
-      .post('express:/project/:projectId/linked_file', () => 204)
+      .post('express:/jwt/web/project/:projectId/linked_file', () => 204)
 
     renderWithContext(<OpenWithMode mode="project" />)
 
@@ -279,7 +279,7 @@ describe('<FileTreeModalCreateFile/>', function () {
     await fireEvent.click(submitButton)
 
     expect(
-      fetchMock.called('express:/project/:projectId/linked_file', {
+      fetchMock.called('express:/jwt/web/project/:projectId/linked_file', {
         body: {
           name: 'ball.jpg',
           provider: 'project_output_file',
@@ -333,7 +333,7 @@ describe('<FileTreeModalCreateFile/>', function () {
   })
 
   it('import from a URL when the form is submitted', async function () {
-    fetchMock.post('express:/project/:projectId/linked_file', () => 204)
+    fetchMock.post('express:/jwt/web/project/:projectId/linked_file', () => 204)
 
     renderWithContext(<OpenWithMode mode="url" />)
 
@@ -359,7 +359,7 @@ describe('<FileTreeModalCreateFile/>', function () {
     await fireEvent.click(submitButton)
 
     expect(
-      fetchMock.called('express:/project/:projectId/linked_file', {
+      fetchMock.called('express:/jwt/web/project/:projectId/linked_file', {
         body: {
           name: 'test.tex',
           provider: 'url',
@@ -396,7 +396,7 @@ describe('<FileTreeModalCreateFile/>', function () {
 
     const [request] = requests
     expect(request.url).to.equal(
-      '/project/123abc/upload?folder_id=root-folder-id'
+      '/jwt/web/project/123abc/folder/root-folder-id/upload'
     )
     expect(request.method).to.equal('POST')
 
@@ -429,7 +429,7 @@ describe('<FileTreeModalCreateFile/>', function () {
 
     const [request] = requests
     expect(request.url).to.equal(
-      '/project/123abc/upload?folder_id=root-folder-id'
+      '/jwt/web/project/123abc/folder/root-folder-id/upload'
     )
     expect(request.method).to.equal('POST')
 
@@ -462,7 +462,7 @@ describe('<FileTreeModalCreateFile/>', function () {
 
     const [request] = requests
     expect(request.url).to.equal(
-      '/project/123abc/upload?folder_id=root-folder-id'
+      '/jwt/web/project/123abc/folder/root-folder-id/upload'
     )
     expect(request.method).to.equal('POST')
 

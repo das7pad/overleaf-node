@@ -43,6 +43,9 @@ TpdsWorker.js
 BackgroundJobsWorker.js
 UserAndProjectPopulator.coffee
 
+generated/
+output/
+
 public/manifest.json
 
 public/js
@@ -50,6 +53,8 @@ public/minjs
 public/stylesheets
 public/fonts
 public/images
+public/vendor
+public/LICENSE
 
 Gemfile.lock
 

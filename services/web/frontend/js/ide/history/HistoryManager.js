@@ -2,7 +2,6 @@
     camelcase,
     max-len,
     no-return-assign,
-    no-unused-vars,
 */
 // TODO: This file was created by bulk-decaffeinate.
 // Fix any style issues and re-enable lint.
@@ -20,6 +19,10 @@ import displayNameForUser from './util/displayNameForUser'
 import './controllers/HistoryListController'
 import './controllers/HistoryDiffController'
 import './directives/infiniteScroll'
+import {
+  projectJWTGetJSON,
+  projectJWTPOSTJSON,
+} from '../../infrastructure/jwt-fetch-json'
 let HistoryManager
 
 export default HistoryManager = (function () {
@@ -116,20 +119,21 @@ export default HistoryManager = (function () {
         url += `&before=${this.$scope.history.nextBeforeTimestamp}`
       }
       this.$scope.history.loading = true
-      return this.ide.$http.get(url).then(response => {
-        const { data } = response
-        this._loadUpdates(data.updates)
-        this.$scope.history.nextBeforeTimestamp = data.nextBeforeTimestamp
-        if (data.nextBeforeTimestamp == null) {
-          this.$scope.history.atEnd = true
-        }
-        return (this.$scope.history.loading = false)
-      })
+      return projectJWTGetJSON(url)
+        .then(data => {
+          this._loadUpdates(data.updates)
+          this.$scope.history.nextBeforeTimestamp = data.nextBeforeTimestamp
+          if (data.nextBeforeTimestamp == null) {
+            this.$scope.history.atEnd = true
+          }
+          this.$scope.history.loading = false
+        })
+        .finally(() => this.$scope.$applyAsync(() => {}))
     }
 
     reloadDiff() {
       let { diff } = this.$scope.history
-      const { updates, doc } = this.$scope.history.selection
+      const { doc } = this.$scope.history.selection
       const { fromV, toV, start_ts, end_ts } =
         this._calculateRangeFromSelection()
 
@@ -163,10 +167,8 @@ export default HistoryManager = (function () {
           url += `?from=${diff.fromV}&to=${diff.toV}`
         }
 
-        return this.ide.$http
-          .get(url)
-          .then(response => {
-            const { data } = response
+        return projectJWTGetJSON(url)
+          .then(data => {
             diff.loading = false
             const { text, highlights } = this._parseDiff(data)
             diff.text = text
@@ -176,6 +178,7 @@ export default HistoryManager = (function () {
             diff.loading = false
             return (diff.error = true)
           })
+          .finally(() => this.$scope.$applyAsync(() => {}))
       } else {
         diff.deleted = true
         diff.restoreInProgress = false
@@ -186,15 +189,14 @@ export default HistoryManager = (function () {
 
     restoreDeletedDoc(doc) {
       const url = `/project/${this.$scope.project_id}/doc/${doc.id}/restore`
-      return this.ide.$http.post(url, {
-        name: doc.name,
-        _csrf: window.csrfToken,
-      })
+      return projectJWTPOSTJSON(url, { body: { name: doc.name } })
     }
 
     restoreDiff(diff) {
       const url = `/project/${this.$scope.project_id}/doc/${diff.doc.id}/version/${diff.fromV}/restore`
-      return this.ide.$http.post(url, { _csrf: window.csrfToken })
+      return projectJWTPOSTJSON(url).finally(() => {
+        this.$scope.$applyAsync(() => {})
+      })
     }
 
     _parseDiff(diff) {

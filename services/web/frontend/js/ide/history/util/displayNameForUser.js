@@ -13,7 +13,7 @@
 let displayNameForUser
 
 export default displayNameForUser = function (user) {
-  if (user == null) {
+  if (user == null || user.id === '00000000-0000-0000-0000-000000000000') {
     return 'Anonymous'
   }
   if (user.id === window.user.id) {

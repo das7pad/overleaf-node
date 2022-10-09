@@ -18,6 +18,7 @@ export type ExposedSettings = {
   hasSamlBeta?: boolean
   hasSamlFeature: boolean
   isOverleaf: boolean
+  betaEnabled?: boolean
   maxEntitiesPerProject: number
   maxUploadSize: number
   recaptchaDisabled: {

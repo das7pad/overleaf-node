@@ -1,45 +1,39 @@
 import {
-  deleteJSON,
-  getJSON,
-  postJSON,
-  putJSON,
-} from '../../../infrastructure/fetch-json'
-import { executeV2Captcha } from './captcha'
+  projectJWTDeleteJSON,
+  projectJWTGetJSON,
+  projectJWTPOSTJSON,
+  projectJWTPutJSON,
+} from '../../../infrastructure/jwt-fetch-json'
 
 export function sendInvite(projectId, email, privileges) {
-  return executeV2Captcha(
-    window.ExposedSettings.recaptchaDisabled?.invite
-  ).then(grecaptchaResponse => {
-    return postJSON(`/project/${projectId}/invite`, {
-      body: {
-        email, // TODO: normalisedEmail?
-        privileges,
-        'g-recaptcha-response': grecaptchaResponse,
-      },
-    })
+  return projectJWTPOSTJSON(`/project/${projectId}/invite`, {
+    body: {
+      email,
+      privileges,
+    },
   })
 }
 
 export function resendInvite(projectId, invite) {
-  return postJSON(`/project/${projectId}/invite/${invite._id}/resend`)
+  return projectJWTPOSTJSON(`/project/${projectId}/invite/${invite._id}/resend`)
 }
 
 export function revokeInvite(projectId, invite) {
-  return deleteJSON(`/project/${projectId}/invite/${invite._id}`)
+  return projectJWTDeleteJSON(`/project/${projectId}/invite/${invite._id}`)
 }
 
 export function updateMember(projectId, member, data) {
-  return putJSON(`/project/${projectId}/users/${member._id}`, {
+  return projectJWTPutJSON(`/project/${projectId}/users/${member._id}`, {
     body: data,
   })
 }
 
 export function removeMemberFromProject(projectId, member) {
-  return deleteJSON(`/project/${projectId}/users/${member._id}`)
+  return projectJWTDeleteJSON(`/project/${projectId}/users/${member._id}`)
 }
 
 export function transferProjectOwnership(projectId, member) {
-  return postJSON(`/project/${projectId}/transfer-ownership`, {
+  return projectJWTPOSTJSON(`/project/${projectId}/transfer-ownership`, {
     body: {
       user_id: member._id,
     },
@@ -47,15 +41,16 @@ export function transferProjectOwnership(projectId, member) {
 }
 
 export function setProjectAccessLevel(projectId, publicAccessLevel) {
-  return postJSON(`/project/${projectId}/settings/admin`, {
-    body: { publicAccessLevel },
-  })
+  return projectJWTPutJSON(
+    `/project/${projectId}/settings/admin/publicAccessLevel`,
+    { body: { publicAccessLevel } }
+  )
 }
 
 export function listProjectMembers(projectId) {
-  return getJSON(`/project/${projectId}/members`)
+  return projectJWTGetJSON(`/project/${projectId}/members`)
 }
 
 export function listProjectInvites(projectId) {
-  return getJSON(`/project/${projectId}/invites`)
+  return projectJWTGetJSON(`/project/${projectId}/invites`)
 }

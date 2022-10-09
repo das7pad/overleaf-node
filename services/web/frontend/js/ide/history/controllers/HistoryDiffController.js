@@ -19,12 +19,13 @@ App.controller(
       $scope.history.diff.restoreInProgress = true
       return ide.historyManager
         .restoreDeletedDoc($scope.history.diff.doc)
-        .then(function (response) {
-          const { data } = response
-          $scope.history.diff.restoredDocNewId = data.doc_id
-          $scope.history.diff.restoreInProgress = false
-          return ($scope.history.diff.restoreDeletedSuccess = true)
-        })
+        .then(data =>
+          $scope.$applyAsync(() => {
+            $scope.history.diff.restoredDocNewId = data.doc_id
+            $scope.history.diff.restoreInProgress = false
+            $scope.history.diff.restoreDeletedSuccess = true
+          })
+        )
     }
 
     $scope.openRestoreDiffModal = function () {

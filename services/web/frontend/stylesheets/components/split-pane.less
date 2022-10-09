@@ -1,0 +1,79 @@
+.split-pane {
+  display: flex;
+  height: 100%;
+  width: 100%;
+
+  & > .split-pane-resizer {
+    display: flex;
+    align-items: center;
+    justify-content: space-evenly;
+    padding: 0;
+    border: 0;
+    background-color: @editor-resizer-bg-color;
+
+    & > .split-pane-resizer-icon {
+      &::before {
+        font-size: 24px;
+        color: @ol-blue-gray-2;
+      }
+    }
+
+    & > .split-pane-toggler {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0;
+      border: 0;
+      background-color: @editor-toggler-bg-color;
+
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+      font-size: 65%;
+      font-weight: bold;
+      color: @white;
+
+      &:hover {
+        background-color: @editor-toggler-hover-bg-color;
+      }
+    }
+  }
+
+  &.horizontal {
+    flex-direction: row;
+
+    > div:first-child {
+      overflow-x: hidden;
+    }
+
+    & > .split-pane-resizer {
+      cursor: col-resize;
+      flex-direction: column;
+      width: @ui-resizer-size !important;
+
+      & > .split-pane-toggler {
+        flex-direction: column;
+        height: 50px;
+        width: @ui-resizer-size !important;
+      }
+    }
+  }
+  &.vertical {
+    flex-direction: column;
+
+    > div:first-child {
+      overflow-y: hidden;
+    }
+
+    & > .split-pane-resizer {
+      cursor: row-resize;
+      flex-direction: row;
+      height: @ui-resizer-size !important;
+
+      & > .split-pane-toggler {
+        flex-direction: row;
+        height: @ui-resizer-size !important;
+        width: 50px;
+      }
+    }
+  }
+}

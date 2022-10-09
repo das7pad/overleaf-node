@@ -13,7 +13,7 @@ export function useUserProjects() {
   const { signal } = useAbortController()
 
   useEffect(() => {
-    getJSON('/user/projects', { signal })
+    getJSON('/api/user/projects', { signal })
       .then(data => {
         setData(data.projects.sort(alphabetical))
       })

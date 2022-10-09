@@ -42,7 +42,7 @@ describe('<CopyProjectButton />', function () {
 
   it('opens the modal and copies the project ', async function () {
     const copyProjectMock = fetchMock.post(
-      `express:/project/:projectId/clone`,
+      `express:/api/project/:projectId/clone`,
       {
         status: 200,
       },
@@ -62,8 +62,9 @@ describe('<CopyProjectButton />', function () {
 
     await waitFor(
       () =>
-        expect(copyProjectMock.called(`/project/${copyableProject.id}/clone`))
-          .to.be.true
+        expect(
+          copyProjectMock.called(`/api/project/${copyableProject.id}/clone`)
+        ).to.be.true
     )
   })
 })

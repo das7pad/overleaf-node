@@ -1,7 +1,7 @@
 import { expect } from 'chai'
 import sinon from 'sinon'
 import { screen, render, waitFor } from '@testing-library/react'
-import * as eventTracking from '../../../../../frontend/js/infrastructure/event-tracking'
+import eventTracking from '../../../../../frontend/js/infrastructure/event-tracking'
 import SettingsPageRoot from '../../../../../frontend/js/features/settings/components/root'
 
 describe('<SettingsPageRoot />', function () {
@@ -34,6 +34,11 @@ describe('<SettingsPageRoot />', function () {
   })
 
   it('displays page for Overleaf', async function () {
+    window.metaAttributesCache.set('ol-ExposedSettings', {
+      hasAffiliationsFeature: true,
+      isOverleaf: true,
+      betaEnabled: true,
+    })
     render(<SettingsPageRoot />)
 
     await waitFor(() => {
@@ -42,7 +47,7 @@ describe('<SettingsPageRoot />', function () {
     screen.getByText('Emails and Affiliations')
     screen.getByText('Update Account Info')
     screen.getByText('Change Password')
-    screen.getByText('Integrations')
+    // SAAS: screen.getByText('Integrations')
     screen.getByText('Overleaf Beta Program')
     screen.getByText('Sessions')
     screen.getByText('Newsletter')
@@ -55,6 +60,7 @@ describe('<SettingsPageRoot />', function () {
     window.metaAttributesCache.set('ol-ExposedSettings', {
       hasAffiliationsFeature: false,
       isOverleaf: false,
+      betaEnabled: true,
     })
     render(<SettingsPageRoot />)
 
@@ -64,15 +70,15 @@ describe('<SettingsPageRoot />', function () {
     expect(screen.queryByText('Emails and Affiliations')).to.not.exist
     screen.getByText('Update Account Info')
     screen.getByText('Change Password')
-    screen.getByText('Integrations')
-    expect(screen.queryByText('Overleaf Beta Program')).to.not.exist
+    expect(screen.queryByText('Integrations')).to.not.exist
+    expect(screen.queryByText('Overleaf Beta Program')).to.exist
     screen.getByText('Sessions')
     expect(screen.queryByText('Newsletter')).to.not.exist
     expect(
       screen.queryByRole('button', {
         name: 'Delete your account',
       })
-    ).to.not.exist
+    ).to.exist
   })
 
   it('sends tracking event on load', async function () {

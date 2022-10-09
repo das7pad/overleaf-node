@@ -21,7 +21,7 @@ import './directives/toggleSwitch'
 import './controllers/SavingNotificationController'
 import './controllers/CompileButton'
 import './controllers/SwitchToPDFButton'
-import getMeta from '../../utils/meta'
+import { captureException } from '../../infrastructure/error-reporter'
 
 let EditorManager
 
@@ -41,51 +41,9 @@ export default EditorManager = (function () {
         open_doc_id: null,
         open_doc_name: null,
         opening: true,
-        trackChanges: false,
-        wantTrackChanges: false,
         docTooLongErrorShown: false,
-        showRichText: this.showRichText(),
-        newSourceEditor: this.newSourceEditor(),
-        showSymbolPalette: false,
-        toggleSymbolPalette: () => {
-          const newValue = !this.$scope.editor.showSymbolPalette
-          this.$scope.editor.showSymbolPalette = newValue
-          if (newValue && this.$scope.editor.showGalileo) {
-            this.$scope.editor.toggleGalileoPanel()
-          }
-          ide.$scope.$emit('south-pane-toggled', newValue)
-          eventTracking.sendMB(
-            newValue ? 'symbol-palette-show' : 'symbol-palette-hide'
-          )
-        },
-        insertSymbol: symbol => {
-          ide.$scope.$emit('editor:replace-selection', symbol.command)
-          eventTracking.sendMB('symbol-palette-insert')
-        },
-        showGalileo: false,
-        toggleGalileoPanel: () => {
-          const newValue = !this.$scope.editor.showGalileo
-          this.$scope.editor.showGalileo = newValue
-          if (newValue && this.$scope.editor.showSymbolPalette) {
-            this.$scope.editor.toggleSymbolPalette()
-          }
-          ide.$scope.$emit('south-pane-toggled', newValue)
-          eventTracking.sendMB(newValue ? 'galileo-show' : 'galileo-hide')
-        },
-        galileoActivated: false,
-        toggleGalileo: () => {
-          const newValue = !this.$scope.editor.galileoActivated
-          this.$scope.editor.galileoActivated = newValue
-          eventTracking.sendMB(
-            newValue ? 'galileo-activated' : 'galileo-disabled'
-          )
-        },
         multiSelectedCount: 0,
       }
-
-      window.addEventListener('editor:insert-symbol', event => {
-        this.$scope.editor.insertSymbol(event.detail)
-      })
 
       this.$scope.$on('entity:selected', (event, entity) => {
         if (this.$scope.ui.view !== 'history' && entity.type === 'doc') {
@@ -143,13 +101,6 @@ export default EditorManager = (function () {
         Document.flushAll()
       })
 
-      this.$scope.$watch('editor.wantTrackChanges', value => {
-        if (value == null) {
-          return
-        }
-        return this._syncTrackChangesState(this.$scope.editor.sharejs_doc)
-      })
-
       window.addEventListener('editor:open-doc', event => {
         const { doc, ...options } = event.detail
         this.openDoc(doc, options)
@@ -161,48 +112,6 @@ export default EditorManager = (function () {
         return null
       }
       return this.$scope.editor.sharejs_doc.editorType()
-    }
-
-    showRichText() {
-      return (
-        this.localStorage(`editor.mode.${this.$scope.project_id}`) ===
-        'rich-text'
-      )
-    }
-
-    newSourceEditor() {
-      // only use the new source editor if the option to switch is available
-      if (!getMeta('ol-showNewSourceEditorOption')) {
-        return false
-      }
-
-      // We will be restarting the survey later after some time
-      // Until then, we won't force user to use cm6 if they already use ace
-      const showCM6SwitchAwaySurvey = false
-
-      if (!showCM6SwitchAwaySurvey) {
-        const sourceEditor = this.localStorage(
-          `editor.source_editor.${this.$scope.project_id}`
-        )
-
-        return sourceEditor === 'cm6' || sourceEditor == null
-      }
-
-      // the key will be changed when we decided to restart the survey
-      const hasSeenCM6SwitchAwaySurvey = this.localStorage(
-        'editor.has_seen_cm6_switch_away_survey'
-      )
-
-      if (hasSeenCM6SwitchAwaySurvey) {
-        const sourceEditor = this.localStorage(
-          `editor.source_editor.${this.$scope.project_id}`
-        )
-
-        return sourceEditor === 'cm6' || sourceEditor == null
-      } else {
-        // force user to switch to cm6 if they haven't seen the switch away survey
-        return true
-      }
     }
 
     autoOpenDoc() {
@@ -305,8 +214,6 @@ export default EditorManager = (function () {
             )
             return
           }
-
-          this._syncTrackChangesState(sharejs_doc)
 
           this.$scope.$broadcast('doc:opened')
 
@@ -433,6 +340,9 @@ export default EditorManager = (function () {
           sharejs_doc.leaveAndCleanUp()
           this.ide.connectionManager.disconnect({ permanent: true })
           this.ide.reportError(error, meta)
+          captureException(new Error(message), {
+            extra: { error, meta },
+          })
 
           // Tell the user about the error state.
           this.$scope.editor.error_state = true
@@ -491,37 +401,6 @@ export default EditorManager = (function () {
 
     stopIgnoringExternalUpdates() {
       return (this._ignoreExternalUpdates = false)
-    }
-
-    _syncTrackChangesState(doc) {
-      let tryToggle
-      if (doc == null) {
-        return
-      }
-
-      if (this._syncTimeout != null) {
-        clearTimeout(this._syncTimeout)
-        this._syncTimeout = null
-      }
-
-      const want = this.$scope.editor.wantTrackChanges
-      const have = doc.getTrackingChanges()
-      if (want === have) {
-        this.$scope.editor.trackChanges = want
-        return
-      }
-
-      return (tryToggle = () => {
-        const saved = doc.getInflightOp() == null && doc.getPendingOp() == null
-        if (saved) {
-          doc.setTrackingChanges(want)
-          return this.$scope.$apply(() => {
-            return (this.$scope.editor.trackChanges = want)
-          })
-        } else {
-          return (this._syncTimeout = setTimeout(tryToggle, 100))
-        }
-      })()
     }
   }
   EditorManager.initClass()

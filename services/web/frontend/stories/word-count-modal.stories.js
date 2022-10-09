@@ -17,8 +17,8 @@ const messages = [
 export const WordCount = args => {
   useFetchMock(fetchMock => {
     fetchMock.get(
-      'express:/project/:projectId/wordcount',
-      { status: 200, body: { texcount: counts } },
+      'express:/jwt/web/project/:projectId/wordcount',
+      { status: 200, body: counts },
       { delay: 500 }
     )
   })
@@ -29,8 +29,8 @@ export const WordCount = args => {
 export const WordCountWithMessages = args => {
   useFetchMock(fetchMock => {
     fetchMock.get(
-      'express:/project/:projectId/wordcount',
-      { status: 200, body: { texcount: { ...counts, messages } } },
+      'express:/jwt/web/project/:projectId/wordcount',
+      { status: 200, body: { ...counts, messages } },
       { delay: 500 }
     )
   })
@@ -41,7 +41,7 @@ export const WordCountWithMessages = args => {
 export const ErrorResponse = args => {
   useFetchMock(fetchMock => {
     fetchMock.get(
-      'express:/project/:projectId/wordcount',
+      'express:/jwt/web/project/:projectId/wordcount',
       { status: 500 },
       { delay: 500 }
     )

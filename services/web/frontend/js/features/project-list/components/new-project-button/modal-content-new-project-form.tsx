@@ -32,9 +32,8 @@ function ModalContentNewProjectForm({ onCancel, template = 'none' }: Props) {
 
   const createNewProject = () => {
     runAsync(
-      postJSON('/project/new', {
+      postJSON('/api/project/new', {
         body: {
-          _csrf: window.csrfToken,
           projectName,
           template,
         },

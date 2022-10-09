@@ -4,7 +4,7 @@ import fetchMock from 'fetch-mock'
 import sinon from 'sinon'
 import ProjectListRoot from '../../../../../frontend/js/features/project-list/components/project-list-root'
 import { renderWithProjectListContext } from '../helpers/render-with-context'
-import * as eventTracking from '../../../../../frontend/js/infrastructure/event-tracking'
+import eventTracking from '../../../../../frontend/js/infrastructure/event-tracking'
 import {
   projectsData,
   owner,
@@ -16,6 +16,8 @@ const { fullList, currentList, trashedList } = makeLongProjectList(40)
 const userId = owner.id
 
 describe('<ProjectListRoot />', function () {
+  this.timeout(5 * 1000)
+
   const originalLocation = window.location
   const locationStub = sinon.stub()
   let sendSpy: sinon.SinonSpy
@@ -113,7 +115,7 @@ describe('<ProjectListRoot />', function () {
 
           sinon.assert.calledWithMatch(
             locationStub,
-            `/project/download/zip?project_ids=${project1Id},${project2Id}`
+            `/api/project/download/zip?project_ids=${project1Id},${project2Id}`
           )
 
           const allCheckboxes =
@@ -124,7 +126,7 @@ describe('<ProjectListRoot />', function () {
 
         it('opens archive modal for all selected projects and archives all', async function () {
           const archiveProjectMock = fetchMock.post(
-            `express:/project/:projectId/archive`,
+            `express:/api/project/:projectId/archive`,
             {
               status: 200,
             },
@@ -141,20 +143,20 @@ describe('<ProjectListRoot />', function () {
           await waitFor(
             () =>
               expect(
-                archiveProjectMock.called(`/project/${project1Id}/archive`)
+                archiveProjectMock.called(`/api/project/${project1Id}/archive`)
               ).to.be.true
           )
           await waitFor(
             () =>
               expect(
-                archiveProjectMock.called(`/project/${project2Id}/archive`)
+                archiveProjectMock.called(`/api/project/${project2Id}/archive`)
               ).to.be.true
           )
         })
 
         it('opens trash modal for all selected projects and trashes all', async function () {
           const trashProjectMock = fetchMock.post(
-            `express:/project/:projectId/trash`,
+            `express:/api/project/:projectId/trash`,
             {
               status: 200,
             },
@@ -170,13 +172,15 @@ describe('<ProjectListRoot />', function () {
 
           await waitFor(
             () =>
-              expect(trashProjectMock.called(`/project/${project1Id}/trash`)).to
-                .be.true
+              expect(
+                trashProjectMock.called(`/api/project/${project1Id}/trash`)
+              ).to.be.true
           )
           await waitFor(
             () =>
-              expect(trashProjectMock.called(`/project/${project2Id}/trash`)).to
-                .be.true
+              expect(
+                trashProjectMock.called(`/api/project/${project2Id}/trash`)
+              ).to.be.true
           )
         })
 
@@ -235,7 +239,7 @@ describe('<ProjectListRoot />', function () {
         })
 
         it('restores all projects when selected', async function () {
-          fetchMock.delete(`express:/project/:id/archive`, {
+          fetchMock.delete(`express:/api/project/:id/archive`, {
             status: 200,
           })
 
@@ -302,7 +306,7 @@ describe('<ProjectListRoot />', function () {
         })
 
         it('untrashes all the projects', async function () {
-          fetchMock.delete(`express:/project/:id/trash`, {
+          fetchMock.delete(`express:/api/project/:id/trash`, {
             status: 200,
           })
 
@@ -330,7 +334,7 @@ describe('<ProjectListRoot />', function () {
         })
 
         it('removes project from view when archiving', async function () {
-          fetchMock.post(`express:/project/:id/archive`, {
+          fetchMock.post(`express:/api/project/:id/archive`, {
             status: 200,
           })
 
@@ -362,7 +366,7 @@ describe('<ProjectListRoot />', function () {
         })
 
         it('opens the tags dropdown and creates a new tag', async function () {
-          fetchMock.post(`express:/tag`, {
+          fetchMock.post(`express:/api/tag`, {
             status: 200,
             body: {
               _id: this.newTagId,
@@ -370,7 +374,7 @@ describe('<ProjectListRoot />', function () {
               project_ids: [],
             },
           })
-          fetchMock.post(`express:/tag/:id/projects`, {
+          fetchMock.post(`express:/api/tag/:id/projects`, {
             status: 204,
           })
 
@@ -395,9 +399,10 @@ describe('<ProjectListRoot />', function () {
 
           await fetchMock.flush(true)
 
-          expect(fetchMock.called('/tag', { name: this.newTagName })).to.be.true
+          expect(fetchMock.called('/api/tag', { name: this.newTagName })).to.be
+            .true
           expect(
-            fetchMock.called(`/tag/${this.newTagId}/projects`, {
+            fetchMock.called(`/api/tag/${this.newTagId}/projects`, {
               body: {
                 projectIds: [projectsData[0].id, projectsData[1].id],
               },
@@ -409,7 +414,7 @@ describe('<ProjectListRoot />', function () {
 
         it('opens the tags dropdown and remove a tag from selected projects', async function () {
           const deleteProjectsFromTagMock = fetchMock.delete(
-            `express:/tag/:id/projects`,
+            `express:/api/tag/:id/projects`,
             {
               status: 204,
             }
@@ -428,18 +433,21 @@ describe('<ProjectListRoot />', function () {
           await fetchMock.flush(true)
 
           expect(
-            deleteProjectsFromTagMock.called(`/tag/${this.tagId}/projects`, {
-              body: {
-                projectIds: [projectsData[0].id, projectsData[1].id],
-              },
-            })
+            deleteProjectsFromTagMock.called(
+              `/api/tag/${this.tagId}/projects`,
+              {
+                body: {
+                  projectIds: [projectsData[0].id, projectsData[1].id],
+                },
+              }
+            )
           ).to.be.true
           screen.getByRole('button', { name: `${this.tagName} (0)` })
         })
 
         it('select another project, opens the tags dropdown and add a tag only to the untagged project', async function () {
           const addProjectsToTagMock = fetchMock.post(
-            `express:/tag/:id/projects`,
+            `express:/api/tag/:id/projects`,
             {
               status: 204,
             }
@@ -461,7 +469,7 @@ describe('<ProjectListRoot />', function () {
           await fetchMock.flush(true)
 
           expect(
-            addProjectsToTagMock.called(`/tag/${this.tagId}/projects`, {
+            addProjectsToTagMock.called(`/api/tag/${this.tagId}/projects`, {
               body: {
                 projectIds: [projectsData[2].id],
               },
@@ -523,7 +531,7 @@ describe('<ProjectListRoot />', function () {
 
         it('opens the rename modal, and can rename the project, and view updated', async function () {
           const renameProjectMock = fetchMock.post(
-            `express:/project/:id/rename`,
+            `express:/api/project/:id/rename`,
             {
               status: 200,
             }
@@ -558,7 +566,9 @@ describe('<ProjectListRoot />', function () {
           await fetchMock.flush(true)
 
           expect(
-            renameProjectMock.called(`/project/${projectsData[1].id}/rename`)
+            renameProjectMock.called(
+              `/api/project/${projectsData[1].id}/rename`
+            )
           ).to.be.true
 
           const table = await screen.findByRole('table')
@@ -579,7 +589,7 @@ describe('<ProjectListRoot />', function () {
           screen.getByText(projectNameToCopy) // make sure not just empty string
           const copiedProjectName = `${projectNameToCopy} (Copy)`
           const cloneProjectMock = fetchMock.post(
-            `express:/project/:id/clone`,
+            `express:/api/project/:id/clone`,
             {
               status: 200,
               body: {
@@ -617,7 +627,7 @@ describe('<ProjectListRoot />', function () {
           await fetchMock.flush(true)
 
           expect(
-            cloneProjectMock.called(`/project/${projectsData[1].id}/clone`)
+            cloneProjectMock.called(`/api/project/${projectsData[1].id}/clone`)
           ).to.be.true
 
           expect(sendSpy).to.be.calledOnce
@@ -698,15 +708,15 @@ describe('<ProjectListRoot />', function () {
         })
 
         it('maintains original list even after some have been processed', async function () {
+          fetchMock.post('express:/api/project/:id/archive', {
+            status: 200,
+          })
           const totalProjectsToProcess = 2
           selectedMatchesDisplayed(totalProjectsToProcess)
           const button = screen.getByRole('button', { name: 'Confirm' })
           fireEvent.click(button)
           project1Id = allCheckboxes[1].getAttribute('data-project-id')
-          fetchMock.post('express:/project/:id/archive', {
-            status: 200,
-          })
-          fetchMock.post(`/project/${project2Id}/archive`, {
+          fetchMock.post(`/api/project/${project2Id}/archive`, {
             status: 500,
           })
 
@@ -741,7 +751,7 @@ describe('<ProjectListRoot />', function () {
         const linkForProjectToCopy = within(tableRows[1]).getByRole('link')
         const projectNameToCopy = linkForProjectToCopy.textContent
         const copiedProjectName = `${projectNameToCopy} Copy`
-        fetchMock.post(`express:/project/:id/clone`, {
+        fetchMock.post(`express:/api/project/:id/clone`, {
           status: 200,
           body: {
             name: copiedProjectName,

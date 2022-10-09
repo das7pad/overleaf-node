@@ -21,7 +21,7 @@ function DownloadProjectsButton() {
     )
 
     window.location.assign(
-      `/project/download/zip?project_ids=${projectIds.join(',')}`
+      `/api/project/download/zip?project_ids=${projectIds.join(',')}`
     )
 
     const selected = false

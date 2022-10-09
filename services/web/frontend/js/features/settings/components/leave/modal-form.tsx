@@ -47,7 +47,7 @@ function LeaveModalForm({
     }
     setError(null)
     setInFlight(true)
-    postJSON('/user/delete', {
+    postJSON('/api/user/delete', {
       body: {
         password,
       },

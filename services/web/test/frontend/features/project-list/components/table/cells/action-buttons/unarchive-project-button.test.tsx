@@ -43,7 +43,7 @@ describe('<UnarchiveProjectButton />', function () {
   it('unarchive the project and updates the view data', async function () {
     const project = Object.assign({}, archivedProject)
     const unarchiveProjectMock = fetchMock.delete(
-      `express:/project/:projectId/archive`,
+      `express:/api/project/:projectId/archive`,
       {
         status: 200,
       },
@@ -57,8 +57,9 @@ describe('<UnarchiveProjectButton />', function () {
 
     await waitFor(
       () =>
-        expect(unarchiveProjectMock.called(`/project/${project.id}/archive`)).to
-          .be.true
+        expect(
+          unarchiveProjectMock.called(`/api/project/${project.id}/archive`)
+        ).to.be.true
     )
   })
 })

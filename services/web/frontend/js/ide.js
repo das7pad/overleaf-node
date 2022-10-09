@@ -3,7 +3,6 @@
     max-len,
     no-cond-assign,
     no-return-assign,
-    no-unused-vars,
     no-useless-escape,
 */
 // TODO: This file was created by bulk-decaffeinate.
@@ -23,14 +22,10 @@ import ConnectionManager from './ide/connection/ConnectionManager'
 import EditorManager from './ide/editor/EditorManager'
 import OnlineUsersManager from './ide/online-users/OnlineUsersManager'
 import HistoryManager from './ide/history/HistoryManager'
-import HistoryV2Manager from './ide/history/HistoryV2Manager'
 import PermissionsManager from './ide/permissions/PermissionsManager'
 import BinaryFilesManager from './ide/binary-files/BinaryFilesManager'
-import ReferencesManager from './ide/references/ReferencesManager'
 import MetadataManager from './ide/metadata/MetadataManager'
-import './ide/review-panel/ReviewPanelManager'
 import OutlineManager from './features/outline/outline-manager'
-import SafariScrollPatcher from './ide/SafariScrollPatcher'
 import './ide/cobranding/CobrandingDataService'
 import './ide/settings/index'
 import './ide/chat/index'
@@ -43,45 +38,25 @@ import './ide/directives/validFile'
 import './ide/directives/verticalResizablePanes'
 import './ide/services/ide'
 import './directives/focus'
-import './directives/fineUpload'
 import './directives/scroll'
 import './directives/onEnter'
 import './directives/stopPropagation'
 import './directives/rightClick'
 import './directives/expandableTextArea'
-import './directives/videoPlayState'
-import './services/queued-http'
-import './services/validateCaptcha'
-import './services/validateCaptchaV3'
 import './services/wait-for'
 import './filters/formatDate'
 import './main/event'
-import './main/account-upgrade-angular'
 import './main/system-messages'
-import '../../modules/modules-ide.js'
 import './shared/context/controllers/root-context-controller'
 import './features/editor-navigation-toolbar/controllers/editor-navigation-toolbar-controller'
 import './features/pdf-preview/controllers/pdf-preview-controller'
 import './features/share-project-modal/controllers/react-share-project-modal-controller'
-import './features/source-editor/controllers/editor-switch-controller'
-import './features/source-editor/controllers/cm6-switch-away-survey-controller'
-import './features/source-editor/controllers/grammarly-warning-controller'
-import { cleanupServiceWorker } from './utils/service-worker-cleanup'
-import { reportCM6Perf } from './infrastructure/cm6-performance'
+import { localStorage } from './modules/storage'
+import getMeta from './utils/meta'
 
 App.controller(
   'IdeController',
-  function (
-    $scope,
-    $timeout,
-    ide,
-    localStorage,
-    eventTracking,
-    metadata,
-    $q,
-    CobrandingDataService,
-    $window
-  ) {
+  function ($scope, $timeout, ide, eventTracking, metadata) {
     // Don't freak out if we're already in an apply callback
     let err, pdfLayout, userAgent
     $scope.$originalApply = $scope.$apply
@@ -109,8 +84,6 @@ App.controller(
       pdfLayout: 'sideBySide',
       pdfHidden: false,
       pdfWidth: 0,
-      reviewPanelOpen: localStorage(`ui.reviewPanelOpen.${window.project_id}`),
-      miniReviewPanelVisible: false,
       chatResizerSizeOpen: 7,
       chatResizerSizeClosed: 0,
     }
@@ -122,32 +95,14 @@ App.controller(
     $scope.isRestrictedTokenMember = window.isRestrictedTokenMember
 
     $scope.cobranding = {
-      isProjectCobranded: CobrandingDataService.isProjectCobranded(),
-      logoImgUrl: CobrandingDataService.getLogoImgUrl(),
-      submitBtnHtml: CobrandingDataService.getSubmitBtnHtml(),
-      brandVariationName: CobrandingDataService.getBrandVariationName(),
-      brandVariationHomeUrl: CobrandingDataService.getBrandVariationHomeUrl(),
+      isProjectCobranded: false,
+      logoImgUrl: undefined,
+      submitBtnHtml: undefined,
+      brandVariationName: undefined,
+      brandVariationHomeUrl: undefined,
     }
 
     $scope.chat = {}
-
-    ide.toggleReviewPanel = $scope.toggleReviewPanel = function () {
-      $scope.$applyAsync(() => {
-        if (!$scope.project.features.trackChangesVisible) {
-          return
-        }
-        $scope.ui.reviewPanelOpen = !$scope.ui.reviewPanelOpen
-        eventTracking.sendMB('rp-toggle-panel', {
-          value: $scope.ui.reviewPanelOpen,
-        })
-      })
-    }
-
-    $scope.$watch('ui.reviewPanelOpen', function (value) {
-      if (value != null) {
-        return localStorage(`ui.reviewPanelOpen.${window.project_id}`, value)
-      }
-    })
 
     $scope.$on('layout:pdf:resize', function (_, layoutState) {
       $scope.ui.pdfHidden = layoutState.east.initClosed
@@ -184,17 +139,20 @@ App.controller(
 
     ide.validFileRegex = '^[^*/]*$' // Don't allow * and /
 
-    const useFallbackWebsocket =
-      window.location &&
-      window.location.search &&
-      window.location.search.match(/ws=fallback/)
-    // if we previously failed to load the websocket fall back to null (the siteUrl)
-    ide.wsUrl = useFallbackWebsocket ? null : window.sharelatex.wsUrl || null // websocket url (if defined)
-
     ide.project_id = $scope.project_id = window.project_id
     ide.$scope = $scope
+    $scope.project = {
+      _id: getMeta('ol-project_id'),
+      rootDoc_id: getMeta('ol-projectRootDoc_id'),
+      compiler: getMeta('ol-projectCompiler'),
+      imageName: getMeta('ol-projectImageName'),
+      version: getMeta('ol-projectTreeVersion'),
+      features: {
+        trackChangesVisible: false,
+      },
+      name: '',
+    }
 
-    ide.referencesSearchManager = new ReferencesManager(ide, $scope)
     ide.loadingManager = new LoadingManager($scope)
     ide.connectionManager = new ConnectionManager(ide, $scope)
     ide.fileTreeManager = new FileTreeManager(ide, $scope)
@@ -204,12 +162,12 @@ App.controller(
       localStorage,
       eventTracking
     )
-    ide.onlineUsersManager = new OnlineUsersManager(ide, $scope)
-    if (window.data.useV2History) {
-      ide.historyManager = new HistoryV2Manager(ide, $scope, localStorage)
+    if (!$scope.isRestrictedTokenMember) {
+      ide.onlineUsersManager = new OnlineUsersManager(ide, $scope)
     } else {
-      ide.historyManager = new HistoryManager(ide, $scope)
+      $scope.onlineUsersArray = []
     }
+    ide.historyManager = new HistoryManager(ide, $scope)
     ide.permissionsManager = new PermissionsManager(ide, $scope)
     ide.binaryFilesManager = new BinaryFilesManager(ide, $scope)
     ide.metadataManager = new MetadataManager(ide, $scope, metadata)
@@ -236,13 +194,12 @@ If the project has been renamed please look in your project list for a new proje
 `
         )
       }
-      return $timeout(function () {
+      // NOTE: $scope.permissions.write is not immediately available.
+      $timeout(function () {
         if ($scope.permissions.write) {
-          let _labelsInitialLoadDone
           ide.metadataManager.loadProjectMetaFromServer()
-          return (_labelsInitialLoadDone = true)
         }
-      }, 200)
+      }, 1)
     })
 
     // Count the first 'doc:opened' as a sign that the ide is loaded
@@ -255,94 +212,6 @@ If the project has been renamed please look in your project list for a new proje
       }
       $scope.$broadcast('ide:loaded')
       return (_loaded = true)
-    })
-
-    ide.editingSessionHeartbeat = () => {
-      eventTracking.editingSessionHeartbeat(() => {
-        const editorType = ide.editorManager.getEditorType()
-
-        const segmentation = {
-          editorType,
-        }
-
-        if (editorType === 'cm6') {
-          const cm6PerfData = reportCM6Perf()
-
-          // Ignore if no typing has happened
-          if (cm6PerfData.numberOfEntries > 0) {
-            const perfProps = [
-              'Max',
-              'Mean',
-              'Median',
-              'NinetyFifthPercentile',
-              'DocLength',
-              'NumberOfEntries',
-              'MaxUserEventsBetweenDomUpdates',
-              'Grammarly',
-              'SessionLength',
-              'Memory',
-              'Lags',
-              'NonLags',
-              'LongestLag',
-              'MeanLagsPerMeasure',
-              'MeanKeypressesPerMeasure',
-              'MeanKeypressPaint',
-            ]
-
-            for (const prop of perfProps) {
-              const perfValue =
-                cm6PerfData[prop.charAt(0).toLowerCase() + prop.slice(1)]
-              if (perfValue !== null) {
-                segmentation['cm6Perf' + prop] = perfValue
-              }
-            }
-          }
-        }
-
-        return segmentation
-      })
-    }
-
-    $scope.$on('cursor:editor:update', () => {
-      ide.editingSessionHeartbeat()
-    })
-    $scope.$on('scroll:editor:update', () => {
-      ide.editingSessionHeartbeat()
-    })
-
-    angular.element($window).on('click', ide.editingSessionHeartbeat)
-
-    $scope.$on('$destroy', () =>
-      angular.element($window).off('click', ide.editingSessionHeartbeat)
-    )
-
-    const DARK_THEMES = [
-      'ambiance',
-      'chaos',
-      'clouds_midnight',
-      'cobalt',
-      'idle_fingers',
-      'merbivore',
-      'merbivore_soft',
-      'mono_industrial',
-      'monokai',
-      'pastel_on_dark',
-      'solarized_dark',
-      'terminal',
-      'tomorrow_night',
-      'tomorrow_night_blue',
-      'tomorrow_night_bright',
-      'tomorrow_night_eighties',
-      'twilight',
-      'vibrant_ink',
-    ]
-    $scope.darkTheme = false
-    $scope.$watch('settings.editorTheme', function (theme) {
-      if (Array.from(DARK_THEMES).includes(theme)) {
-        return ($scope.darkTheme = true)
-      } else {
-        return ($scope.darkTheme = false)
-      }
     })
 
     ide.localStorage = localStorage
@@ -419,38 +288,6 @@ If the project has been renamed please look in your project list for a new proje
       console.error(err)
     }
 
-    if (ide.browserIsSafari) {
-      ide.safariScrollPatcher = new SafariScrollPatcher($scope)
-    }
-
-    // Fix Chrome 61 and 62 text-shadow rendering
-    let browserIsChrome61or62 = false
-    try {
-      const chromeVersion =
-        parseFloat(navigator.userAgent.split(' Chrome/')[1]) || null
-      browserIsChrome61or62 = chromeVersion != null
-      if (browserIsChrome61or62) {
-        document.styleSheets[0].insertRule(
-          '.ace_editor.ace_autocomplete .ace_completion-highlight { text-shadow: none !important; font-weight: bold; }',
-          1
-        )
-      }
-    } catch (error1) {
-      err = error1
-      console.error(err)
-    }
-
-    // User can append ?ft=somefeature to url to activate a feature toggle
-    ide.featureToggle = __guard__(
-      __guard__(
-        typeof location !== 'undefined' && location !== null
-          ? location.search
-          : undefined,
-        x1 => x1.match(/^\?ft=(\w+)$/)
-      ),
-      x => x[1]
-    )
-
     // Listen for editor:lint event from CM6 linter
     window.addEventListener('editor:lint', event => {
       $scope.hasLintingError = event.detail.hasLintingError
@@ -464,8 +301,6 @@ If the project has been renamed please look in your project list for a new proje
     })
   }
 )
-
-cleanupServiceWorker()
 
 angular.module('SharelatexApp').config(function ($provide) {
   $provide.decorator('$browser', [

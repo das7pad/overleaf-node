@@ -1,9 +1,9 @@
 import { isMainFile } from './editor-files'
 import getMeta from '../../../utils/meta'
-import { deleteJSON, postJSON } from '../../../infrastructure/fetch-json'
+import { projectJWTPOSTJSON } from '../../../infrastructure/jwt-fetch-json'
 import { debounce } from 'lodash'
 import { trackPdfDownload } from './metrics'
-import { enablePdfCaching } from './pdf-caching-flags'
+import { FetchError } from '../../../infrastructure/fetch-json'
 
 const AUTO_COMPILE_MAX_WAIT = 5000
 // We add a 2 second debounce to sending user changes to server if they aren't
@@ -12,13 +12,12 @@ const AUTO_COMPILE_MAX_WAIT = 5000
 // and then again on ack.
 const AUTO_COMPILE_DEBOUNCE = 2500
 
-const searchParams = new URLSearchParams(window.location.search)
-
 export default class DocumentCompiler {
   constructor({
     compilingRef,
+    projectTreeVersionRef,
     projectId,
-    rootDocId,
+    getPathForDocId,
     setChangedAt,
     setCompiling,
     setData,
@@ -29,8 +28,8 @@ export default class DocumentCompiler {
     signal,
   }) {
     this.compilingRef = compilingRef
+    this.getPathForDocId = getPathForDocId
     this.projectId = projectId
-    this.rootDocId = rootDocId
     this.setChangedAt = setChangedAt
     this.setCompiling = setCompiling
     this.setData = setData
@@ -40,13 +39,18 @@ export default class DocumentCompiler {
     this.cleanupCompileResult = cleanupCompileResult
     this.signal = signal
 
+    this.abortPendingCompile = () => {}
     this.clsiServerId = null
     this.currentDoc = null
     this.error = undefined
+    this.projectTreeVersionRef = projectTreeVersionRef
+    this.lastCompiledProjectTreeVersion = projectTreeVersionRef.current
     this.timer = 0
     this.defaultOptions = {
       draft: false,
       stopOnFirstError: false,
+      compilerName: '',
+      imageName: '',
     }
 
     this.debouncedAutoCompile = debounce(
@@ -87,24 +91,35 @@ export default class DocumentCompiler {
 
       window.dispatchEvent(new CustomEvent('flush-changes')) // TODO: wait for this?
 
-      const params = this.buildCompileParams(options)
-
       const t0 = performance.now()
 
+      const currentProjectTreeVersion = this.projectTreeVersionRef.current
+
+      const rootDocId = this.getRootDocOverrideId(options)
+      const rootDocPath = options.rootDocPath || this.getPathForDocId(rootDocId)
+      localStorage.setItem(`doc.path.${rootDocId}`, rootDocPath)
       const body = {
-        rootDoc_id: this.getRootDocOverrideId(),
-        draft: options.draft,
+        autoCompile:
+          options.isAutoCompileOnLoad || options.isAutoCompileOnChange,
         check: 'silent', // NOTE: 'error' and 'validate' are possible, but unused
+        compiler: options.compilerName,
+        draft: options.draft,
+        imageName: options.imageName,
         // use incremental compile for all users but revert to a full compile
-        // if there was previously a server error
-        incrementalCompilesEnabled: !this.error,
+        // if there was previously a server error or the three version changed.
+        incrementalCompilesEnabled:
+          !this.error &&
+          currentProjectTreeVersion === this.lastCompiledProjectTreeVersion,
+        rootDocId,
+        rootDocPath,
         stopOnFirstError: options.stopOnFirstError,
+        syncState: String(currentProjectTreeVersion),
       }
 
-      const data = await postJSON(
-        `/project/${this.projectId}/compile?${params}`,
-        { body, signal: this.signal }
-      )
+      const data = await this.performCompile(body)
+      if (data.status === 'success') {
+        this.lastCompiledProjectTreeVersion = currentProjectTreeVersion
+      }
 
       const compileTimeClientE2E = Math.ceil(performance.now() - t0)
       const { deliveryLatencies, firstRenderDone } = trackPdfDownload(
@@ -123,6 +138,7 @@ export default class DocumentCompiler {
         this.clsiServerId = data.clsiServerId
       }
       this.setData(data)
+      return data
     } catch (error) {
       console.error(error)
       this.cleanupCompileResult()
@@ -132,82 +148,78 @@ export default class DocumentCompiler {
     }
   }
 
+  async performCompile(body) {
+    if (this.signal.aborted) {
+      return {
+        status: 'terminated',
+      }
+    }
+    const c = new AbortController()
+    function abortPendingCompile() {
+      c.abort()
+    }
+    this.abortPendingCompile = abortPendingCompile
+    this.signal.addEventListener('abort', abortPendingCompile)
+    try {
+      return await projectJWTPOSTJSON(`/project/${this.projectId}/compile`, {
+        body,
+        signal: c.signal,
+        swallowAbortError: false,
+      })
+    } catch (err) {
+      if (
+        c.signal.aborted ||
+        (err instanceof FetchError && err.cause?.name === 'AbortError')
+      ) {
+        return {
+          status: 'terminated',
+        }
+      }
+      throw err
+    } finally {
+      this.signal.removeEventListener('abort', abortPendingCompile)
+      this.abortPendingCompile = () => {}
+    }
+  }
+
   // parse the text of the current doc in the editor
   // if it contains "\documentclass" then use this as the root doc
-  getRootDocOverrideId() {
+  getRootDocOverrideId({ rootDocId, isAutoCompileOnLoad }) {
+    if (isAutoCompileOnLoad) {
+      return rootDocId
+    }
     // only override when not in the root doc itself
-    if (this.currentDoc.doc_id !== this.rootDocId) {
+    if (this.currentDoc.doc_id !== rootDocId) {
       const snapshot = this.currentDoc.getSnapshot()
 
       if (snapshot && isMainFile(snapshot)) {
+        localStorage.setItem(
+          `doc.isValidRootDoc.${this.currentDoc.doc_id}`,
+          'true'
+        )
         return this.currentDoc.doc_id
+      } else {
+        localStorage.setItem(
+          `doc.isValidRootDoc.${this.currentDoc.doc_id}`,
+          'false'
+        )
       }
     }
 
-    return null
-  }
-
-  // build the query parameters added to post-compile requests
-  buildPostCompileParams() {
-    const params = new URLSearchParams()
-
-    // the id of the CLSI server that processed the previous compile request
-    if (this.clsiServerId) {
-      params.set('clsiserverid', this.clsiServerId)
-    }
-
-    return params
-  }
-
-  // build the query parameters for the compile request
-  buildCompileParams(options) {
-    const params = new URLSearchParams()
-
-    // note: no clsiserverid query param is set on "compile" requests,
-    // as this is added in the backend by the web api
-
-    // tell the server whether this is an automatic or manual compile request
-    if (options.isAutoCompileOnLoad || options.isAutoCompileOnChange) {
-      params.set('auto_compile', 'true')
-    }
-
-    // use the feature flag to enable PDF caching
-    if (enablePdfCaching) {
-      params.set('enable_pdf_caching', 'true')
-    }
-
-    // use the feature flag to enable "file line errors"
-    if (searchParams.get('file_line_errors') === 'true') {
-      params.file_line_errors = 'true'
-    }
-
-    return params
+    return rootDocId
   }
 
   // send a request to stop the current compile
   stopCompile() {
-    // NOTE: no stoppingCompile state, as this should happen fairly quickly
-    // and doesn't matter if it runs twice.
-
-    const params = this.buildPostCompileParams()
-
-    return postJSON(`/project/${this.projectId}/compile/stop?${params}`, {
-      signal: this.signal,
-    })
-      .catch(error => {
-        console.error(error)
-        this.setError('error')
-      })
-      .finally(() => {
-        this.setCompiling(false)
-      })
+    this.abortPendingCompile()
+    this.setCompiling(false)
   }
 
   // send a request to clear the cache
   clearCache() {
-    const params = this.buildPostCompileParams()
-
-    return deleteJSON(`/project/${this.projectId}/output?${params}`, {
+    this.abortPendingCompile()
+    return projectJWTPOSTJSON(`/project/${this.projectId}/clear-cache`, {
+      body: { clsiServerId: this.clsiServerId },
       signal: this.signal,
     }).catch(error => {
       console.error(error)

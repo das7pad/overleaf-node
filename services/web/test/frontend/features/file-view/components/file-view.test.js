@@ -36,12 +36,12 @@ describe('<FileView/>', function () {
 
   describe('for a text file', function () {
     it('shows a loading indicator while the file is loading', async function () {
-      fetchMock.head('express:/project/:project_id/file/:file_id', {
+      fetchMock.head('express:/api/project/:project_id/file/:file_id', {
         status: 201,
         headers: { 'Content-Length': 10000 },
       })
       fetchMock.get(
-        'express:/project/:project_id/file/:file_id',
+        'express:/api/project/:project_id/file/:file_id',
         'Text file content'
       )
 

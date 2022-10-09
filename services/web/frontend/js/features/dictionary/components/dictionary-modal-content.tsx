@@ -25,7 +25,7 @@ export default function DictionaryModalContent({
     word => {
       ignoredWords.remove(word)
       runAsync(
-        postJSON('/spelling/unlearn', {
+        postJSON('/api/spelling/unlearn', {
           body: {
             word,
           },

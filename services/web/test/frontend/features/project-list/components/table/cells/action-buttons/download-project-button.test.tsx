@@ -40,7 +40,7 @@ describe('<DownloadProjectButton />', function () {
 
     sinon.assert.calledWithMatch(
       locationStub,
-      `/project/${projectsData[0].id}/download/zip`
+      `/api/project/${projectsData[0].id}/download/zip`
     )
   })
 })

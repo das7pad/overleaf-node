@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { merge } from 'webpack-merge'
 import path from 'path'
 import webpack from 'webpack'

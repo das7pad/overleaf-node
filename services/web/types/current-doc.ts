@@ -1,6 +1,5 @@
 import EventEmitter from '../frontend/js/utils/EventEmitter'
 import { ShareDoc } from './share-doc'
-import { EditorFacade } from '../modules/source-editor/frontend/js/extensions/realtime'
 import {
   AnyOperation,
   Change,
@@ -28,7 +27,6 @@ export interface CurrentDoc extends EventEmitter {
     ) => Change<InsertOperation | ChangeOperation | DeleteOperation>[]
     validate: (text: string) => void
   }
-  attachToCM6: (editor: EditorFacade) => void
   detachFromCM6: () => void
   submitOp: (op: AnyOperation) => void
   getSnapshot: () => string

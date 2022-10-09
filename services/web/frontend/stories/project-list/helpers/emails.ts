@@ -46,7 +46,7 @@ const fakeNotificationData = {
 export function defaultSetupMocks(fetchMock: FetchMockStatic) {
   // at least one project is required to show some notifications
   const projects = [{}] as Project[]
-  fetchMock.post(/\/api\/project/, {
+  fetchMock.post('express:/api/project', {
     status: 200,
     body: {
       projects,
@@ -69,13 +69,13 @@ export function setDefaultMeta() {
 
 export function errorsMocks(fetchMock: FetchMockStatic) {
   defaultSetupMocks(fetchMock)
-  fetchMock.post(/\/user\/emails\/*/, 500, { delay: MOCK_DELAY })
+  fetchMock.post(/\/api\/user\/emails\/*/, 500, { delay: MOCK_DELAY })
   fetchMock.post(
     /\/project\/[A-Za-z0-9]+\/invite\/token\/[A-Za-z0-9]+\/accept/,
     500,
     { delay: MOCK_DELAY }
   )
-  fetchMock.post(/\/user\/emails\/send-reconfirmation/, 500, {
+  fetchMock.post(/\/api\/user\/emails\/send-reconfirmation/, 500, {
     delay: MOCK_DELAY,
   })
 }
@@ -115,7 +115,7 @@ export function setReconfirmationMeta() {
 
 export function reconfirmationSetupMocks(fetchMock: FetchMockStatic) {
   defaultSetupMocks(fetchMock)
-  fetchMock.post(/\/user\/emails\/resend_confirmation/, 200, {
+  fetchMock.post(/\/api\/user\/emails\/resend_confirmation/, 200, {
     delay: MOCK_DELAY,
   })
 }
@@ -141,7 +141,7 @@ export function reconfirmAffiliationSetupMocks(fetchMock: FetchMockStatic) {
     },
     { overwriteRoutes: true }
   )
-  fetchMock.post(/\/user\/emails\/send-reconfirmation/, 200, {
+  fetchMock.post(/\/api\/user\/emails\/send-reconfirmation/, 200, {
     delay: MOCK_DELAY,
   })
 }

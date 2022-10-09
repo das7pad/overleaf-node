@@ -22,14 +22,14 @@ describe('<TagsList />', function () {
       },
     ])
 
-    fetchMock.post('/tag', {
+    fetchMock.post('/api/tag', {
       _id: 'eee888eee888',
       name: 'New Tag',
       project_ids: [],
     })
-    fetchMock.post('express:/tag/:tagId/projects', 200)
-    fetchMock.post('express:/tag/:tagId/rename', 200)
-    fetchMock.delete('express:/tag/:tagId', 200)
+    fetchMock.post('express:/api/tag/:tagId/projects', 200)
+    fetchMock.post('express:/api/tag/:tagId/rename', 200)
+    fetchMock.delete('express:/api/tag/:tagId', 200)
 
     renderWithProjectListContext(<TagsList />)
 
@@ -146,7 +146,7 @@ describe('<TagsList />', function () {
 
       await fireEvent.click(createButton)
 
-      await waitFor(() => expect(fetchMock.called(`/tag`)).to.be.true)
+      await waitFor(() => expect(fetchMock.called(`/api/tag`)).to.be.true)
 
       expect(screen.queryByRole('dialog', { hidden: false })).to.be.null
 
@@ -233,7 +233,9 @@ describe('<TagsList />', function () {
 
       await fireEvent.click(renameButton)
 
-      await waitFor(() => expect(fetchMock.called(`/tag/abc123def456/rename`)))
+      await waitFor(() =>
+        expect(fetchMock.called(`/api/tag/abc123def456/rename`))
+      )
 
       expect(screen.queryByRole('dialog', { hidden: false })).to.be.null
 
@@ -274,7 +276,7 @@ describe('<TagsList />', function () {
       const deleteButton = within(modal).getByRole('button', { name: 'Delete' })
       await fireEvent.click(deleteButton)
 
-      await waitFor(() => expect(fetchMock.called(`/tag/bcd234efg567`)))
+      await waitFor(() => expect(fetchMock.called(`/api/tag/bcd234efg567`)))
 
       expect(screen.queryByRole('dialog', { hidden: false })).to.be.null
       expect(
@@ -285,13 +287,15 @@ describe('<TagsList />', function () {
     })
 
     it('a failed request displays an error message', async function () {
-      fetchMock.delete('express:/tag/:tagId', 500, { overwriteRoutes: true })
+      fetchMock.delete('express:/api/tag/:tagId', 500, {
+        overwriteRoutes: true,
+      })
 
       const modal = screen.getAllByRole('dialog', { hidden: false })[0]
       const deleteButton = within(modal).getByRole('button', { name: 'Delete' })
       await fireEvent.click(deleteButton)
 
-      await waitFor(() => expect(fetchMock.called(`/tag/bcd234efg567`)))
+      await waitFor(() => expect(fetchMock.called(`/api/tag/bcd234efg567`)))
 
       within(modal).getByText('Sorry, something went wrong')
     })

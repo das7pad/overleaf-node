@@ -41,13 +41,13 @@ describe('<ChatPane />', function () {
       id: 'msg_1',
       content: 'a message',
       user,
-      timestamp: new Date().getTime(),
+      timestamp: new Date(),
     },
     {
       id: 'msg_2',
       content: 'another message',
       user,
-      timestamp: new Date().getTime(),
+      timestamp: new Date(),
     },
   ]
 

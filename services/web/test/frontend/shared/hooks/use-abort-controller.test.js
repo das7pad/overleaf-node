@@ -4,6 +4,7 @@ import React from 'react'
 import { render, waitFor } from '@testing-library/react'
 import useAbortController from '../../../../frontend/js/shared/hooks/use-abort-controller'
 import { getJSON } from '../../../../frontend/js/infrastructure/fetch-json'
+import PropTypes from 'prop-types'
 
 describe('useAbortController', function () {
   let status
@@ -42,6 +43,8 @@ describe('useAbortController', function () {
 
     return null
   }
+
+  AbortableRequest.propTypes = { url: PropTypes.string }
 
   it('calls then when the request succeeds', async function () {
     fetchMock.get('/test', { status: 204 }, { delay: 100 })

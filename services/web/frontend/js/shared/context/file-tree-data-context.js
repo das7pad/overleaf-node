@@ -139,6 +139,17 @@ export function FileTreeDataProvider({ children }) {
 
   const { rootFolder } = project || {}
 
+  const [projectTreeVersion, setProjectTreeVersion] =
+    useScopeValue('project.version')
+  const updateProjectVersion = useCallback(
+    v => {
+      if (v && v > projectTreeVersion) {
+        setProjectTreeVersion(v)
+      }
+    },
+    [projectTreeVersion, setProjectTreeVersion]
+  )
+
   const [{ fileTreeData, fileCount }, dispatch] = useReducer(
     fileTreeMutableReducer,
     rootFolder,
@@ -199,6 +210,8 @@ export function FileTreeDataProvider({ children }) {
 
   const value = useMemo(() => {
     return {
+      projectTreeVersion,
+      updateProjectVersion,
       dispatchCreateDoc,
       dispatchCreateFile,
       dispatchCreateFolder,
@@ -212,6 +225,8 @@ export function FileTreeDataProvider({ children }) {
       setSelectedEntities,
     }
   }, [
+    projectTreeVersion,
+    updateProjectVersion,
     dispatchCreateDoc,
     dispatchCreateFile,
     dispatchCreateFolder,

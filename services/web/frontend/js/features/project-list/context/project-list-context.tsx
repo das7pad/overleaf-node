@@ -349,7 +349,7 @@ export function ProjectListProvider({ children }: ProjectListProviderProps) {
       // clone API not using camelCase and does not return all data
 
       const owner = {
-        id: project.owner?._id,
+        id: project.owner?._id || getMeta('ol-user_id'),
         email: project.owner?.email,
         firstName: project.owner?.first_name,
         lastName: project.owner?.last_name,
@@ -359,6 +359,7 @@ export function ProjectListProvider({ children }: ProjectListProviderProps) {
         ...project,
         id: project.project_id,
         owner,
+        lastUpdated: new Date().toISOString(),
         lastUpdatedBy: owner,
         source: 'owner',
         trashed: false,

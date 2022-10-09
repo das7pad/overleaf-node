@@ -9,14 +9,27 @@ import {
 import { useTranslation } from 'react-i18next'
 import {
   getUserFacingMessage,
-  postJSON,
+  putJSON,
 } from '../../../infrastructure/fetch-json'
-import getMeta from '../../../utils/meta'
-import { ExposedSettings } from '../../../../../types/exposed-settings'
 import useAsync from '../../../shared/hooks/use-async'
 import { useUserContext } from '../../../shared/context/user-context'
+import getMeta from 'frontend/js/utils/meta'
+import { ExposedSettings } from '../../../../../types/exposed-settings'
 
 function AccountInfoSection() {
+  const { t } = useTranslation()
+
+  return (
+    <>
+      <h3>{t('update_account_info')}</h3>
+      <AccountEmailSection />
+      <hr />
+      <AccountNameSection />
+    </>
+  )
+}
+
+function AccountEmailSection() {
   const { t } = useTranslation()
   const { hasAffiliationsFeature } = getMeta(
     'ol-ExposedSettings'
@@ -24,18 +37,9 @@ function AccountInfoSection() {
   const isExternalAuthenticationSystemUsed = getMeta(
     'ol-isExternalAuthenticationSystemUsed'
   ) as boolean
-  const shouldAllowEditingDetails = getMeta(
-    'ol-shouldAllowEditingDetails'
-  ) as boolean
-  const {
-    first_name: initialFirstName,
-    last_name: initialLastName,
-    email: initialEmail,
-  } = useUserContext()
+  const { email: initialEmail } = useUserContext()
 
   const [email, setEmail] = useState(initialEmail)
-  const [firstName, setFirstName] = useState(initialFirstName)
-  const [lastName, setLastName] = useState(initialLastName)
   const { isLoading, isSuccess, isError, error, runAsync } = useAsync()
   const [isFormValid, setIsFormValid] = useState(true)
 
@@ -44,19 +48,8 @@ function AccountInfoSection() {
     setIsFormValid(event.target.validity.valid)
   }
 
-  const handleFirstNameChange = (
-    event: React.ChangeEvent<HTMLInputElement>
-  ) => {
-    setFirstName(event.target.value)
-  }
-
-  const handleLastNameChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    setLastName(event.target.value)
-  }
-
   const canUpdateEmail =
     !hasAffiliationsFeature && !isExternalAuthenticationSystemUsed
-  const canUpdateNames = shouldAllowEditingDetails
 
   const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault()
@@ -64,11 +57,9 @@ function AccountInfoSection() {
       return
     }
     runAsync(
-      postJSON('/user/settings', {
+      putJSON('/api/user/settings/email', {
         body: {
-          email: canUpdateEmail ? email : undefined,
-          first_name: canUpdateNames ? firstName : undefined,
-          last_name: canUpdateNames ? lastName : undefined,
+          email,
         },
       })
     ).catch(() => {})
@@ -76,8 +67,7 @@ function AccountInfoSection() {
 
   return (
     <>
-      <h3>{t('update_account_info')}</h3>
-      <form id="account-info-form" onSubmit={handleSubmit}>
+      <form id="account-email-form" onSubmit={handleSubmit}>
         {hasAffiliationsFeature ? null : (
           <ReadOrWriteFormGroup
             id="email-input"
@@ -89,6 +79,68 @@ function AccountInfoSection() {
             required
           />
         )}
+        {isSuccess ? (
+          <FormGroup>
+            <Alert bsStyle="success">{t('thanks_settings_updated')}</Alert>
+          </FormGroup>
+        ) : null}
+        {isError ? (
+          <FormGroup>
+            <Alert bsStyle="danger">{getUserFacingMessage(error)}</Alert>
+          </FormGroup>
+        ) : null}
+        <Button
+          form="account-email-form"
+          type="submit"
+          bsStyle="primary"
+          disabled={isLoading || !isFormValid}
+        >
+          {isLoading ? <>{t('changing')}…</> : t('change')}
+        </Button>
+      </form>
+    </>
+  )
+}
+
+function AccountNameSection() {
+  const { t } = useTranslation()
+  const shouldAllowEditingDetails = getMeta(
+    'ol-shouldAllowEditingDetails'
+  ) as boolean
+  const { first_name: initialFirstName, last_name: initialLastName } =
+    useUserContext()
+
+  const [firstName, setFirstName] = useState(initialFirstName)
+  const [lastName, setLastName] = useState(initialLastName)
+  const { isLoading, isSuccess, isError, error, runAsync } = useAsync()
+
+  const handleFirstNameChange = (
+    event: React.ChangeEvent<HTMLInputElement>
+  ) => {
+    setFirstName(event.target.value)
+  }
+
+  const handleLastNameChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    setLastName(event.target.value)
+  }
+
+  const canUpdateNames = shouldAllowEditingDetails
+
+  const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault()
+    runAsync(
+      putJSON('/api/user/settings/name', {
+        body: {
+          first_name: firstName,
+          last_name: lastName,
+        },
+      })
+    ).catch(() => {})
+  }
+
+  return (
+    <>
+      <form id="account-name-form" onSubmit={handleSubmit}>
         <ReadOrWriteFormGroup
           id="first-name-input"
           type="text"
@@ -117,12 +169,12 @@ function AccountInfoSection() {
             <Alert bsStyle="danger">{getUserFacingMessage(error)}</Alert>
           </FormGroup>
         ) : null}
-        {canUpdateEmail || canUpdateNames ? (
+        {canUpdateNames ? (
           <Button
-            form="account-info-form"
+            form="account-name-form"
             type="submit"
             bsStyle="primary"
-            disabled={isLoading || !isFormValid}
+            disabled={isLoading}
           >
             {isLoading ? <>{t('saving')}…</> : t('update')}
           </Button>

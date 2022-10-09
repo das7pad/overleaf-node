@@ -67,8 +67,8 @@ describe('FileTree Rename Entity Flow', function () {
     onSelect.reset()
   })
 
-  it('renames doc', function () {
-    const fetchMatcher = /\/project\/\w+\/doc\/\w+\/rename/
+  it('renames doc', async function () {
+    const fetchMatcher = /\/jwt\/web\/project\/\w+\/doc\/\w+\/rename/
     fetchMock.post(fetchMatcher, 204)
 
     const input = initItemRename('a.tex')
@@ -77,7 +77,7 @@ describe('FileTree Rename Entity Flow', function () {
 
     screen.getByRole('treeitem', { name: 'b.tex' })
 
-    const lastFetchBody = getLastFetchBody(fetchMatcher)
+    const lastFetchBody = await getLastFetchBody(fetchMatcher)
     expect(lastFetchBody.name).to.equal('b.tex')
 
     // onSelect should have been called once only: when the doc was selected for
@@ -85,8 +85,8 @@ describe('FileTree Rename Entity Flow', function () {
     sinon.assert.calledOnce(onSelect)
   })
 
-  it('renames folder', function () {
-    const fetchMatcher = /\/project\/\w+\/folder\/\w+\/rename/
+  it('renames folder', async function () {
+    const fetchMatcher = /\/jwt\/web\/project\/\w+\/folder\/\w+\/rename/
     fetchMock.post(fetchMatcher, 204)
 
     const input = initItemRename('folder')
@@ -95,12 +95,12 @@ describe('FileTree Rename Entity Flow', function () {
 
     screen.getByRole('treeitem', { name: 'new folder name' })
 
-    const lastFetchBody = getLastFetchBody(fetchMatcher)
+    const lastFetchBody = await getLastFetchBody(fetchMatcher)
     expect(lastFetchBody.name).to.equal('new folder name')
   })
 
-  it('renames file in subfolder', function () {
-    const fetchMatcher = /\/project\/\w+\/file\/\w+\/rename/
+  it('renames file in subfolder', async function () {
+    const fetchMatcher = /\/jwt\/web\/project\/\w+\/file\/\w+\/rename/
     fetchMock.post(fetchMatcher, 204)
 
     const expandButton = screen.queryByRole('button', { name: 'Expand' })
@@ -113,12 +113,12 @@ describe('FileTree Rename Entity Flow', function () {
     screen.getByRole('treeitem', { name: 'folder' })
     screen.getByRole('treeitem', { name: 'd.tex' })
 
-    const lastFetchBody = getLastFetchBody(fetchMatcher)
+    const lastFetchBody = await getLastFetchBody(fetchMatcher)
     expect(lastFetchBody.name).to.equal('d.tex')
   })
 
   it('reverts rename on error', async function () {
-    const fetchMatcher = /\/project\/\w+\/doc\/\w+\/rename/
+    const fetchMatcher = /\/jwt\/web\/project\/\w+\/doc\/\w+\/rename/
     fetchMock.post(fetchMatcher, 500)
 
     const input = initItemRename('a.tex')
@@ -201,7 +201,8 @@ describe('FileTree Rename Entity Flow', function () {
 
     return screen.getByRole('textbox')
   }
-  function getLastFetchBody(matcher) {
+  async function getLastFetchBody(matcher) {
+    await fetchMock.flush(true)
     const [, { body }] = fetchMock.lastCall(matcher)
     return JSON.parse(body)
   }

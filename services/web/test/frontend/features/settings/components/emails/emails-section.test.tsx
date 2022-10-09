@@ -115,7 +115,7 @@ describe('<EmailsSection />', function () {
     render(<EmailsSection />)
     await waitForElementToBeRemoved(() => screen.getByText(/loading/i))
 
-    fetchMock.post('/user/emails/resend_confirmation', 200)
+    fetchMock.post('/api/user/emails/resend_confirmation', 200)
 
     const button = screen.getByRole('button', {
       name: /resend confirmation email/i,
@@ -145,7 +145,7 @@ describe('<EmailsSection />', function () {
     render(<EmailsSection />)
     await waitForElementToBeRemoved(() => screen.getByText(/loading/i))
 
-    fetchMock.post('/user/emails/resend_confirmation', 503)
+    fetchMock.post('/api/user/emails/resend_confirmation', 503)
 
     const button = screen.getByRole('button', {
       name: /resend confirmation email/i,

@@ -3,8 +3,10 @@ import { Button } from 'react-bootstrap'
 import Tooltip from '../../../shared/components/tooltip'
 import Icon from '../../../shared/components/icon'
 import { useDetachCompileContext as useCompileContext } from '../../../shared/context/detach-compile-context'
+import { useProjectContext } from '../../../shared/context/project-context'
 
 function PdfHybridDownloadButton() {
+  const { name } = useProjectContext()
   const { pdfDownloadUrl } = useCompileContext()
 
   const { t } = useTranslation()
@@ -21,7 +23,7 @@ function PdfHybridDownloadButton() {
       <Button
         bsStyle="link"
         disabled={!pdfDownloadUrl}
-        download
+        download={`${name}.pdf`}
         href={pdfDownloadUrl || '#'}
         target="_blank"
         style={{ pointerEvents: 'auto' }}

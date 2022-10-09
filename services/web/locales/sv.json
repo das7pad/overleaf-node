@@ -202,7 +202,6 @@
   "do_not_have_acct_or_do_not_want_to_link": "Om du inte har ett <b>__appName__</b>-konto, eller om du inte vill länka till ditt <b>__institutionName__</b>-konto, vänligen klicka på <b>__clickText__</b>.",
   "do_not_link_accounts": "Länka ej konton",
   "account_has_been_link_to_institution_account": "Ditt __appName__-konto för <b>__email__</b> har länkats till ditt institutionella konto <b>__institutionName__</b>.",
-  "account_with_email_exists": "Det verkar som om ett <b>__appName__</b>-konto med e-post-adressen <b>__email__</b> redan finns.",
   "acct_linked_to_institution_acct": "Detta kontot är <b>länkat</b> till ditt institutionella konto <b>__institutionName__</b>.",
   "alternatively_create_new_institution_account": "Alternativt kan du skapa ett <b>nytt konto</b> med din institutions-e-post-adress (<b>__email__</b>) genom att klicka på <b>__clickText__</b>.",
   "as_a_member_of_sso_required": "Som medlem i <b>__institutionName__</b> måste du logga in på <b>__appName__</b> via din institutionsportal.",

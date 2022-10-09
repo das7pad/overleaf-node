@@ -1,4 +1,4 @@
-import { act } from '@testing-library/react-hooks'
+import { act } from '@testing-library/react-hooks/dom'
 import { expect } from 'chai'
 import { renderHookWithEditorContext } from '../../helpers/render-with-context'
 import sysendTestHelper from '../../helpers/sysend'

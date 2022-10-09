@@ -2,17 +2,17 @@ import { useEffect } from 'react'
 import SystemMessage from './system-message'
 import TranslationMessage from './translation-message'
 import useAsync from '../../../../shared/hooks/use-async'
-import { getJSON } from '../../../../infrastructure/fetch-json'
 import getMeta from '../../../../utils/meta'
 import {
   SystemMessage as TSystemMessage,
   SuggestedLanguage,
 } from '../../../../../../types/project/dashboard/system-message'
+import { jwtGetJSON } from '../../../../infrastructure/jwt-fetch-json'
 
 const MESSAGE_POLL_INTERVAL = 15 * 60 * 1000
 
 function SystemMessages() {
-  const { data: messages, runAsync } = useAsync<TSystemMessage[]>()
+  const { data: messages, setData, runAsync } = useAsync<TSystemMessage[]>()
   const suggestedLanguage = getMeta('ol-suggestedLanguage', undefined) as
     | SuggestedLanguage
     | undefined
@@ -24,16 +24,31 @@ function SystemMessages() {
         return
       }
 
-      runAsync(getJSON('/system/messages')).catch(console.error)
+      if (!getMeta('ol-jwtLoggedInUser')) {
+        return
+      }
+      runAsync(
+        jwtGetJSON({
+          name: 'ol-jwtLoggedInUser',
+          url: '/system/messages',
+          refreshEndpoint: '/api/user/jwt',
+        })
+      ).catch(console.error)
     }
-    pollMessages()
+
+    const cached = getMeta('ol-systemMessages')
+    if (cached) {
+      setData(cached)
+    } else {
+      pollMessages()
+    }
 
     const interval = setInterval(pollMessages, MESSAGE_POLL_INTERVAL)
 
     return () => {
       clearInterval(interval)
     }
-  }, [runAsync])
+  }, [runAsync, setData])
 
   if (!messages?.length && !suggestedLanguage) {
     return null

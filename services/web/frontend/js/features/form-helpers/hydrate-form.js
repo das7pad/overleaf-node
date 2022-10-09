@@ -104,6 +104,17 @@ async function validateCaptcha(formEl) {
   return captchaResponse
 }
 
+async function login(formEl) {
+  const email = formEl.querySelector('[name="email"]').value
+  const password = formEl.querySelector('[name="password"]').value
+  return await postJSON('/api/login', { body: { email, password } })
+}
+
+/**
+ * @param {Element} formEl
+ * @param {string} captchaResponse
+ * @returns {Object}
+ */
 async function sendFormRequest(formEl, captchaResponse) {
   const formData = new FormData(formEl)
   if (captchaResponse) {
@@ -117,7 +128,24 @@ async function sendFormRequest(formEl, captchaResponse) {
     })
   )
   const url = formEl.getAttribute('action')
-  return postJSON(url, { body })
+  try {
+    const res = await postJSON(url, { body })
+    if (formEl.hasAttribute('data-ol-login-on-success')) {
+      return await login(formEl)
+    }
+    return res
+  } catch (e) {
+    if (
+      e instanceof FetchError &&
+      e.data?.message?.key &&
+      e.data?.message?.key === formEl.getAttribute('data-ol-try-login-on-error')
+    ) {
+      try {
+        return await login(formEl)
+      } catch (e) {}
+    }
+    throw e
+  }
 }
 
 function hideFormElements(formEl) {

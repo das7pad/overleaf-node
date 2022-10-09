@@ -1,12 +1,10 @@
 // Disable prop type checks for test harnesses
 /* eslint-disable react/prop-types */
 
-import { renderHook, act } from '@testing-library/react-hooks/dom'
+import { act, renderHook } from '@testing-library/react-hooks/dom'
 import { expect } from 'chai'
-import sinon from 'sinon'
 import fetchMock from 'fetch-mock'
 import EventEmitter from 'events'
-import uuid from 'uuid'
 import { useChatContext } from '../../../../../frontend/js/features/chat/context/chat-context'
 import {
   ChatProviders,
@@ -20,7 +18,6 @@ describe('ChatContext', function () {
     first_name: 'fake_user_first_name',
     email: 'fake@example.com',
   }
-  const uuidValue = '00000000-0000-0000-0000-000000000000'
 
   beforeEach(function () {
     fetchMock.reset()
@@ -30,24 +27,21 @@ describe('ChatContext', function () {
 
     window.metaAttributesCache = new Map()
     window.metaAttributesCache.set('ol-user', user)
-
-    this.stub = sinon.stub(uuid, 'v4').returns(uuidValue)
   })
 
   afterEach(function () {
     tearDownMathJaxStubs()
 
     window.metaAttributesCache = new Map()
-    this.stub.restore()
   })
 
   describe('socket connection', function () {
     beforeEach(function () {
       // Mock GET messages to return no messages
-      fetchMock.get('express:/project/:projectId/messages', [])
+      fetchMock.get('express:/jwt/web/project/:projectId/messages', [])
 
       // Mock POST new message to return 200
-      fetchMock.post('express:/project/:projectId/messages', 200)
+      fetchMock.post('express:/jwt/web/project/:projectId/messages', 200)
     })
 
     it('subscribes when mounted', function () {
@@ -86,7 +80,7 @@ describe('ChatContext', function () {
       socket.emit('new-chat-message', {
         id: 'msg_1',
         content: 'new message',
-        timestamp: Date.now(),
+        timestamp: new Date().toISOString(),
         user: {
           id: 'another_fake_user',
           first_name: 'another_fake_user_first_name',
@@ -118,9 +112,9 @@ describe('ChatContext', function () {
         socket.emit('new-chat-message', {
           id: 'msg_1',
           content: 'received message',
-          timestamp: Date.now(),
+          timestamp: new Date().toISOString(),
           user,
-          clientId: uuidValue,
+          clientId: result.current.clientId.current,
         })
       })
 
@@ -155,7 +149,7 @@ describe('ChatContext', function () {
         socket.emit('new-chat-message', {
           id: 'msg_1',
           content: otherMsg,
-          timestamp: Date.now(),
+          timestamp: new Date().toISOString(),
           user: {
             id: 'another_fake_user',
             first_name: 'another_fake_user_first_name',
@@ -173,9 +167,9 @@ describe('ChatContext', function () {
         socket.emit('new-chat-message', {
           id: 'msg_2',
           content: 'received message from current user',
-          timestamp: Date.now(),
+          timestamp: new Date().toISOString(),
           user,
-          clientId: uuidValue,
+          clientId: result.current.clientId.current,
         })
       })
 
@@ -189,12 +183,12 @@ describe('ChatContext', function () {
 
   describe('loadInitialMessages', function () {
     beforeEach(function () {
-      fetchMock.get('express:/project/:projectId/messages', [
+      fetchMock.get('express:/jwt/web/project/:projectId/messages', [
         {
           id: 'msg_1',
           content: 'a message',
           user,
-          timestamp: Date.now(),
+          timestamp: new Date().toISOString(),
         },
       ])
     })
@@ -223,7 +217,7 @@ describe('ChatContext', function () {
 
     it('provides an error on failure', async function () {
       fetchMock.reset()
-      fetchMock.get('express:/project/:projectId/messages', 500)
+      fetchMock.get('express:/jwt/web/project/:projectId/messages', 500)
       const { result, waitForNextUpdate } = renderChatContextHook({})
 
       result.current.loadInitialMessages()
@@ -237,12 +231,12 @@ describe('ChatContext', function () {
   describe('loadMoreMessages', function () {
     it('adds messages to the list', async function () {
       // Mock a GET request for an initial message
-      fetchMock.getOnce('express:/project/:projectId/messages', [
+      fetchMock.getOnce('express:/jwt/web/project/:projectId/messages', [
         {
           id: 'msg_1',
           content: 'first message',
           user,
-          timestamp: new Date('2021-03-04T10:00:00').getTime(),
+          timestamp: new Date('2021-03-04T10:00:00').toISOString(),
         },
       ])
 
@@ -263,18 +257,22 @@ describe('ChatContext', function () {
       // Mock 2 GET requests, with different content
       fetchMock
         .getOnce(
-          'express:/project/:projectId/messages',
+          'express:/jwt/web/project/:projectId/messages',
           // Resolve a full "page" of messages (50)
-          createMessages(50, user, new Date('2021-03-04T10:00:00').getTime())
+          createMessages(
+            50,
+            user,
+            new Date('2021-03-04T10:00:00').toISOString()
+          )
         )
         .getOnce(
-          'express:/project/:projectId/messages',
+          'express:/jwt/web/project/:projectId/messages',
           [
             {
               id: 'msg_51',
               content: 'message from second page',
               user,
-              timestamp: new Date('2021-03-04T11:00:00').getTime(),
+              timestamp: new Date('2021-03-04T11:00:00').toISOString(),
             },
           ],
           { overwriteRoutes: false }
@@ -306,7 +304,7 @@ describe('ChatContext', function () {
       // Mock a GET request for 49 messages. This is less the the full page size
       // (50 messages), meaning that there are no further messages to be loaded
       fetchMock.getOnce(
-        'express:/project/:projectId/messages',
+        'express:/jwt/web/project/:projectId/messages',
         createMessages(49, user)
       )
 
@@ -327,7 +325,7 @@ describe('ChatContext', function () {
       // Mock GET messages so that we can control when the promise is resolved
       let resolveLoadingMessages
       fetchMock.get(
-        'express:/project/:projectId/messages',
+        'express:/jwt/web/project/:projectId/messages',
         new Promise(resolve => {
           resolveLoadingMessages = resolve
         })
@@ -346,7 +344,7 @@ describe('ChatContext', function () {
       socket.emit('new-chat-message', {
         id: 'socket_msg',
         content: 'socket message',
-        timestamp: Date.now(),
+        timestamp: new Date().toISOString(),
         user: {
           id: 'another_fake_user',
           first_name: 'another_fake_user_first_name',
@@ -360,7 +358,7 @@ describe('ChatContext', function () {
           id: 'fetched_msg',
           content: 'loaded message',
           user,
-          timestamp: Date.now(),
+          timestamp: new Date().toISOString(),
         },
       ])
       await waitForNextUpdate()
@@ -378,7 +376,7 @@ describe('ChatContext', function () {
 
     it('provides an error on failures', async function () {
       fetchMock.reset()
-      fetchMock.get('express:/project/:projectId/messages', 500)
+      fetchMock.get('express:/jwt/web/project/:projectId/messages', 500)
       const { result, waitForNextUpdate } = renderChatContextHook({})
 
       result.current.loadMoreMessages()
@@ -394,8 +392,8 @@ describe('ChatContext', function () {
       // Mock GET messages to return no messages and POST new message to be
       // successful
       fetchMock
-        .get('express:/project/:projectId/messages', [])
-        .postOnce('express:/project/:projectId/messages', 200)
+        .get('express:/jwt/web/project/:projectId/messages', [])
+        .postOnce('express:/jwt/web/project/:projectId/messages', 200)
     })
 
     it('optimistically adds the message to the list', function () {
@@ -408,13 +406,15 @@ describe('ChatContext', function () {
       ])
     })
 
-    it('POSTs the message to the backend', function () {
+    it('POSTs the message to the backend', async function () {
       const { result } = renderChatContextHook({})
 
       result.current.sendMessage('sent message')
 
+      await fetchMock.flush(true)
+
       const [, { body }] = fetchMock.lastCall(
-        'express:/project/:projectId/messages',
+        'express:/jwt/web/project/:projectId/messages',
         'POST'
       )
       expect(JSON.parse(body)).to.deep.include({ content: 'sent message' })
@@ -427,7 +427,7 @@ describe('ChatContext', function () {
 
       expect(result.current.messages).to.be.empty
       expect(
-        fetchMock.called('express:/project/:projectId/messages', {
+        fetchMock.called('express:/jwt/web/project/:projectId/messages', {
           method: 'post',
         })
       ).to.be.false
@@ -436,8 +436,8 @@ describe('ChatContext', function () {
     it('provides an error on failure', async function () {
       fetchMock.reset()
       fetchMock
-        .get('express:/project/:projectId/messages', [])
-        .postOnce('express:/project/:projectId/messages', 500)
+        .get('express:/jwt/web/project/:projectId/messages', [])
+        .postOnce('express:/jwt/web/project/:projectId/messages', 500)
       const { result, waitForNextUpdate } = renderChatContextHook({})
 
       result.current.sendMessage('sent message')
@@ -451,7 +451,7 @@ describe('ChatContext', function () {
   describe('unread messages', function () {
     beforeEach(function () {
       // Mock GET messages to return no messages
-      fetchMock.get('express:/project/:projectId/messages', [])
+      fetchMock.get('express:/jwt/web/project/:projectId/messages', [])
     })
 
     it('increments unreadMessageCount when a new message is received', function () {
@@ -462,7 +462,7 @@ describe('ChatContext', function () {
       socket.emit('new-chat-message', {
         id: 'msg_1',
         content: 'new message',
-        timestamp: Date.now(),
+        timestamp: new Date().toISOString(),
         user,
       })
 
@@ -478,7 +478,7 @@ describe('ChatContext', function () {
       socket.emit('new-chat-message', {
         id: 'msg_1',
         content: 'new message',
-        timestamp: Date.now(),
+        timestamp: new Date().toISOString(),
         user,
       })
 
@@ -499,7 +499,7 @@ function renderChatContextHook(props) {
   })
 }
 
-function createMessages(number, user, timestamp = Date.now()) {
+function createMessages(number, user, timestamp = new Date().toISOString()) {
   return Array.from({ length: number }, (_m, idx) => ({
     id: `msg_${idx + 1}`,
     content: `message ${idx + 1}`,

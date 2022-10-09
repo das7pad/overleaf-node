@@ -51,7 +51,6 @@ export default {
     jumpToLine: { action: 'jumpToLine' },
   },
   args: {
-    eventTracking: { sendMB: () => {} },
     isTexFile: true,
     outline: [],
     jumpToLine: () => {},

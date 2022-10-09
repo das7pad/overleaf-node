@@ -21,6 +21,9 @@ describe('fetchJSON', function () {
 
   const headers = {
     Accept: 'application/json',
+  }
+  const headersPOSTJSON = {
+    Accept: 'application/json',
     'Content-Type': 'application/json',
   }
 
@@ -164,7 +167,7 @@ describe('fetchJSON', function () {
     const body = { example: true }
 
     fetchMock.once(
-      { method: 'POST', url: '/test', headers, body },
+      { method: 'POST', url: '/test', headers: headersPOSTJSON, body },
       { status: 200, body: { result: 'success' } }
     )
 
@@ -173,11 +176,52 @@ describe('fetchJSON', function () {
     })
   })
 
+  it('handles POST FormData requests', function () {
+    const body = new FormData()
+
+    fetchMock.once(
+      (path, o) =>
+        path === '/test' &&
+        o.method === 'POST' &&
+        o.headers.get('accept') === 'application/json' &&
+        o.body === body,
+      { status: 200, body: { result: 'success' } }
+    )
+
+    return expect(postJSON('/test', { body })).to.eventually.deep.equal({
+      result: 'success',
+    })
+  })
+
+  it('sends credentials for api requests', function () {
+    const body = {}
+    fetchMock.once(
+      { method: 'POST', url: '/api/test', credentials: 'same-origin', body },
+      { status: 200, body: { result: 'success' } }
+    )
+
+    return expect(postJSON('/api/test', { body })).to.eventually.deep.equal({
+      result: 'success',
+    })
+  })
+
+  it('omits credentials for jwt requests', function () {
+    const body = {}
+    fetchMock.once(
+      { method: 'POST', url: '/jwt/test', credentials: 'omit', body },
+      { status: 200, body: { result: 'success' } }
+    )
+
+    return expect(postJSON('/jwt/test', { body })).to.eventually.deep.equal({
+      result: 'success',
+    })
+  })
+
   it('handles PUT requests', function () {
     const body = { example: true }
 
     fetchMock.once(
-      { method: 'PUT', url: '/test', headers, body },
+      { method: 'PUT', url: '/test', headers: headersPOSTJSON, body },
       { status: 200, body: { result: 'success' } }
     )
 

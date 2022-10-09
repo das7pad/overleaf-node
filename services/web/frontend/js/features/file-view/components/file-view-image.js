@@ -8,10 +8,9 @@ export default function FileViewImage({ fileName, fileId, onLoad, onError }) {
 
   return (
     <img
-      src={`/project/${projectId}/file/${fileId}`}
+      src={`/api/project/${projectId}/file/${fileId}`}
       onLoad={onLoad}
       onError={onError}
-      onAbort={onError}
       alt={fileName}
     />
   )

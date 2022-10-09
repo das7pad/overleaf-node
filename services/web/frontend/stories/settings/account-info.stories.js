@@ -42,7 +42,7 @@ export const NoEmailInput = args => {
 
 export const Error = args => {
   setDefaultMeta()
-  useFetchMock(fetchMock => fetchMock.post(/\/user\/settings/, 500))
+  useFetchMock(fetchMock => fetchMock.post(/\/api\/user\/settings/, 500))
 
   return (
     <UserProvider>

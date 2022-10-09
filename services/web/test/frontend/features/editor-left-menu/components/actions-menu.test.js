@@ -6,7 +6,7 @@ import { renderWithEditorContext } from '../../../helpers/render-with-context'
 
 describe('<ActionsMenu />', function () {
   beforeEach(function () {
-    fetchMock.post('express:/project/:projectId/compile', {
+    fetchMock.post('express:/jwt/web/project/:projectId/compile', {
       status: 'success',
       pdfDownloadDomain: 'https://clsi.test-overleaf.com',
       outputFiles: [

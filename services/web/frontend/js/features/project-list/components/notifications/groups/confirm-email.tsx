@@ -53,7 +53,7 @@ function ConfirmEmailNotification({ userEmail }: { userEmail: UserEmailData }) {
 
   const handleResendConfirmationEmail = ({ email }: UserEmailData) => {
     runAsync(
-      postJSON('/user/emails/resend_confirmation', {
+      postJSON('/api/user/emails/resend_confirmation', {
         body: { email },
       })
     ).catch(console.error)

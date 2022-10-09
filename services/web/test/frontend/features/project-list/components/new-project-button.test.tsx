@@ -35,7 +35,7 @@ describe('<NewProjectButton />', function () {
       screen.getByText('Blank Project')
       screen.getByText('Example Project')
       screen.getByText('Upload Project')
-      screen.getByText('Import from GitHub')
+      // SAAS: screen.getByText('Import from GitHub')
 
       // static text
       screen.getByText('Templates')
@@ -111,7 +111,7 @@ describe('<NewProjectButton />', function () {
       screen.getByText('Blank Project')
       screen.getByText('Example Project')
       screen.getByText('Upload Project')
-      screen.getByText('Import from GitHub')
+      // SAAS: screen.getByText('Import from GitHub')
 
       // static text for institution templates
       screen.getByText('Institution Templates')

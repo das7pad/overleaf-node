@@ -1,12 +1,9 @@
 import { useTranslation } from 'react-i18next'
-import getMeta from '../../../utils/meta'
-import HelpContactUs from './help-contact-us'
 import HelpDocumentation from './help-documentation'
 import HelpShowHotkeys from './help-show-hotkeys'
 
 export default function HelpMenu() {
   const { t } = useTranslation()
-  const showSupport = getMeta('ol-showSupport') as boolean | undefined
 
   return (
     <>
@@ -15,16 +12,9 @@ export default function HelpMenu() {
         <li>
           <HelpShowHotkeys />
         </li>
-        {showSupport ? (
-          <>
-            <li>
-              <HelpDocumentation />
-            </li>
-            <li>
-              <HelpContactUs />
-            </li>
-          </>
-        ) : null}
+        <li>
+          <HelpDocumentation />
+        </li>
       </ul>
     </>
   )

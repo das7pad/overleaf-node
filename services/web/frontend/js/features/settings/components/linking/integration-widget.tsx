@@ -2,7 +2,6 @@ import { useCallback, useState, ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
 import AccessibleModal from '../../../../shared/components/accessible-modal'
 import { Button, Modal } from 'react-bootstrap'
-import getMeta from '../../../../utils/meta'
 import { sendMB } from '../../../../infrastructure/event-tracking'
 
 function trackUpgradeClick() {
@@ -171,7 +170,6 @@ function UnlinkConfirmationModal({
 
       <Modal.Footer>
         <form action={unlinkPath} method="POST" className="form-inline">
-          <input type="hidden" name="_csrf" value={getMeta('ol-csrfToken')} />
           <Button
             className="btn-secondary-info btn-secondary"
             onClick={handleCancel}

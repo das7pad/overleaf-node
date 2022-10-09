@@ -55,7 +55,7 @@ describe('<UploadProjectModal />', function () {
     await waitFor(() => expect(requests).to.have.length(1))
 
     const [request] = requests
-    expect(request.url).to.equal('/project/new/upload')
+    expect(request.url).to.equal('/api/project/new/upload')
     expect(request.method).to.equal('POST')
 
     const projectId = '123abc'
@@ -137,7 +137,7 @@ describe('<UploadProjectModal />', function () {
     await waitFor(() => expect(requests).to.have.length(1))
 
     const [request] = requests
-    expect(request.url).to.equal('/project/new/upload')
+    expect(request.url).to.equal('/api/project/new/upload')
     expect(request.method).to.equal('POST')
     request.respond(
       422,

@@ -93,7 +93,7 @@ describe('<FileViewHeader/>', function () {
   describe('The refresh button', async function () {
     it('Changes text when the file is refreshing', async function () {
       fetchMock.post(
-        'express:/project/:project_id/linked_file/:file_id/refresh',
+        'express:/jwt/web/project/:project_id/linked_file/:file_id/refresh',
         {
           new_file_id: '5ff7418157b4e144321df5c4',
         }
@@ -113,7 +113,7 @@ describe('<FileViewHeader/>', function () {
 
     it('Reindexes references after refreshing a file from a third-party provider', async function () {
       fetchMock.post(
-        'express:/project/:project_id/linked_file/:file_id/refresh',
+        'express:/jwt/web/project/:project_id/linked_file/:file_id/refresh',
         {
           new_file_id: '5ff7418157b4e144321df5c4',
         }

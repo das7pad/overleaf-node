@@ -45,7 +45,7 @@ export default function CloneProjectModalContent({
     setInFlight(true)
 
     // clone the project
-    postJSON(`/project/${projectId}/clone`, {
+    postJSON(`/api/project/${projectId}/clone`, {
       body: { projectName: clonedProjectName },
     })
       .then(data => {

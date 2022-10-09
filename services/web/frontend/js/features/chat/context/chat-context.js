@@ -12,7 +12,10 @@ import { v4 as uuid } from 'uuid'
 
 import { useUserContext } from '../../../shared/context/user-context'
 import { useProjectContext } from '../../../shared/context/project-context'
-import { getJSON, postJSON } from '../../../infrastructure/fetch-json'
+import {
+  projectJWTGetJSON,
+  projectJWTPOSTJSON,
+} from '../../../infrastructure/jwt-fetch-json'
 import { appendMessage, prependMessages } from '../utils/message-list-appender'
 import useBrowserWindow from '../../../shared/hooks/use-browser-window'
 import { useLayoutContext } from '../../../shared/context/layout-context'
@@ -54,7 +57,7 @@ export function chatReducer(state, action) {
           id: uuid(),
           user: action.user,
           content: action.content,
-          timestamp: Date.now(),
+          timestamp: new Date(),
         }),
       }
 
@@ -100,6 +103,7 @@ export const ChatContext = createContext()
 
 ChatContext.Provider.propTypes = {
   value: PropTypes.shape({
+    clientId: PropTypes.object.isRequired,
     status: PropTypes.string.isRequired,
     messages: PropTypes.array.isRequired,
     initialMessagesLoaded: PropTypes.bool.isRequired,
@@ -140,14 +144,17 @@ export function ChatProvider({ children }) {
       const query = { limit: PAGE_SIZE }
 
       if (state.lastTimestamp) {
-        query.before = state.lastTimestamp
+        query.before = state.lastTimestamp.getTime()
       }
 
       const queryString = new URLSearchParams(query)
       const url = `/project/${projectId}/messages?${queryString.toString()}`
 
-      getJSON(url)
+      projectJWTGetJSON(url)
         .then((messages = []) => {
+          messages.forEach(message => {
+            message.timestamp = new Date(message.timestamp)
+          })
           dispatch({
             type: 'FETCH_MESSAGES_SUCCESS',
             messages: messages.reverse(),
@@ -196,7 +203,7 @@ export function ChatProvider({ children }) {
       })
 
       const url = `/project/${projectId}/messages`
-      postJSON(url, {
+      projectJWTPOSTJSON(url, {
         body: { content, client_id: clientId.current },
       }).catch(error => {
         dispatch({
@@ -255,6 +262,7 @@ export function ChatProvider({ children }) {
 
   const value = useMemo(
     () => ({
+      clientId,
       status: state.status,
       messages: state.messages,
       initialMessagesLoaded: state.initialMessagesLoaded,
@@ -268,6 +276,7 @@ export function ChatProvider({ children }) {
       error: state.error,
     }),
     [
+      clientId,
       loadInitialMessages,
       loadMoreMessages,
       markMessagesAsRead,

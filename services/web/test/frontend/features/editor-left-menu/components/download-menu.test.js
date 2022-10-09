@@ -10,7 +10,7 @@ describe('<DownloadMenu />', function () {
   })
 
   it('shows download links with correct url', async function () {
-    fetchMock.post('express:/project/:projectId/compile', {
+    fetchMock.post('express:/jwt/web/project/:projectId/compile', {
       clsiServerId: 'foo',
       compileGroup: 'priority',
       status: 'success',
@@ -19,7 +19,7 @@ describe('<DownloadMenu />', function () {
         {
           path: 'output.pdf',
           build: 'build-123',
-          url: '/build/build-123/output.pdf',
+          url: '/project/123abc/build/build-123/output/output.pdf',
           type: 'pdf',
         },
       ],
@@ -50,8 +50,9 @@ describe('<DownloadMenu />', function () {
         name: 'PDF',
       })
 
+      expect(pdfLink.getAttribute('download')).to.equal('project-name.pdf')
       expect(pdfLink.getAttribute('href')).to.equal(
-        '/download/project/123abc/build/build-123/output/output.pdf?compileGroup=priority&clsiserverid=foo&popupDownload=true'
+        'https://clsi.test-overleaf.com/project/123abc/build/build-123/output/output.pdf?compileGroup=priority&clsiserverid=foo'
       )
     })
   })

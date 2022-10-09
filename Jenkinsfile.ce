@@ -1,0 +1,129 @@
+pipeline {
+  agent none
+  environment {
+    DOCKER_COMPOSE_FLAGS = "-f docker-compose.ci.yml"
+  }
+  options {
+    timeout(time: 15, unit: 'MINUTES')
+  }
+
+  stages {
+    stage('Cache') {
+      agent {
+        label 'overleaf && docker_builder'
+      }
+      environment {
+        TARGET = '-dev-deps'
+        R_TARGET = '-dev-deps'
+      }
+      steps {
+        sh 'make -C services/web ensure_cache_exists'
+      }
+      post {
+        cleanup {
+          sh 'make -C services/web clean_ci_stage'
+        }
+      }
+    }
+
+    stage('Fan out') {
+      parallel {
+        stage('Lint') {
+          agent {
+            label 'overleaf'
+          }
+          environment {
+            SUFFIX = '-lint'
+          }
+          steps {
+            sh 'make -C services/web prepare_ci_stage'
+            sh 'make -C services/web lint'
+          }
+          post {
+            cleanup {
+              sh 'make -C services/web clean_ci_stage'
+            }
+          }
+        }
+
+        stage('Formatting') {
+          agent {
+            label 'overleaf'
+          }
+          environment {
+            SUFFIX = '-format'
+          }
+          steps {
+            sh 'make -C services/web prepare_ci_stage'
+            sh 'make -C services/web format'
+          }
+          post {
+            cleanup {
+              sh 'make -C services/web clean_ci_stage'
+            }
+          }
+        }
+
+        stage('Type Check') {
+          agent {
+            label 'overleaf'
+          }
+          environment {
+            SUFFIX = '-type-check'
+          }
+          steps {
+            sh 'make -C services/web prepare_ci_stage'
+            sh 'make -C services/web type_check'
+          }
+          post {
+            cleanup {
+              sh 'make -C services/web clean_ci_stage'
+            }
+          }
+        }
+
+        stage('JSDOM Tests') {
+          agent {
+            label 'overleaf'
+          }
+          environment {
+            SUFFIX = '-test-jsdom'
+          }
+          steps {
+            sh 'make -C services/web prepare_ci_stage'
+            sh 'make -C services/web test_frontend'
+          }
+          post {
+            always {
+              junit 'services/web/output/jsdom.xml'
+            }
+            cleanup {
+              sh 'make -C services/web clean_ci_stage'
+            }
+          }
+        }
+
+        stage('Dist') {
+          agent {
+            label 'overleaf'
+          }
+          environment {
+            SUFFIX = '-dist'
+          }
+          steps {
+            sh 'make -C services/web prepare_ci_stage'
+            sh 'make -C services/web output/public.tar.gz'
+            sh 'mv services/web/output/public.tar.gz* .'
+            archiveArtifacts(artifacts: 'public.tar.gz*')
+          }
+          post {
+            cleanup {
+              sh 'make -C services/web clean_ci_stage clean/public.tar.gz'
+              sh 'rm -f public.tar.gz*'
+            }
+          }
+        }
+      }
+    }
+  }
+}

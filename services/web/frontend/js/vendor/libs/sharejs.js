@@ -1,3 +1,6 @@
+import 'ace/ace'
+import CryptoJSSHA1 from 'crypto-js/sha1'
+
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 
 var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; };
@@ -12,7 +15,6 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
     no-class-assign,
     no-return-assign,
     no-undef,
-    no-unused-vars,
     no-use-before-define,
     standard/object-curly-even-spacing,
 */
@@ -26,7 +28,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
  * DS207: Consider shorter variations of null checks
  * Full docs: https://github.com/decaffeinate/decaffeinate/blob/master/docs/suggestions.md
  */
-define(['ace/ace','crypto-js/sha1'], function (_ignore, CryptoJSSHA1) {
+(function () {
   var append = void 0,
       bootstrapTransform = void 0,
       exports = void 0,
@@ -860,10 +862,6 @@ define(['ace/ace','crypto-js/sha1'], function (_ignore, CryptoJSSHA1) {
     return obj;
   };
 
-  if (WEB == null) {
-    module.exports = MicroEvent;
-  }
-
   if (WEB != null) {
     exports.extendDoc = function (name, fn) {
       return Doc.prototype[name] = fn;
@@ -1291,9 +1289,7 @@ define(['ace/ace','crypto-js/sha1'], function (_ignore, CryptoJSSHA1) {
         }
 
         // console.log "SENDING OP TO SERVER", @inflightOp, @version
-        var lastVersion = this.__lastVersion;
-        this.__lastVersion = this.version;
-        return this.connection.send({ doc: this.name, op: this.inflightOp, v: this.version, lastV: lastVersion, hash: sha1});
+        return this.connection.send({ doc: this.name, op: this.inflightOp, v: this.version, hash: sha1});
       }
 
       // Submit an op to the server. The op maybe held for a little while before being sent, as only one
@@ -1497,7 +1493,7 @@ define(['ace/ace','crypto-js/sha1'], function (_ignore, CryptoJSSHA1) {
         return;
       }
 
-      if (maxDocLength != null && editorDoc.getValue().length >= maxDocLength) {
+      if (maxDocLength != null && editorDoc.getValue().length > maxDocLength) {
         doc.emit('error', new Error('document length is greater than maxDocLength'));
         return;
       }
@@ -1656,7 +1652,7 @@ define(['ace/ace','crypto-js/sha1'], function (_ignore, CryptoJSSHA1) {
         // this change has been injected via sharejs
         return;
       }
-      if (maxDocLength != null && editorDoc.getValue().length >= maxDocLength) {
+      if (maxDocLength != null && editorDoc.getValue().length > maxDocLength) {
         sharedoc.emit('error', new Error('document length is greater than maxDocLength'));
         return;
       }
@@ -1699,4 +1695,6 @@ define(['ace/ace','crypto-js/sha1'], function (_ignore, CryptoJSSHA1) {
   });
 
   return window.sharejs;
-});
+})();
+
+export default window.sharejs

@@ -32,7 +32,7 @@ describe('<DictionaryModalContent />', function () {
   })
 
   it('removes words', async function () {
-    fetchMock.post('/spelling/unlearn', 200)
+    fetchMock.post('/api/spelling/unlearn', 200)
     setLearnedWords(['Foo', 'bar'])
     renderWithEditorContext(<DictionaryModal show handleHide={() => {}} />)
     screen.getByText('bar')
@@ -45,7 +45,7 @@ describe('<DictionaryModalContent />', function () {
   })
 
   it('handles errors', async function () {
-    fetchMock.post('/spelling/unlearn', 500)
+    fetchMock.post('/api/spelling/unlearn', 500)
     setLearnedWords(['foo'])
     renderWithEditorContext(<DictionaryModal show handleHide={() => {}} />)
     const [firstButton] = screen.getAllByRole('button', {

@@ -8,9 +8,8 @@
  * Full docs: https://github.com/decaffeinate/decaffeinate/blob/master/docs/suggestions.md
  */
 
-/* global io */
-
 import SocketIoShim from './SocketIoShim'
+import { clearProjectJWT } from '../../infrastructure/jwt-fetch-json'
 
 let ConnectionManager
 const ONEHOUR = 1000 * 60 * 60
@@ -34,23 +33,6 @@ export default ConnectionManager = (function () {
     constructor(ide, $scope) {
       this.ide = ide
       this.$scope = $scope
-      this.wsUrl = ide.wsUrl || null // websocket url (if defined)
-      if (typeof io === 'undefined' || io === null) {
-        if (this.wsUrl && !window.location.href.match(/ws=fallback/)) {
-          // if we tried to boot from a custom real-time backend and failed,
-          // try reloading and falling back to the siteUrl
-          window.location = window.location.href + '?ws=fallback'
-        }
-        console.error(
-          'Socket.io javascript not loaded. Please check that the real-time service is running and accessible.'
-        )
-        this.ide.socket = SocketIoShim.stub()
-        this.$scope.$apply(() => {
-          return (this.$scope.state.error =
-            'Could not connect to websocket server :(')
-        })
-        return
-      }
 
       setInterval(() => {
         return this.disconnectIfInactive()
@@ -112,29 +94,14 @@ export default ConnectionManager = (function () {
 
       // initial connection attempt
       this.updateConnectionManagerState('connecting')
-      let parsedURL
-      try {
-        parsedURL = new URL(this.wsUrl || '/socket.io', window.location)
-      } catch (e) {
-        // hello IE11
-        if (
-          this.wsUrl &&
-          this.wsUrl.indexOf('/') !== 0 &&
-          !window.location.href.match(/ws=fallback/)
-        ) {
-          // do not even try parsing the wsUrl, use the fallback
-          window.location = window.location.href + '?ws=fallback'
-        }
-        parsedURL = {
-          origin: null,
-          pathname: this.wsUrl || '/socket.io',
-        }
-      }
-      this.ide.socket = SocketIoShim.connect(parsedURL.origin, {
-        resource: parsedURL.pathname.slice(1),
-        reconnect: false,
-        'connect timeout': 30 * 1000,
-        'force new connection': true,
+      this.ide.socket = new SocketIoShim()
+
+      // Clear project jwt when detecting a changed epoch.
+      this.ide.socket.on('project:membership:changed', () => {
+        clearProjectJWT()
+      })
+      this.ide.socket.on('project:tokens:changed', () => {
+        clearProjectJWT()
       })
 
       // handle network-level websocket errors (e.g. failed dns lookups)
@@ -149,7 +116,7 @@ export default ConnectionManager = (function () {
         }
         this.updateConnectionManagerState('error')
         sl_console.log('socket.io error', err)
-        if (this.wsUrl && !window.location.href.match(/ws=fallback/)) {
+        if (!window.location.href.match(/ws=fallback/)) {
           // if we tried to load a custom websocket location and failed
           // try reloading and falling back to the siteUrl
           window.location = window.location.href + '?ws=fallback'
@@ -395,7 +362,7 @@ Something went wrong connecting to your project. Please refresh if this continue
       this.ide.socket.emit(
         'joinProject',
         data,
-        (err, project, permissionsLevel, protocolVersion) => {
+        (err, project, permissionsLevel, protocolVersion, connectedUsers) => {
           if (err != null || project == null) {
             err = err || {}
             if (err.code === 'ProjectNotFound') {
@@ -446,6 +413,7 @@ Something went wrong connecting to your project. Please refresh if this continue
             this.$scope.project = { ...defaultProjectAttributes, ...project }
             this.$scope.permissionsLevel = permissionsLevel
             this.ide.loadingManager.socketLoaded()
+            this.$scope.connectedUsers = connectedUsers
             window.dispatchEvent(
               new CustomEvent('project:joined', { detail: this.$scope.project })
             )

@@ -66,7 +66,7 @@ describe('FileTree Delete Entity Flow', function () {
     })
 
     it('removes item', async function () {
-      const fetchMatcher = /\/project\/\w+\/doc\/\w+/
+      const fetchMatcher = /\/jwt\/web\/project\/\w+\/doc\/\w+/
       fetchMock.delete(fetchMatcher, 204)
 
       const modalDeleteButton = await getModalDeleteButton()
@@ -93,11 +93,11 @@ describe('FileTree Delete Entity Flow', function () {
       })
 
       const [lastFetchPath] = fetchMock.lastCall(fetchMatcher)
-      expect(lastFetchPath).to.equal('/project/123abc/doc/456def')
+      expect(lastFetchPath).to.equal('/jwt/web/project/123abc/doc/456def')
     })
 
     it('continues delete on 404s', async function () {
-      fetchMock.delete(/\/project\/\w+\/doc\/\w+/, 404)
+      fetchMock.delete(/\/jwt\/web\/project\/\w+\/doc\/\w+/, 404)
 
       const modalDeleteButton = await getModalDeleteButton()
       fireEvent.click(modalDeleteButton)
@@ -128,7 +128,7 @@ describe('FileTree Delete Entity Flow', function () {
     })
 
     it('aborts delete on error', async function () {
-      const fetchMatcher = /\/project\/\w+\/doc\/\w+/
+      const fetchMatcher = /\/jwt\/web\/project\/\w+\/doc\/\w+/
       fetchMock.delete(fetchMatcher, 500)
 
       const modalDeleteButton = await getModalDeleteButton()
@@ -255,7 +255,7 @@ describe('FileTree Delete Entity Flow', function () {
     })
 
     it('removes all items', async function () {
-      const fetchMatcher = /\/project\/\w+\/(doc|file)\/\w+/
+      const fetchMatcher = /\/jwt\/web\/project\/\w+\/(doc|file)\/\w+/
       fetchMock.delete(fetchMatcher, 204)
 
       const modalDeleteButton = await getModalDeleteButton()
@@ -287,8 +287,8 @@ describe('FileTree Delete Entity Flow', function () {
       const [firstFetchPath, secondFetchPath] = fetchMock
         .calls()
         .map(([url]) => url)
-      expect(firstFetchPath).to.equal('/project/123abc/doc/456def')
-      expect(secondFetchPath).to.equal('/project/123abc/file/789ghi')
+      expect(firstFetchPath).to.equal('/jwt/web/project/123abc/doc/456def')
+      expect(secondFetchPath).to.equal('/jwt/web/project/123abc/file/789ghi')
     })
   })
 

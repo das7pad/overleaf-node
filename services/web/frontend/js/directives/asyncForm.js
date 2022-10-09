@@ -1,6 +1,6 @@
 import App from '../base'
 import '../vendor/libs/passfield'
-App.directive('asyncForm', ($http, validateCaptcha, validateCaptchaV3) => ({
+App.directive('asyncForm', $http => ({
   controller: [
     '$scope',
     '$location',
@@ -27,15 +27,7 @@ App.directive('asyncForm', ($http, validateCaptcha, validateCaptchaV3) => ({
       scope.$applyAsync(() => {
         scope[attrs.name].inflight = true
       })
-
-      if (attrs.captchaActionName) {
-        validateCaptchaV3(attrs.captchaActionName)
-      }
-      if (attrs.captcha != null) {
-        validateCaptcha(callback)
-      } else {
-        callback()
-      }
+      callback()
     }
 
     const _submitRequest = function (grecaptchaResponse) {

@@ -1,11 +1,12 @@
-import importOverleafModules from '../../../macros/import-overleaf-module.macro'
 import { JSXElementConstructor, useCallback, useState } from 'react'
 
-const [contactUsModalModules] = importOverleafModules('contactUsModal')
-const ContactUsModal: JSXElementConstructor<{
-  show: boolean
-  handleHide: () => void
-}> = contactUsModalModules?.import.default
+const contactUsModalModules = [] as Array<
+  JSXElementConstructor<{
+    show: boolean
+    handleHide: () => void
+  }>
+>
+const ContactUsModal = contactUsModalModules.pop()
 
 export const useContactUsModal = () => {
   const [show, setShow] = useState(false)

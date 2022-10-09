@@ -11,11 +11,14 @@ export const getMockIde = () => {
       $on: () => {},
       $watch: () => {},
       $applyAsync: () => {},
-      user: {},
+      user: getMeta('ol-user', {}),
       project: {
-        _id: getMeta('ol-project_id'),
-        name: getMeta('ol-projectName'),
-        rootDocId: '',
+        _id: getMeta('ol-project_id', ''),
+        name: getMeta('ol-projectName', ''),
+        rootDoc_id: getMeta('ol-projectRootDoc_id', ''),
+        compiler: getMeta('ol-projectCompiler', ''),
+        imageName: getMeta('ol-projectImageName', ''),
+        version: getMeta('ol-projectTreeVersion', 0),
         members: [],
         invites: [],
         features: {
@@ -54,12 +57,20 @@ export const getMockIde = () => {
         uncompiled: true,
         logEntryAnnotations: {},
       },
-      settings: { syntaxValidation: false, pdfViewer: 'pdfjs' },
+      anonymous: getMeta('ol-anonymous', false),
+      isRestrictedTokenMember: getMeta('ol-isRestrictedTokenMember', false),
+      settings: getMeta('ol-userSettings', {
+        syntaxValidation: false,
+        pdfViewer: 'pdfjs',
+      }),
       hasLintingError: false,
     },
     editorManager: {
       openDoc: () => {},
       getCurrentDocId: () => {},
+    },
+    fileTreeManager: {
+      getEntityPathById: () => null,
     },
   }
 }

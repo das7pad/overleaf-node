@@ -1,9 +1,15 @@
 import App from '../base'
+import showFakeProgress from '../utils/loadingScreen'
+import getMeta from '../utils/meta'
+import { postJSON } from '../infrastructure/fetch-json'
+
 App.controller(
   'TokenAccessPageController',
-  ($scope, $http, $location, localStorage) => {
-    window.S = $scope
+  ($scope, $location, $http, $element) => {
     $scope.mode = 'accessAttempt' // 'accessAttempt' | 'v1Import' | 'requireAccept'
+    if (getMeta('ol-user_id')) {
+      $scope.mode = 'requireAccept'
+    }
 
     $scope.v1ImportData = null
     $scope.requireAccept = null
@@ -35,55 +41,53 @@ App.controller(
     }
 
     $scope.post = (confirmedByUser = false) => {
+      if (getMeta('ol-user_id') && !confirmedByUser) {
+        $scope.mode = 'requireAccept'
+        return
+      }
       $scope.mode = 'accessAttempt'
-      const textData = $('#overleaf-token-access-data').text()
-      const parsedData = JSON.parse(textData)
-      const { postUrl, csrfToken } = parsedData
+      const postURL = getMeta('ol-postURL')
       $scope.accessInFlight = true
 
-      $http({
-        method: 'POST',
-        url: postUrl,
-        data: {
-          _csrf: csrfToken,
-          confirmedByUser,
-        },
-      }).then(
-        function successCallback(response) {
+      showFakeProgress()
+
+      postJSON(postURL)
+        .then(data => {
           $scope.accessInFlight = false
           $scope.accessError = false
-          const { data } = response
-          if (data.redirect) {
-            const redirect = response.data.redirect
-            if (!redirect) {
-              console.warn(
-                'no redirect supplied in success response data',
-                response
-              )
-              $scope.accessError = true
-              return
-            }
-            window.location.replace(redirect)
-          } else if (data.v1Import) {
-            $scope.mode = 'v1Import'
-            $scope.v1ImportData = data.v1Import
-          } else if (data.requireAccept) {
-            $scope.mode = 'requireAccept'
-            $scope.requireAccept = data.requireAccept
+          if (data.redir) {
+            window.location.replace(data.redir)
           } else {
-            console.warn(
-              'invalid data from server in success response',
-              response
-            )
-            $scope.accessError = true
+            console.warn('invalid data from server in success response', data)
+            $scope.accessError = 'error'
           }
-        },
-        function errorCallback(response) {
-          console.warn('error response from server', response)
+        })
+        .catch(function (err) {
+          const redir = err.data?.redir
+          if (redir) {
+            return window.location.replace(redir)
+          }
+          console.warn('error response from server', err)
           $scope.accessInFlight = false
-          $scope.accessError = response.status === 404 ? 'not_found' : 'error'
-        }
-      )
+          switch (err.response?.status) {
+            case 404:
+              $scope.accessError = 'not_found'
+              break
+            case 429:
+              $scope.accessError = 'rate_limited'
+              $scope.retryBlocked = true
+              setTimeout(() => {
+                $scope.$applyAsync(() => {
+                  $scope.retryBlocked = false
+                })
+              }, err.retryAfter)
+              break
+            default:
+              $scope.accessError = 'error'
+              break
+          }
+        })
+        .finally(() => $scope.$applyAsync(() => {}))
     }
   }
 )

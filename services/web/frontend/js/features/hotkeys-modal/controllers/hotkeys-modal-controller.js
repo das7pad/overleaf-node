@@ -17,9 +17,6 @@ export default App.controller('HotkeysModalController', function ($scope) {
 
   $scope.openHotkeysModal = () => {
     $scope.$applyAsync(() => {
-      $scope.trackChangesVisible =
-        $scope.project && $scope.project.features.trackChangesVisible
-
       $scope.show = true
     })
   }

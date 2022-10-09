@@ -11,6 +11,7 @@ import useBrowserWindow from '../hooks/use-browser-window'
 import { useIdeContext } from './ide-context'
 import { useProjectContext } from './project-context'
 import { useDetachContext } from './detach-context'
+import { FetchError, postJSON } from '../../infrastructure/fetch-json'
 
 export const EditorContext = createContext()
 
@@ -45,12 +46,17 @@ EditorContext.Provider.propTypes = {
   }),
 }
 
-export function EditorProvider({ children, settings }) {
+export function EditorProvider({ children }) {
   const ide = useIdeContext()
 
   const { role } = useDetachContext()
 
-  const { owner, features } = useProjectContext({
+  const {
+    _id: projectId,
+    owner,
+    features,
+  } = useProjectContext({
+    _id: PropTypes.string.isRequired,
     owner: PropTypes.shape({
       _id: PropTypes.string.isRequired,
     }),
@@ -99,11 +105,15 @@ export function EditorProvider({ children, settings }) {
     newName => {
       setProjectName(oldName => {
         if (oldName !== newName) {
-          settings.saveProjectSettings({ name: newName }).catch(response => {
+          postJSON(`/api/project/${projectId}/rename`, {
+            body: { newProjectName: newName },
+          }).catch(err => {
             setProjectName(oldName)
-            const { data, status } = response
-            if (status === 400) {
-              return ide.showGenericMessageModal('Error renaming project', data)
+            if (err instanceof FetchError && err.response?.status === 400) {
+              return ide.showGenericMessageModal(
+                'Error renaming project',
+                err.getUserFacingMessage()
+              )
             } else {
               return ide.showGenericMessageModal(
                 'Error renaming project',
@@ -115,7 +125,7 @@ export function EditorProvider({ children, settings }) {
         return newName
       })
     },
-    [settings, ide, setProjectName]
+    [ide, projectId, setProjectName]
   )
 
   const { setTitle } = useBrowserWindow()
@@ -208,7 +218,6 @@ export function EditorProvider({ children, settings }) {
 
 EditorProvider.propTypes = {
   children: PropTypes.any,
-  settings: PropTypes.object,
 }
 
 export function useEditorContext(propTypes) {

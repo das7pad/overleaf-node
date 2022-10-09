@@ -1,9 +1,8 @@
 import { ElementType } from 'react'
 import { useTranslation } from 'react-i18next'
-import importOverleafModules from '../../../../macros/import-overleaf-module.macro'
 import getMeta from '../../../utils/meta'
 
-const components = importOverleafModules('editorLeftMenuSync') as {
+const components = [] as {
   import: { default: ElementType }
   path: string
 }[]

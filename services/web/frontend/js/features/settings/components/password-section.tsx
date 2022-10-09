@@ -103,7 +103,7 @@ function PasswordForm() {
       return
     }
     runAsync(
-      postJSON('/user/password/update', {
+      postJSON('/api/user/password/update', {
         body: {
           currentPassword,
           newPassword1,

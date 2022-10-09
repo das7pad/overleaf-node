@@ -23,7 +23,7 @@ function DownloadProjectButton({
       'project action',
       'Download Zip'
     )
-    window.location.assign(`/project/${project.id}/download/zip`)
+    window.location.assign(`/api/project/${project.id}/download/zip`)
   }, [project])
 
   return children(text, downloadProject)

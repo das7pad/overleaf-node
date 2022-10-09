@@ -1,6 +1,5 @@
 import { useCallback, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { assign } from '../../../shared/components/location'
 import EditorCloneProjectModalWrapper from '../../clone-project-modal/components/editor-clone-project-modal-wrapper'
 import LeftMenuButton from './left-menu-button'
 
@@ -14,7 +13,7 @@ export default function ActionsCopyProject() {
 
   const openProject = useCallback(
     ({ project_id: projectId }: ProjectCopyResponse) => {
-      assign(`/project/${projectId}`)
+      window.location.assign(`/project/${projectId}`)
     },
     []
   )

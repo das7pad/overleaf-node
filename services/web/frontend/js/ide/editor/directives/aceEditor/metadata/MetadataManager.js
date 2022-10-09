@@ -40,7 +40,6 @@ export default MetadataManager = class MetadataManager {
       if (!['remove', 'insert'].includes(change.action)) {
         return
       }
-      const cursorPosition = this.editor.getCursorPosition()
       const { end } = change
       let range = new Range(end.row, 0, end.row, end.column)
       let lineUpToCursor = this.editor.getSession().getTextRange(range)

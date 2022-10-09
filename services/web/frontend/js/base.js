@@ -14,34 +14,23 @@
  * Full docs: https://github.com/decaffeinate/decaffeinate/blob/master/docs/suggestions.md
  */
 
-import './utils/webpack-public-path'
 import './libraries'
-import './infrastructure/error-reporter'
 import './modules/recursionHelper'
 import './modules/errorCatcher'
-import './modules/localStorage'
-import './modules/sessionStorage'
+import './modules/storage'
 import getMeta from './utils/meta'
-import { configureMathJax } from './features/mathjax/configure'
 
 const App = angular
   .module('SharelatexApp', [
     'ui.bootstrap',
-    'autocomplete',
     'RecursionHelper',
     'ng-context-menu',
     'ngSanitize',
-    'ipCookie',
     'ErrorCatcher',
-    'localStorage',
-    'sessionStorage',
-    'ui.select',
+    'storage',
   ])
-  .config(function ($qProvider, $httpProvider, uiSelectConfig) {
+  .config(function ($qProvider, $httpProvider) {
     $qProvider.errorOnUnhandledRejections(false)
-    uiSelectConfig.spinnerClass = 'fa fa-refresh ui-select-spin'
-
-    configureMathJax()
   })
 
 App.run(($rootScope, $templateCache) => {

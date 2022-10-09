@@ -2,7 +2,7 @@ const MOCK_DELAY = 1000
 
 export function defaultSetupMocks(fetchMock) {
   fetchMock.post(
-    /\/user\/password\/update/,
+    /\/api\/user\/password\/update/,
     {
       status: 200,
       body: {

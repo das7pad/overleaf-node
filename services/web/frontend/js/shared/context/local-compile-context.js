@@ -13,11 +13,7 @@ import useScopeValueSetterOnly from '../hooks/use-scope-value-setter-only'
 import usePersistedState from '../hooks/use-persisted-state'
 import useAbortController from '../hooks/use-abort-controller'
 import DocumentCompiler from '../../features/pdf-preview/util/compiler'
-import {
-  send,
-  sendMBOnce,
-  sendMBSampled,
-} from '../../infrastructure/event-tracking'
+import { sendMBOnce, sendMBSampled } from '../../infrastructure/event-tracking'
 import {
   buildLogEntryAnnotations,
   handleLogFiles,
@@ -29,6 +25,8 @@ import { useEditorContext } from './editor-context'
 import { buildFileList } from '../../features/pdf-preview/util/file-list'
 import { useSplitTestContext } from './split-test-context'
 import { useLayoutContext } from './layout-context'
+import getMeta from '../../utils/meta'
+import { useFileTreeData } from './file-tree-data-context'
 
 export const LocalCompileContext = createContext()
 
@@ -82,13 +80,20 @@ LocalCompileContext.Provider.propTypes = CompileContextPropTypes
 export function LocalCompileProvider({ children }) {
   const ide = useIdeContext()
 
-  const { hasPremiumCompile, isProjectOwner } = useEditorContext()
+  const { isProjectOwner } = useEditorContext()
 
-  const { _id: projectId, rootDocId } = useProjectContext()
+  const {
+    _id: projectId,
+    rootDocId,
+    imageName,
+    compiler: compilerName,
+  } = useProjectContext()
+
+  const { projectTreeVersion } = useFileTreeData()
 
   const { splitTestVariants } = useSplitTestContext()
 
-  const { pdfPreviewOpen } = useLayoutContext()
+  const { pdfPreviewOpen, detachRole } = useLayoutContext()
 
   // whether a compile is in progress
   const [compiling, setCompiling] = useState(false)
@@ -127,6 +132,9 @@ export function LocalCompileProvider({ children }) {
   // the id of the CLSI server which ran the compile
   const [clsiServerId, setClsiServerId] = useState()
 
+  // the build id of the last compile
+  const [buildId, setBuildId] = useState()
+
   // data received in response to a compile request
   const [data, setData] = useState()
 
@@ -137,7 +145,7 @@ export function LocalCompileProvider({ children }) {
   const [deliveryLatencies, setDeliveryLatencies] = useState({})
 
   // whether the project has been compiled yet
-  const [compiledOnce, setCompiledOnce] = useState(false)
+  const [compiledOnce, setCompiledOnce] = useState(0)
 
   // whether the cache is being cleared
   const [clearingCache, setClearingCache] = useState(false)
@@ -233,11 +241,15 @@ export function LocalCompileProvider({ children }) {
     compilingRef.current = compiling
   }, [compiling])
 
+  const projectTreeVersionRef = useRef(projectTreeVersion)
+  useEffect(() => {
+    projectTreeVersionRef.current = projectTreeVersion
+  }, [projectTreeVersion])
+
   // the document compiler
   const [compiler] = useState(() => {
     return new DocumentCompiler({
       projectId,
-      rootDocId,
       setChangedAt,
       setCompiling,
       setData,
@@ -247,6 +259,8 @@ export function LocalCompileProvider({ children }) {
       cleanupCompileResult,
       compilingRef,
       signal,
+      projectTreeVersionRef,
+      getPathForDocId: id => ide.fileTreeManager.getEntityPathById(id),
     })
   })
 
@@ -254,6 +268,21 @@ export function LocalCompileProvider({ children }) {
   useEffect(() => {
     compiler.currentDoc = currentDoc
   }, [compiler, currentDoc])
+
+  // keep rootDocId setting in sync with the compiler
+  useEffect(() => {
+    compiler.setOption('rootDocId', rootDocId)
+  }, [compiler, rootDocId])
+
+  // keep compiler setting in sync with the compiler
+  useEffect(() => {
+    compiler.setOption('compilerName', compilerName)
+  }, [compiler, compilerName])
+
+  // keep imageName setting in sync with the compiler
+  useEffect(() => {
+    compiler.setOption('imageName', imageName)
+  }, [compiler, imageName])
 
   // keep draft setting in sync with the compiler
   useEffect(() => {
@@ -270,10 +299,55 @@ export function LocalCompileProvider({ children }) {
     setUncompiled(changedAt > 0)
   }, [setUncompiled, changedAt])
 
+  // try to compile ahead of joining the project
+  const [tryCompileOnBoot, setTryCompileOnBoot] = useState(true)
+  useEffect(() => {
+    if (!tryCompileOnBoot) return
+    setTryCompileOnBoot(false)
+    if (detachRole === 'detached') return
+    if (getMeta('ol-preventCompileOnBoot')) return
+    const lastOpenedDoc = localStorage
+      .getItem(`doc.open_id.${projectId}`)
+      ?.replace(/"/g, '')
+    let lastOpenedDocIsValidRootDoc, lastOpenedDocPath
+    if (lastOpenedDoc !== rootDocId) {
+      lastOpenedDocIsValidRootDoc = localStorage.getItem(
+        `doc.isValidRootDoc.${lastOpenedDoc}`
+      )
+      lastOpenedDocPath = localStorage.getItem(`doc.path.${lastOpenedDoc}`)
+    }
+    if (
+      // This project has not been opened (in this browser) yet.
+      !lastOpenedDoc ||
+      // The last time this project was open, the rootDoc was open.
+      lastOpenedDoc === rootDocId ||
+      // A manual compile request with this doc opened was triggered before.
+      (lastOpenedDocIsValidRootDoc === 'true' && lastOpenedDocPath)
+    ) {
+      // Fast path: Trigger compile request before joinProject yields.
+      setCompiledOnce(i => i + 1) // avoid double compile on joinProject
+      compiler
+        .compile({
+          rootDocId:
+            // Set the custom rootDoc when valid, else use projects rootDoc.
+            lastOpenedDocIsValidRootDoc ? lastOpenedDoc : rootDocId,
+          rootDocPath: lastOpenedDocIsValidRootDoc
+            ? lastOpenedDocPath
+            : getMeta('ol-projectRootDocPath'),
+          isAutoCompileOnLoad: true,
+        })
+        .then(data => {
+          if (data?.status !== 'success') {
+            setCompiledOnce(i => i - 1)
+          }
+        })
+    }
+  }, [compiler, data, detachRole, projectId, rootDocId, tryCompileOnBoot])
+
   // always compile the PDF once after opening the project, after the doc has loaded
   useEffect(() => {
-    if (!compiledOnce && currentDoc) {
-      setCompiledOnce(true)
+    if (compiledOnce === 0 && currentDoc) {
+      setCompiledOnce(i => i + 1)
       compiler.compile({ isAutoCompileOnLoad: true })
     }
   }, [compiledOnce, currentDoc, compiler])
@@ -308,6 +382,9 @@ export function LocalCompileProvider({ children }) {
       )
 
       if (data.outputFiles) {
+        if (data.outputFiles.length > 0) {
+          setBuildId(data.outputFiles[0].build)
+        }
         const outputFiles = new Map()
 
         for (const outputFile of data.outputFiles) {
@@ -385,14 +462,6 @@ export function LocalCompileProvider({ children }) {
 
         case 'timedout':
           setError('timedout')
-
-          if (!hasPremiumCompile && isProjectOwner) {
-            send(
-              'subscription-funnel',
-              'editor-click-feature',
-              'compile-timeout'
-            )
-          }
           break
 
         case 'autocompile-backoff':
@@ -425,8 +494,6 @@ export function LocalCompileProvider({ children }) {
   }, [
     data,
     ide,
-    hasPremiumCompile,
-    isProjectOwner,
     projectId,
     setAutoCompile,
     setClsiServerId,
@@ -479,6 +546,7 @@ export function LocalCompileProvider({ children }) {
   // start a compile manually
   const startCompile = useCallback(
     options => {
+      setCompiledOnce(i => i + 1)
       compiler.compile(options)
     },
     [compiler]
@@ -507,6 +575,7 @@ export function LocalCompileProvider({ children }) {
   // clear the cache then run a compile, triggered by a menu item
   const recompileFromScratch = useCallback(() => {
     clearCache().then(() => {
+      setCompiledOnce(i => i + 1)
       compiler.compile()
     })
   }, [clearCache, compiler])
@@ -519,6 +588,7 @@ export function LocalCompileProvider({ children }) {
     () => ({
       animateCompileDropdownArrow,
       autoCompile,
+      buildId,
       clearCache,
       clearingCache,
       clsiServerId,
@@ -570,6 +640,7 @@ export function LocalCompileProvider({ children }) {
     [
       animateCompileDropdownArrow,
       autoCompile,
+      buildId,
       clearCache,
       clearingCache,
       clsiServerId,

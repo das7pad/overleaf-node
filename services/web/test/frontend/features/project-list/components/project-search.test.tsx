@@ -2,7 +2,7 @@ import sinon from 'sinon'
 import { render, screen, fireEvent } from '@testing-library/react'
 import { expect } from 'chai'
 import SearchForm from '../../../../../frontend/js/features/project-list/components/search-form'
-import * as eventTracking from '../../../../../frontend/js/infrastructure/event-tracking'
+import eventTracking from '../../../../../frontend/js/infrastructure/event-tracking'
 import fetchMock from 'fetch-mock'
 
 describe('Project list search form', function () {

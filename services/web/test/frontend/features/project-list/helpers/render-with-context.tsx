@@ -24,7 +24,7 @@ export function renderWithProjectListContext(
     body: { projects, totalSize: projects.length },
   })
 
-  fetchMock.get('express:/system/messages', {
+  fetchMock.get('express:/jwt/web/system/messages', {
     status: 200,
     body: [],
   })

@@ -1,4 +1,3 @@
-import _ from 'lodash'
 /* eslint-disable
     camelcase,
     max-len,
@@ -14,11 +13,19 @@ import _ from 'lodash'
  */
 import App from '../../../base'
 import isValidTeXFile from '../../../main/is-valid-tex-file'
+import getMeta from '../../../utils/meta'
 
 export default App.controller(
   'SettingsController',
   function ($scope, settings, ide) {
-    $scope.overallThemesList = window.overallThemes
+    $scope.editorThemes = getMeta('ol-editorThemes').map(t => {
+      return { value: t, name: t.replace(/_/g, ' ') }
+    })
+    $scope.overallThemesList = [
+      { value: '', name: 'Default', path: getMeta('ol-theme-default') },
+      { value: 'light-', name: 'Light', path: getMeta('ol-theme-light') },
+    ]
+    $scope.allowedImageNames = getMeta('ol-allowedImageNames')
     $scope.ui = { loadingStyleSheet: false }
 
     const _updateCSSFile = function (theme) {
@@ -47,17 +54,17 @@ export default App.controller(
     }
 
     if (
-      $scope.settings.fontFamily != null &&
+      !$scope.settings.fontFamily ||
       !['monaco', 'lucida'].includes($scope.settings.fontFamily)
     ) {
-      delete $scope.settings.fontFamily
+      $scope.settings.fontFamily = 'lucida'
     }
 
     if (
-      $scope.settings.lineHeight != null &&
+      !$scope.settings.lineHeight ||
       !['compact', 'normal', 'wide'].includes($scope.settings.lineHeight)
     ) {
-      delete $scope.settings.lineHeight
+      $scope.settings.lineHeight = 'normal'
     }
 
     $scope.fontSizeAsStr = function (newVal) {
@@ -82,17 +89,16 @@ export default App.controller(
       return filteredDocs
     }
 
-    $scope.$watch('settings.editorTheme', (editorTheme, oldEditorTheme) => {
-      if (editorTheme !== oldEditorTheme) {
-        return settings.saveSettings({ editorTheme })
+    $scope.$watch('settings.theme', (theme, oldTheme) => {
+      if (theme !== oldTheme) {
+        return settings.saveSettings({ theme })
       }
     })
 
     $scope.$watch('settings.overallTheme', (overallTheme, oldOverallTheme) => {
       if (overallTheme !== oldOverallTheme) {
-        const chosenTheme = _.find(
-          $scope.overallThemesList,
-          theme => theme.val === overallTheme
+        const chosenTheme = $scope.overallThemesList.find(
+          theme => theme.value === overallTheme
         )
         if (chosenTheme != null) {
           _updateCSSFile(chosenTheme)

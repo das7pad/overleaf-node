@@ -3,7 +3,7 @@ import { memo, useCallback, useEffect, useState, useRef } from 'react'
 import PropTypes from 'prop-types'
 import { useIdeContext } from '../../../shared/context/ide-context'
 import { useProjectContext } from '../../../shared/context/project-context'
-import { getJSON } from '../../../infrastructure/fetch-json'
+import { projectJWTPOSTJSON } from '../../../infrastructure/jwt-fetch-json'
 import { useDetachCompileContext as useCompileContext } from '../../../shared/context/detach-compile-context'
 import { useLayoutContext } from '../../../shared/context/layout-context'
 import useScopeValue from '../../../shared/hooks/use-scope-value'
@@ -103,11 +103,12 @@ function GoToPdfButton({
 function PdfSynctexControls() {
   const ide = useIdeContext()
 
-  const { _id: projectId } = useProjectContext()
+  const { _id: projectId, imageName } = useProjectContext()
 
   const { detachRole } = useLayoutContext()
 
   const {
+    buildId,
     clsiServerId,
     pdfUrl,
     pdfViewer,
@@ -183,17 +184,17 @@ function PdfSynctexControls() {
   )
 
   const goToPdfLocation = useCallback(
-    params => {
+    body => {
       setSyncToPdfInFlight(true)
 
-      if (clsiServerId) {
-        params += `&clsiserverid=${clsiServerId}`
-      }
+      body.buildId = buildId
+      body.clsiServerId = clsiServerId
+      body.imageName = imageName
 
-      getJSON(`/project/${projectId}/sync/code?${params}`, { signal })
+      projectJWTPOSTJSON(`/project/${projectId}/sync/code`, { body, signal })
         .then(data => {
           setShowLogs(false)
-          setHighlights(data.pdf)
+          setHighlights(data)
         })
         .catch(error => {
           console.error(error)
@@ -205,7 +206,9 @@ function PdfSynctexControls() {
         })
     },
     [
+      buildId,
       clsiServerId,
+      imageName,
       isMounted,
       projectId,
       setShowLogs,
@@ -217,11 +220,11 @@ function PdfSynctexControls() {
 
   const syncToPdf = useCallback(
     cursorPosition => {
-      const params = new URLSearchParams({
-        file: getCurrentFilePath(),
+      const params = {
+        fileName: getCurrentFilePath(),
         line: cursorPosition.row + 1,
         column: cursorPosition.column,
-      }).toString()
+      }
 
       goToPdfLocation(params)
     },
@@ -263,19 +266,19 @@ function PdfSynctexControls() {
       }
       v += visualOffset
 
-      const params = new URLSearchParams({
+      const body = {
         page: position.page + 1,
-        h: h.toFixed(2),
-        v: v.toFixed(2),
-      })
-
-      if (clsiServerId) {
-        params.set('clsiserverid', clsiServerId)
+        horizontal: h,
+        vertical: v,
       }
 
-      getJSON(`/project/${projectId}/sync/pdf?${params}`, { signal })
+      body.buildId = buildId
+      body.clsiServerId = clsiServerId
+      body.imageName = imageName
+
+      projectJWTPOSTJSON(`/project/${projectId}/sync/pdf`, { body, signal })
         .then(data => {
-          const [{ file, line }] = data.code
+          const [{ file, line }] = data
           goToCodeLine(file, line)
         })
         .catch(error => {
@@ -288,7 +291,9 @@ function PdfSynctexControls() {
         })
     },
     [
+      buildId,
       clsiServerId,
+      imageName,
       projectId,
       signal,
       isMounted,

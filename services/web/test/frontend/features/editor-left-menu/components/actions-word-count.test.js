@@ -10,8 +10,8 @@ describe('<ActionsWordCount />', function () {
   })
 
   it('shows correct modal when clicked after document is compiled', async function () {
-    const compileEndpoint = 'express:/project/:projectId/compile'
-    const wordcountEndpoint = 'express:/project/:projectId/wordcount'
+    const compileEndpoint = 'express:/jwt/web/project/:projectId/compile'
+    const wordcountEndpoint = 'express:/jwt/web/project/:projectId/wordcount'
 
     fetchMock.post(compileEndpoint, {
       status: 'success',
@@ -26,14 +26,12 @@ describe('<ActionsWordCount />', function () {
       ],
     })
 
-    fetchMock.get(wordcountEndpoint, {
-      texcount: {
-        encode: 'ascii',
-        textWords: 0,
-        headers: 0,
-        mathInline: 0,
-        mathDisplay: 0,
-      },
+    fetchMock.post(wordcountEndpoint, {
+      encode: 'ascii',
+      textWords: 0,
+      headers: 0,
+      mathInline: 0,
+      mathDisplay: 0,
     })
 
     renderWithEditorContext(<ActionsWordCount />, {

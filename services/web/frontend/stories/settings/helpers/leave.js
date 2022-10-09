@@ -1,7 +1,7 @@
 const MOCK_DELAY = 1000
 
 export function defaultSetupMocks(fetchMock) {
-  fetchMock.post(/\/user\/delete/, 200, {
+  fetchMock.post(/\/api\/user\/delete/, 200, {
     delay: MOCK_DELAY,
   })
 }

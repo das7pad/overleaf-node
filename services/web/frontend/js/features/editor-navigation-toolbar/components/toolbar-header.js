@@ -12,10 +12,8 @@ import ProjectNameEditableLabel from './project-name-editable-label'
 import TrackChangesToggleButton from './track-changes-toggle-button'
 import HistoryToggleButton from './history-toggle-button'
 import ShareProjectButton from './share-project-button'
-import importOverleafModules from '../../../../macros/import-overleaf-module.macro'
 
-const [publishModalModules] = importOverleafModules('publishModal')
-const PublishButton = publishModalModules?.import.default
+const PublishButton = undefined
 
 const ToolbarHeader = React.memo(function ToolbarHeader({
   cobranding,

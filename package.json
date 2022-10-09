@@ -50,7 +50,6 @@
     "services/third-party-datastore",
     "services/third-party-references",
     "services/tpdsworker",
-    "services/track-changes",
-    "services/web"
+    "services/track-changes"
   ]
 }

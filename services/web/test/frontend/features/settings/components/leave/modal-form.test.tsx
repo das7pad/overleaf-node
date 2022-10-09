@@ -57,7 +57,7 @@ describe('<LeaveModalForm />', function () {
     beforeEach(function () {
       setInFlight = sinon.stub()
       setIsFormValid = sinon.stub()
-      deleteMock = fetchMock.post('/user/delete', 200)
+      deleteMock = fetchMock.post('/api/user/delete', 200)
       locationStub = sinon.stub()
       Object.defineProperty(window, 'location', {
         value: {
@@ -114,7 +114,7 @@ describe('<LeaveModalForm />', function () {
 
   it('handles credentials error without Saas tip', async function () {
     window.metaAttributesCache.set('ol-ExposedSettings', { isOverleaf: false })
-    fetchMock.post('/user/delete', 403)
+    fetchMock.post('/api/user/delete', 403)
     render(
       <LeaveModalForm
         setInFlight={() => {}}
@@ -133,7 +133,7 @@ describe('<LeaveModalForm />', function () {
   })
 
   it('handles credentials error with Saas tip', async function () {
-    fetchMock.post('/user/delete', 403)
+    fetchMock.post('/api/user/delete', 403)
     render(
       <LeaveModalForm
         setInFlight={() => {}}
@@ -153,7 +153,7 @@ describe('<LeaveModalForm />', function () {
   })
 
   it('handles subscription error', async function () {
-    fetchMock.post('/user/delete', {
+    fetchMock.post('/api/user/delete', {
       status: 422,
       body: {
         error: 'SubscriptionAdminDeletionError',
@@ -178,7 +178,7 @@ describe('<LeaveModalForm />', function () {
   })
 
   it('handles generic error', async function () {
-    fetchMock.post('/user/delete', 500)
+    fetchMock.post('/api/user/delete', 500)
     render(
       <LeaveModalForm
         setInFlight={() => {}}

@@ -1,7 +1,6 @@
 /* eslint-disable
     camelcase,
     max-len,
-    no-unused-vars,
 */
 // TODO: This file was created by bulk-decaffeinate.
 // Fix any style issues and re-enable lint.
@@ -21,8 +20,8 @@ import ShareJs from '../../vendor/libs/sharejs'
 import EditorWatchdogManager from '../connection/EditorWatchdogManager'
 
 let ShareJsDoc
-const SINGLE_USER_FLUSH_DELAY = 2000 // ms
-const MULTI_USER_FLUSH_DELAY = 500 // ms
+const SINGLE_USER_FLUSH_DELAY = 1000 // ms
+const MULTI_USER_FLUSH_DELAY = 1000 / 60 // ms, 1 frame at 60 fps ~ 16ms delay
 
 export default ShareJsDoc = (function () {
   ShareJsDoc = class ShareJsDoc extends EventEmitter {
@@ -35,21 +34,15 @@ export default ShareJsDoc = (function () {
 
     constructor(
       doc_id,
-      docLines,
+      snapshot,
       version,
       socket,
       globalEditorWatchdogManager
     ) {
       super()
-      // Dencode any binary bits of data
-      // See http://ecmanaut.blogspot.co.uk/2006/07/encoding-decoding-utf8-in-javascript.html
       this.doc_id = doc_id
       this.socket = socket
       this.type = 'text'
-      docLines = Array.from(docLines).map(line =>
-        decodeURIComponent(escape(line))
-      )
-      const snapshot = docLines.join('\n')
       this.track_changes = false
 
       this.connection = {
@@ -415,14 +408,10 @@ export default ShareJsDoc = (function () {
           // service, so don't send an op if we're not. Connection state is set to 'ok'
           // when we've joined the project
           if (this.connection.state !== 'ok') {
-            let timer
             sl_console.log(
               '[inflightOpTimeout] Not connected, retrying in 0.5s'
             )
-            return (timer = setTimeout(
-              retryOp,
-              this.WAIT_FOR_CONNECTION_TIMEOUT
-            ))
+            setTimeout(retryOp, this.WAIT_FOR_CONNECTION_TIMEOUT)
           } else {
             sl_console.log('[inflightOpTimeout] Sending')
             return this.connection.send(update)

@@ -1,4 +1,0 @@
-{
-    "adapter": "./migrations/lib/adapter",
-    "migrationNumberFormat": "dateTime"
-}

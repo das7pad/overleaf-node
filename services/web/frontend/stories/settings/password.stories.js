@@ -31,7 +31,7 @@ export const NoExistingPassword = args => {
 export const Error = args => {
   setDefaultMeta()
   useFetchMock(fetchMock =>
-    fetchMock.post(/\/user\/password\/update/, {
+    fetchMock.post(/\/api\/user\/password\/update/, {
       status: 400,
       body: {
         message: 'Your old password is wrong',

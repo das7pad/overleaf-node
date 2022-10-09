@@ -30,7 +30,7 @@ describe('<LeaveModal />', function () {
   })
 
   it('does not close modal while in flight', async function () {
-    fetchMock.post('/user/delete', new Promise(() => {}))
+    fetchMock.post('/api/user/delete', new Promise(() => {}))
     const handleClose = sinon.stub()
     render(<LeaveModal isOpen handleClose={handleClose} />)
 

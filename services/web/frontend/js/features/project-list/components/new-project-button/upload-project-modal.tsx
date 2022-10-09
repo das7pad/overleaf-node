@@ -35,10 +35,7 @@ function UploadProjectModal({ onHide }: UploadProjectModalProps) {
       },
     })
       .use(XHRUpload, {
-        endpoint: '/project/new/upload',
-        headers: {
-          'X-CSRF-TOKEN': window.csrfToken,
-        },
+        endpoint: '/api/project/new/upload',
         limit: 1,
         fieldName: 'qqfile', // "qqfile" is needed for our express multer middleware
       })

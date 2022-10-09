@@ -328,7 +328,7 @@ function SelectProjectEntity({
         {data &&
           data.map(entity => (
             <option key={entity.path} value={entity.path}>
-              {entity.path.slice(1)}
+              {entity.path}
             </option>
           ))}
       </FormControl>

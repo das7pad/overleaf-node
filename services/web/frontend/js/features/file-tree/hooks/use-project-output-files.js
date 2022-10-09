@@ -18,14 +18,7 @@ export function useProjectOutputFiles(projectId) {
       setError(false)
       setData(null)
 
-      postJSON(`/project/${projectId}/compile`, {
-        body: {
-          check: 'silent',
-          draft: false,
-          incrementalCompilesEnabled: false,
-        },
-        signal,
-      })
+      postJSON(`/api/project/${projectId}/compile/headless`, { signal })
         .then(data => {
           if (data.status === 'success') {
             const filteredFiles = data.outputFiles.filter(file =>

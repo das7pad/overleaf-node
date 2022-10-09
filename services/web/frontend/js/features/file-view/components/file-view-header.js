@@ -5,16 +5,14 @@ import { Trans, useTranslation } from 'react-i18next'
 import Icon from '../../../shared/components/icon'
 import { formatTime, relativeDate } from '../../utils/format-date'
 import { postJSON } from '../../../infrastructure/fetch-json'
+import { projectJWTPOSTJSON } from '../../../infrastructure/jwt-fetch-json'
 import { useEditorContext } from '../../../shared/context/editor-context'
 import { useProjectContext } from '../../../shared/context/project-context'
 
-import importOverleafModules from '../../../../macros/import-overleaf-module.macro'
 import useAbortController from '../../../shared/hooks/use-abort-controller'
 import { LinkedFileIcon } from './file-view-icons'
-const tprLinkedFileInfo = importOverleafModules('tprLinkedFileInfo')
-const tprLinkedFileRefreshError = importOverleafModules(
-  'tprLinkedFileRefreshError'
-)
+const tprLinkedFileInfo = []
+const tprLinkedFileRefreshError = []
 
 const MAX_URL_LENGTH = 60
 const FRONT_OF_URL_LENGTH = 35
@@ -74,7 +72,9 @@ export default function FileViewHeader({ file, storeReferencesKeys }) {
     setRefreshing(true)
     // Replacement of the file handled by the file tree
     window.expectingLinkedFileRefreshedSocketFor = file.name
-    postJSON(`/project/${projectId}/linked_file/${file.id}/refresh`, { signal })
+    projectJWTPOSTJSON(`/project/${projectId}/linked_file/${file.id}/refresh`, {
+      signal,
+    })
       .then(() => {
         setRefreshing(false)
       })
@@ -127,7 +127,7 @@ export default function FileViewHeader({ file, storeReferencesKeys }) {
       )}
       &nbsp;
       <a
-        href={`/project/${projectId}/file/${file.id}`}
+        href={`/api/project/${projectId}/file/${file.id}`}
         className="btn btn-info"
       >
         <Icon type="download" fw />
@@ -208,7 +208,7 @@ function ProjectFilePathProvider({ file }) {
               ]
         }
         values={{
-          sourceEntityPath: file.linkedFileData.source_entity_path.slice(1),
+          sourceEntityPath: file.linkedFileData.source_entity_path,
           formattedDate: formatTime(file.created),
           relativeDate: relativeDate(file.created),
         }}

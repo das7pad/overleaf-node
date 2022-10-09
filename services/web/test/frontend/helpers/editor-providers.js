@@ -50,7 +50,9 @@ export function EditorProviders({
     findEntityById: () => null,
     findEntityByPath: () => null,
     getEntityPath: () => '',
+    getEntityPathById: () => null,
     getRootDocDirname: () => '',
+    getRootDocPath: () => '',
   },
   editorManager = {
     getCurrentDocId: () => 'foo',

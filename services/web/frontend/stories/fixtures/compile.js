@@ -48,7 +48,7 @@ export const outputFiles = [
 
 export const mockCompile = (fetchMock, delay = 1000) =>
   fetchMock.post(
-    'express:/project/:projectId/compile',
+    'express:/jwt/web/project/:projectId/compile',
     {
       body: {
         status: 'success',
@@ -63,7 +63,7 @@ export const mockCompile = (fetchMock, delay = 1000) =>
 
 export const mockCompileError = (fetchMock, status = 'success', delay = 1000) =>
   fetchMock.post(
-    'express:/project/:projectId/compile',
+    'express:/jwt/web/project/:projectId/compile',
     {
       body: {
         status,
@@ -80,7 +80,7 @@ export const mockCompileValidationIssues = (
   delay = 1000
 ) =>
   fetchMock.post(
-    'express:/project/:projectId/compile',
+    'express:/jwt/web/project/:projectId/compile',
     () => {
       return {
         body: {
@@ -95,7 +95,7 @@ export const mockCompileValidationIssues = (
   )
 
 export const mockClearCache = fetchMock =>
-  fetchMock.delete('express:/project/:projectId/output', 204, {
+  fetchMock.delete('express:/jwt/web/project/:projectId/output', 204, {
     delay: 1000,
     overwriteRoutes: true,
   })
@@ -221,9 +221,9 @@ export const mockValidPdf = fetchMock =>
 
 export const mockSynctex = fetchMock =>
   fetchMock
-    .get('express:/project/:projectId/sync/code', () => {
+    .get('express:/jwt/web/project/:projectId/sync/code', () => {
       return { pdf: cloneDeep(mockHighlights) }
     })
-    .get('express:/project/:projectId/sync/pdf', () => {
+    .get('express:/jwt/web/project/:projectId/sync/pdf', () => {
       return { code: [{ file: 'main.tex', line: 100 }] }
     })

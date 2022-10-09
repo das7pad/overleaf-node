@@ -47,9 +47,6 @@ function NewProjectButton({
           <MenuItem onClick={() => setModal('upload_project')}>
             {t('upload_project')}
           </MenuItem>
-          <MenuItem onClick={() => setModal('import_from_github')}>
-            {t('import_from_github')}
-          </MenuItem>
           {portalTemplates?.length > 0 ? (
             <>
               <MenuItem divider />
@@ -66,8 +63,10 @@ function NewProjectButton({
               ))}
             </>
           ) : null}
-          <MenuItem divider />
-          <MenuItem header>{t('templates')}</MenuItem>
+          {templateLinks.length > 0 && <MenuItem divider />}
+          {templateLinks.length > 0 && (
+            <MenuItem header>{t('templates')}</MenuItem>
+          )}
           {templateLinks.map((templateLink, index) => (
             <MenuItem
               key={`new-project-button-template-${index}`}

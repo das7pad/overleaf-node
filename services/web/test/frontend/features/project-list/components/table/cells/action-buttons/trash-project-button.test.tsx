@@ -35,7 +35,7 @@ describe('<TrashProjectButton />', function () {
   it('opens the modal and trashes the project', async function () {
     const project = Object.assign({}, archivedProject)
     const trashProjectMock = fetchMock.post(
-      `express:/project/:projectId/trash`,
+      `express:/api/project/:projectId/trash`,
       {
         status: 200,
       },
@@ -55,8 +55,8 @@ describe('<TrashProjectButton />', function () {
 
     await waitFor(
       () =>
-        expect(trashProjectMock.called(`/project/${project.id}/trash`)).to.be
-          .true
+        expect(trashProjectMock.called(`/api/project/${project.id}/trash`)).to
+          .be.true
     )
   })
 })

@@ -352,7 +352,7 @@ export function FileTreeActionableProvider({ children }) {
       const [selectedEntityId] = selectedEntityIds
       const selectedEntity = findInTree(fileTreeData, selectedEntityId)
       if (selectedEntity?.type === 'fileRef') {
-        return `/project/${projectId}/file/${selectedEntityId}`
+        return `/api/project/${projectId}/file/${selectedEntityId}`
       }
     }
   }, [fileTreeData, projectId, selectedEntityIds])

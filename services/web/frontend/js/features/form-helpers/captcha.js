@@ -1,4 +1,3 @@
-import 'abort-controller/polyfill'
 import { postJSON } from '../../infrastructure/fetch-json'
 
 const grecaptcha = window.grecaptcha
@@ -71,7 +70,7 @@ export async function canSkipCaptcha(email) {
     timer = setTimeout(() => {
       controller.abort()
     }, 1000)
-    canSkip = await postJSON('/login/can-skip-captcha', {
+    canSkip = await postJSON('/api/login/can-skip-captcha', {
       signal,
       body: { email },
       swallowAbortError: false,

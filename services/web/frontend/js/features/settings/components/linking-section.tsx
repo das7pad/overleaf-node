@@ -1,7 +1,5 @@
-import { useState } from 'react'
 import { Alert } from 'react-bootstrap'
 import { useTranslation } from 'react-i18next'
-import importOverleafModules from '../../../../macros/import-overleaf-module.macro'
 import { useSSOContext, SSOSubscription } from '../context/sso-context'
 import { SSOLinkingWidget } from './linking/sso-widget'
 import getMeta from '../../../utils/meta'
@@ -13,16 +11,8 @@ function LinkingSection() {
   const projectSyncSuccessMessage = getMeta(
     'ol-projectSyncSuccessMessage'
   ) as string
-  const [integrationLinkingWidgets] = useState<any[]>(
-    () =>
-      getMeta('integrationLinkingWidgets') ||
-      importOverleafModules('integrationLinkingWidgets')
-  )
-  const [referenceLinkingWidgets] = useState<any[]>(
-    () =>
-      getMeta('referenceLinkingWidgets') ||
-      importOverleafModules('referenceLinkingWidgets')
-  )
+  const integrationLinkingWidgets: any[] = []
+  const referenceLinkingWidgets: any[] = []
 
   const hasIntegrationLinkingSection = integrationLinkingWidgets.length
   const hasReferencesLinkingSection = referenceLinkingWidgets.length

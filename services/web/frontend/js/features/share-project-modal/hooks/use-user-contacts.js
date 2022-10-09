@@ -10,7 +10,7 @@ export function useUserContacts() {
   const { signal } = useAbortController()
 
   useEffect(() => {
-    getJSON('/user/contacts', { signal })
+    getJSON('/api/user/contacts', { signal })
       .then(data => {
         setData(data.contacts.map(buildContact))
       })

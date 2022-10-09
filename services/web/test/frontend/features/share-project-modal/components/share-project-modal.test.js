@@ -9,12 +9,12 @@ import {
 } from '@testing-library/react'
 import fetchMock from 'fetch-mock'
 
+import eventTracking from '../../../../../frontend/js/infrastructure/event-tracking'
 import ShareProjectModal from '../../../../../frontend/js/features/share-project-modal/components/share-project-modal'
 import {
   renderWithEditorContext,
   cleanUpContext,
 } from '../../../helpers/render-with-context'
-import * as locationModule from '../../../../../frontend/js/shared/components/location'
 import {
   EditorProviders,
   USER_EMAIL,
@@ -83,15 +83,18 @@ describe('<ShareProjectModal/>', function () {
     show: true,
     handleHide: sinon.stub(),
   }
+  let sendMBSpy
 
   beforeEach(function () {
-    fetchMock.get('/user/contacts', { contacts })
+    sendMBSpy = sinon.spy(eventTracking, 'sendMB')
+    fetchMock.get('/api/user/contacts', { contacts })
     window.metaAttributesCache = new Map()
     window.metaAttributesCache.set('ol-user', { allowedFreeTrial: true })
     window.metaAttributesCache.set('ol-showUpgradePrompt', true)
   })
 
   afterEach(function () {
+    sendMBSpy.restore()
     fetchMock.restore()
     cleanUpContext()
     window.metaAttributesCache = new Map()
@@ -340,7 +343,7 @@ describe('<ShareProjectModal/>', function () {
 
   it('resends an invite', async function () {
     fetchMock.postOnce(
-      'express:/project/:projectId/invite/:inviteId/resend',
+      'express:/jwt/web/project/:projectId/invite/:inviteId/resend',
       204
     )
 
@@ -376,7 +379,10 @@ describe('<ShareProjectModal/>', function () {
   })
 
   it('revokes an invite', async function () {
-    fetchMock.deleteOnce('express:/project/:projectId/invite/:inviteId', 204)
+    fetchMock.deleteOnce(
+      'express:/jwt/web/project/:projectId/invite/:inviteId',
+      204
+    )
 
     const invites = [
       {
@@ -409,7 +415,7 @@ describe('<ShareProjectModal/>', function () {
   })
 
   it('changes member privileges to read + write', async function () {
-    fetchMock.putOnce('express:/project/:projectId/users/:userId', 204)
+    fetchMock.putOnce('express:/jwt/web/project/:projectId/users/:userId', 204)
 
     const members = [
       {
@@ -451,7 +457,10 @@ describe('<ShareProjectModal/>', function () {
   })
 
   it('removes a member from the project', async function () {
-    fetchMock.deleteOnce('express:/project/:projectId/users/:userId', 204)
+    fetchMock.deleteOnce(
+      'express:/jwt/web/project/:projectId/users/:userId',
+      204
+    )
 
     const members = [
       {
@@ -479,8 +488,10 @@ describe('<ShareProjectModal/>', function () {
 
     fireEvent.click(removeButton)
 
+    await fetchMock.flush(true)
+
     const url = fetchMock.lastUrl()
-    expect(url).to.equal('/project/test-project/users/member-viewer')
+    expect(url).to.equal('/jwt/web/project/test-project/users/member-viewer')
 
     expect(fetchMock.done()).to.be.true
 
@@ -490,7 +501,10 @@ describe('<ShareProjectModal/>', function () {
   })
 
   it('changes member privileges to owner with confirmation', async function () {
-    fetchMock.postOnce('express:/project/:projectId/transfer-ownership', 204)
+    fetchMock.postOnce(
+      'express:/jwt/web/project/:projectId/transfer-ownership',
+      204
+    )
 
     const members = [
       {
@@ -525,7 +539,12 @@ describe('<ShareProjectModal/>', function () {
       )
     })
 
-    const reloadStub = sinon.stub(locationModule, 'reload')
+    // Monkey patch window.location.reload()
+    // jsdom does not implement the underlying `navigation` constructs.
+    const oldLocation = window.location
+    delete window.location
+    const reloadStub = sinon.stub()
+    window.location = { reload: reloadStub }
 
     const confirmButton = screen.getByRole('button', {
       name: 'Change owner',
@@ -538,7 +557,9 @@ describe('<ShareProjectModal/>', function () {
 
     expect(fetchMock.done()).to.be.true
     expect(reloadStub.calledOnce).to.be.true
-    reloadStub.restore()
+
+    // Restore location object
+    window.location = oldLocation
   })
 
   it('sends invites to input email addresses', async function () {
@@ -557,7 +578,7 @@ describe('<ShareProjectModal/>', function () {
 
     // loading contacts
     await waitFor(() => {
-      expect(fetchMock.called('express:/user/contacts')).to.be.true
+      expect(fetchMock.called('express:/api/user/contacts')).to.be.true
     })
 
     // displaying a list of matching contacts
@@ -568,7 +589,7 @@ describe('<ShareProjectModal/>', function () {
 
     // sending invitations
 
-    fetchMock.post('express:/project/:projectId/invite', (url, req) => {
+    fetchMock.post('express:/jwt/web/project/:projectId/invite', (url, req) => {
       const data = JSON.parse(req.body)
 
       if (data.email === 'a@b.c') {
@@ -605,7 +626,7 @@ describe('<ShareProjectModal/>', function () {
     let calls
     await waitFor(
       () => {
-        calls = fetchMock.calls('express:/project/:projectId/invite')
+        calls = fetchMock.calls('express:/jwt/web/project/:projectId/invite')
         expect(calls).to.have.length(4)
       },
       { timeout: 5000 } // allow time for delay between each request
@@ -629,12 +650,6 @@ describe('<ShareProjectModal/>', function () {
   })
 
   it('displays a message when the collaborator limit is reached', async function () {
-    fetchMock.post(
-      '/event/paywall-prompt',
-      {},
-      { body: { 'paywall-type': 'project-sharing' } }
-    )
-
     renderWithEditorContext(<ShareProjectModal {...modalProps} />, {
       scope: {
         project: {
@@ -653,6 +668,10 @@ describe('<ShareProjectModal/>', function () {
     screen.getByText(
       /You need to upgrade your account to add more collaborators/
     )
+
+    expect(sendMBSpy).to.have.been.calledWith('paywall-prompt', {
+      'paywall-type': 'project-sharing',
+    })
   })
 
   it('handles server error responses', async function () {
@@ -667,7 +686,7 @@ describe('<ShareProjectModal/>', function () {
 
     // loading contacts
     await waitFor(() => {
-      expect(fetchMock.called('express:/user/contacts')).to.be.true
+      expect(fetchMock.called('express:/api/user/contacts')).to.be.true
     })
 
     const [inputElement] = await screen.findAllByLabelText(
@@ -684,7 +703,7 @@ describe('<ShareProjectModal/>', function () {
       fireEvent.blur(inputElement)
 
       fetchMock.postOnce(
-        'express:/project/:projectId/invite',
+        'express:/jwt/web/project/:projectId/invite',
         {
           status: 400,
           body: { errorReason },
@@ -721,7 +740,10 @@ describe('<ShareProjectModal/>', function () {
   })
 
   it('handles switching between access levels', async function () {
-    fetchMock.post('express:/project/:projectId/settings/admin', 204)
+    fetchMock.put(
+      'express:/jwt/web/project/:projectId/settings/admin/publicAccessLevel',
+      204
+    )
 
     const watchCallbacks = {}
 
@@ -790,7 +812,7 @@ describe('<ShareProjectModal/>', function () {
 
     // Wait for contacts to load
     await waitFor(() => {
-      expect(fetchMock.called('express:/user/contacts')).to.be.true
+      expect(fetchMock.called('express:/api/user/contacts')).to.be.true
     })
 
     // Enter a prefix that matches a contact

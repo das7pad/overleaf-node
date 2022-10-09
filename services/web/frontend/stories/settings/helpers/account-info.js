@@ -1,7 +1,10 @@
 const MOCK_DELAY = 1000
 
 export function defaultSetupMocks(fetchMock) {
-  fetchMock.post(/\/user\/settings/, 200, {
+  fetchMock.post('express:/api/user/settings/email', 200, {
+    delay: MOCK_DELAY,
+  })
+  fetchMock.post('express:/api/user/settings/name', 200, {
     delay: MOCK_DELAY,
   })
 }

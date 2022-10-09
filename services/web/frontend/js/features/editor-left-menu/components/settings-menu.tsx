@@ -1,6 +1,5 @@
 import { Form } from 'react-bootstrap'
 import { useTranslation } from 'react-i18next'
-import getMeta from '../../../utils/meta'
 import SettingsAutoCloseBrackets from './settings/settings-auto-close-brackets'
 import SettingsAutoComplete from './settings/settings-auto-complete'
 import SettingsCompiler from './settings/settings-compiler'
@@ -19,11 +18,6 @@ import SettingsSyntaxValidation from './settings/settings-syntax-validation'
 
 export default function SettingsMenu() {
   const { t } = useTranslation()
-  const anonymous = getMeta('ol-anonymous') as boolean | undefined
-
-  if (anonymous === true || anonymous === undefined) {
-    return null
-  }
 
   return (
     <>

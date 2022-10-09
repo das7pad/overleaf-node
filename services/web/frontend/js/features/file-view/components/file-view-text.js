@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import PropTypes from 'prop-types'
 import { useProjectContext } from '../../../shared/context/project-context'
+import useAbortController from '../../../shared/hooks/use-abort-controller'
 
 const MAX_FILE_SIZE = 2 * 1024 * 1024
 
@@ -9,67 +10,56 @@ export default function FileViewText({ file, onLoad, onError }) {
     _id: PropTypes.string.isRequired,
   })
 
+  const { signal } = useAbortController()
+
   const [textPreview, setTextPreview] = useState('')
   const [shouldShowDots, setShouldShowDots] = useState(false)
-  const [inFlight, setInFlight] = useState(false)
 
   useEffect(() => {
-    if (inFlight) {
-      return
+    if (file.size === 0) return onLoad()
+    setTextPreview('')
+    const headers = new Headers()
+    if (file.size > MAX_FILE_SIZE) {
+      setShouldShowDots(true)
+      headers.set('Range', `bytes=0-${MAX_FILE_SIZE}`)
+    } else {
+      setShouldShowDots(false)
     }
-    let path = `/project/${projectId}/file/${file.id}`
-    fetch(path, { method: 'HEAD' })
+    fetch(`/api/project/${projectId}/file/${file.id}`, { signal, headers })
       .then(response => {
-        if (!response.ok) throw new Error('HTTP Error Code: ' + response.status)
-        return response.headers.get('Content-Length')
-      })
-      .then(fileSize => {
-        let truncated = false
-        let maxSize = null
-        if (fileSize > MAX_FILE_SIZE) {
-          truncated = true
-          maxSize = MAX_FILE_SIZE
+        if (!response.ok) {
+          throw new Error('Loading preview failed')
         }
-
-        if (maxSize != null) {
-          path += `?range=0-${maxSize}`
-        }
-        return fetch(path).then(response => {
-          return response.text().then(text => {
-            if (truncated) {
-              text = text.replace(/\n.*$/, '')
-            }
-
-            setTextPreview(text)
-            onLoad()
-            setShouldShowDots(truncated)
-          })
+        return response.text().then(text => {
+          if (file.size > MAX_FILE_SIZE) {
+            text = text.replace(/\n.*$/, '')
+          }
+          setTextPreview(text)
+          onLoad()
         })
       })
       .catch(err => {
-        console.error(err)
-        onError()
+        onError(err)
       })
-      .finally(() => {
-        setInFlight(false)
-      })
-  }, [projectId, file.id, onError, onLoad, inFlight])
+  }, [projectId, file, onError, onLoad, signal])
+
+  if (file.size === 0) {
+    return <>This file is empty and does not have a preview.</>
+  }
+  if (!textPreview) return null
   return (
-    <div>
-      {textPreview && (
-        <div className="text-preview">
-          <div className="scroll-container">
-            <p>{textPreview}</p>
-            {shouldShowDots && <p>...</p>}
-          </div>
-        </div>
-      )}
+    <div className="text-preview">
+      <div className="scroll-container">
+        <p>{textPreview}</p>
+        {shouldShowDots && <p>...</p>}
+      </div>
     </div>
   )
 }
 
 FileViewText.propTypes = {
-  file: PropTypes.shape({ id: PropTypes.string }).isRequired,
+  file: PropTypes.shape({ id: PropTypes.string, size: PropTypes.number })
+    .isRequired,
   onLoad: PropTypes.func.isRequired,
   onError: PropTypes.func.isRequired,
 }

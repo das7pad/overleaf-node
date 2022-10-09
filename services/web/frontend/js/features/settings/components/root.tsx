@@ -39,7 +39,7 @@ function SettingsPageRoot() {
 
 function SettingsPageContent() {
   const { t } = useTranslation()
-  const { isOverleaf, labsEnabled } = getMeta(
+  const { isOverleaf, betaEnabled, labsEnabled } = getMeta(
     'ol-ExposedSettings'
   ) as ExposedSettings
 
@@ -64,7 +64,7 @@ function SettingsPageContent() {
           <SSOProvider>
             <LinkingSection />
           </SSOProvider>
-          {isOverleaf ? (
+          {betaEnabled ? (
             <>
               <BetaProgramSection />
               <hr />
@@ -84,7 +84,12 @@ function SettingsPageContent() {
               <hr />
               <LeaveSection />
             </>
-          ) : null}
+          ) : (
+            <>
+              <hr />
+              <LeaveSection />
+            </>
+          )}
         </div>
       </div>
     </UserProvider>

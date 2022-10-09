@@ -2,7 +2,7 @@ import { expect } from 'chai'
 import LatexLogParser from '../../../../frontend/js/ide/log-parser/latex-log-parser'
 import BibLogParser from '../../../../frontend/js/ide/log-parser/bib-log-parser'
 
-const fixturePath = '../../helpers/fixtures/logs/'
+const fixturePath = 'test/frontend/helpers/fixtures/logs/'
 const fs = require('fs')
 const path = require('path')
 
@@ -403,7 +403,7 @@ describe('logParser', function (done) {
 })
 
 function readLog(filename) {
-  return fs.readFileSync(path.resolve(__dirname, fixturePath + filename), {
+  return fs.readFileSync(path.join(fixturePath, filename), {
     encoding: 'utf8',
     flag: 'r',
   })

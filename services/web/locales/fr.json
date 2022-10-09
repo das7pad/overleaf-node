@@ -200,7 +200,6 @@
   "do_not_link_accounts": "Ne pas lier les comptes",
   "account_has_been_link_to_institution_account": "Votre compte __appName__ en <b>__email__</b> a été lié à votre compte institutionnel <b>__institutionName__</b>.",
   "account_linking": "Liaison des comptes",
-  "account_with_email_exists": "Il semble qu’un compte <b>__appName__</b> avec l’adresse courriel <b>__email__</b> existe déjà.",
   "acct_linked_to_institution_acct": "Vous pouvez <b>vous connecter</b> à Overleaf via votre compte institutionnel <b>__institutionName__</b>.",
   "alternatively_create_new_institution_account": "Autrement, vous pouvez créer un <b>nouveau compte</b> avec votre adresse courriel institutionnelle (<b>__email__</b>) en cliquant <b>__clickText__</b>.",
   "as_a_member_of_sso_required": "En tant que membre de <b>__institutionName__</b>, vous devez vous connecter à <b>__appName__</b> via votre portail institutionnel.",

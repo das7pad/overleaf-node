@@ -28,7 +28,7 @@ import { useEditorContext } from '../../../shared/context/editor-context'
 // draggable or droppable element is not within a `dnd-container` element.
 const ModifiedBackend = (...args) => {
   function isDndChild(elt) {
-    if (elt.getAttribute && elt.getAttribute('dnd-container')) return true
+    if (elt.getAttribute && elt.getAttribute('data-dnd-container')) return true
     if (!elt.parentNode) return false
     return isDndChild(elt.parentNode)
   }

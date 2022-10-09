@@ -5,7 +5,7 @@ import { projectsData } from '../../../test/frontend/features/project-list/fixtu
 
 export const Search = (args: any) => {
   useFetchMock(fetchMock => {
-    fetchMock.post(/\/api\/project/, {
+    fetchMock.post('express:/api/project', {
       projects: projectsData,
       totalSize: projectsData.length,
     })

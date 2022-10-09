@@ -66,7 +66,6 @@ export default function TagsList() {
               <button
                 className="dropdown-toggle"
                 data-toggle="dropdown"
-                dropdown-toggle=""
                 aria-haspopup="true"
                 aria-expanded="false"
               >

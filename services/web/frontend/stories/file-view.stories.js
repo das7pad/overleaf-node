@@ -20,14 +20,14 @@ extra parameters or packages included.
 
 const setupFetchMock = fetchMock => {
   return fetchMock
-    .head('express:/project/:project_id/file/:file_id', {
+    .head('express:/api/project/:project_id/file/:file_id', {
       status: 201,
       headers: { 'Content-Length': 10000 },
     })
-    .post('express:/project/:project_id/linked_file/:file_id/refresh', {
+    .post('express:/jwt/web/project/:project_id/linked_file/:file_id/refresh', {
       status: 204,
     })
-    .post('express:/project/:project_id/references/indexAll', {
+    .post('express:/jwt/web/project/:project_id/references/indexAll', {
       status: 204,
     })
 }
@@ -41,7 +41,7 @@ const fileData = {
 export const FileFromUrl = args => {
   useFetchMock(fetchMock =>
     setupFetchMock(fetchMock).get(
-      'express:/project/:project_id/file/:file_id',
+      'express:/api/project/:project_id/file/:file_id',
       { body: bodies.latex }
     )
   )
@@ -61,7 +61,7 @@ FileFromUrl.args = {
 export const FileFromProjectWithLinkableProjectId = args => {
   useFetchMock(fetchMock =>
     setupFetchMock(fetchMock).get(
-      'express:/project/:project_id/file/:file_id',
+      'express:/api/project/:project_id/file/:file_id',
       { body: bodies.latex }
     )
   )
@@ -82,7 +82,7 @@ FileFromProjectWithLinkableProjectId.args = {
 export const FileFromProjectWithoutLinkableProjectId = args => {
   useFetchMock(fetchMock =>
     setupFetchMock(fetchMock).get(
-      'express:/project/:project_id/file/:file_id',
+      'express:/api/project/:project_id/file/:file_id',
       { body: bodies.latex }
     )
   )
@@ -103,7 +103,7 @@ FileFromProjectWithoutLinkableProjectId.args = {
 export const FileFromProjectOutputWithLinkableProject = args => {
   useFetchMock(fetchMock =>
     setupFetchMock(fetchMock).get(
-      'express:/project/:project_id/file/:file_id',
+      'express:/api/project/:project_id/file/:file_id',
       { body: bodies.latex }
     )
   )
@@ -124,7 +124,7 @@ FileFromProjectOutputWithLinkableProject.args = {
 export const FileFromProjectOutputWithoutLinkableProjectId = args => {
   useFetchMock(fetchMock =>
     setupFetchMock(fetchMock).get(
-      'express:/project/:project_id/file/:file_id',
+      'express:/api/project/:project_id/file/:file_id',
       { body: bodies.latex }
     )
   )
@@ -164,7 +164,7 @@ ImageFile.args = {
 export const ThirdPartyReferenceFile = args => {
   useFetchMock(fetchMock =>
     setupFetchMock(fetchMock).get(
-      'express:/project/:project_id/file/:file_id',
+      'express:/api/project/:project_id/file/:file_id',
       { body: bodies.bibtex }
     )
   )
@@ -185,7 +185,7 @@ ThirdPartyReferenceFile.args = {
 export const ThirdPartyReferenceFileWithError = args => {
   useFetchMock(fetchMock =>
     setupFetchMock(fetchMock).head(
-      'express:/project/:project_id/file/:file_id',
+      'express:/api/project/:project_id/file/:file_id',
       { status: 500 },
       { overwriteRoutes: true }
     )
@@ -208,7 +208,7 @@ ThirdPartyReferenceFileWithError.args = {
 export const TextFile = args => {
   useFetchMock(fetchMock =>
     setupFetchMock(fetchMock).get(
-      'express:/project/:project_id/file/:file_id',
+      'express:/api/project/:project_id/file/:file_id',
       { body: bodies.text },
       { overwriteRoutes: true }
     )
@@ -230,7 +230,7 @@ TextFile.args = {
 export const UploadedFile = args => {
   useFetchMock(fetchMock =>
     setupFetchMock(fetchMock).head(
-      'express:/project/:project_id/file/:file_id',
+      'express:/api/project/:project_id/file/:file_id',
       { status: 500 },
       { overwriteRoutes: true }
     )

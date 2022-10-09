@@ -16,7 +16,6 @@
  * DS207: Consider shorter variations of null checks
  * Full docs: https://github.com/decaffeinate/decaffeinate/blob/master/docs/suggestions.md
  */
-import RangesTracker from '@overleaf/ranges-tracker'
 import EventEmitter from '../../utils/EventEmitter'
 import ShareJsDoc from './ShareJsDoc'
 let Document
@@ -231,10 +230,6 @@ export default Document = (function () {
 
     getTrackingChanges() {
       return !!this.doc.track_changes
-    }
-
-    setTrackChangesIdSeeds(id_seeds) {
-      return (this.doc.track_changes_id_seeds = id_seeds)
     }
 
     _bindToSocketEvents() {
@@ -537,17 +532,12 @@ export default Document = (function () {
           this.doc_id,
           this.doc.getVersion(),
           { encodeRanges: true },
-          (error, docLines, version, updates, ranges) => {
+          (error, snapshot, version, updates) => {
             if (error != null) {
               return callback(error)
             }
             this.joined = true
             this.doc.catchUp(updates)
-            this._decodeRanges(ranges)
-            this._catchUpRanges(
-              ranges != null ? ranges.changes : undefined,
-              ranges != null ? ranges.comments : undefined
-            )
             return callback()
           }
         )
@@ -559,7 +549,7 @@ export default Document = (function () {
           'joinDoc',
           this.doc_id,
           { encodeRanges: true },
-          (error, docLines, version, updates, ranges) => {
+          (error, snapshot, version, updates) => {
             if (error != null) {
               return callback(error)
             }
@@ -570,47 +560,15 @@ export default Document = (function () {
             })
             this.doc = new ShareJsDoc(
               this.doc_id,
-              docLines,
+              snapshot,
               version,
               this.ide.socket,
               this.ide.globalEditorWatchdogManager
-            )
-            this._decodeRanges(ranges)
-            this.ranges = new RangesTracker(
-              ranges != null ? ranges.changes : undefined,
-              ranges != null ? ranges.comments : undefined
             )
             this._bindToShareJsDocEvents()
             return callback()
           }
         )
-      }
-    }
-
-    _decodeRanges(ranges) {
-      const decodeFromWebsockets = text => decodeURIComponent(escape(text))
-      try {
-        for (const change of Array.from(ranges.changes || [])) {
-          if (change.op.i != null) {
-            change.op.i = decodeFromWebsockets(change.op.i)
-          }
-          if (change.op.d != null) {
-            change.op.d = decodeFromWebsockets(change.op.d)
-          }
-        }
-        return (() => {
-          const result = []
-          for (const comment of Array.from(ranges.comments || [])) {
-            if (comment.op.c != null) {
-              result.push((comment.op.c = decodeFromWebsockets(comment.op.c)))
-            } else {
-              result.push(undefined)
-            }
-          }
-          return result
-        })()
-      } catch (err) {
-        return console.log(err)
       }
     }
 
@@ -707,7 +665,6 @@ export default Document = (function () {
 
       let docChangedTimeout
       this.doc.on('change', (ops, oldSnapshot, msg) => {
-        this._applyOpsToRanges(ops, oldSnapshot, msg)
         if (docChangedTimeout) {
           window.clearTimeout(docChangedTimeout)
         }
@@ -757,79 +714,7 @@ export default Document = (function () {
       // This could intefere with the new connection of a new instance of this document.
       return this._cleanUp()
     }
-
-    _applyOpsToRanges(ops, oldSnapshot, msg) {
-      let old_id_seed
-      if (ops == null) {
-        ops = []
-      }
-      let track_changes_as = null
-      const remote_op = msg != null
-      if (__guard__(msg != null ? msg.meta : undefined, x => x.tc) != null) {
-        old_id_seed = this.ranges.getIdSeed()
-        this.ranges.setIdSeed(msg.meta.tc)
-      }
-      if (remote_op && (msg.meta != null ? msg.meta.tc : undefined)) {
-        track_changes_as = msg.meta.user_id
-      } else if (!remote_op && this.track_changes_as != null) {
-        ;({ track_changes_as } = this)
-      }
-      this.ranges.track_changes = track_changes_as != null
-      for (const op of this._filterOps(ops)) {
-        this.ranges.applyOp(op, { user_id: track_changes_as })
-      }
-      if (old_id_seed != null) {
-        this.ranges.setIdSeed(old_id_seed)
-      }
-      if (remote_op) {
-        // With remote ops, Ace hasn't been updated when we receive this op,
-        // so defer updating track changes until it has
-        return setTimeout(() => this.emit('ranges:dirty'))
-      } else {
-        return this.emit('ranges:dirty')
-      }
-    }
-
-    _catchUpRanges(changes, comments) {
-      // We've just been given the current server's ranges, but need to apply any local ops we have.
-      // Reset to the server state then apply our local ops again.
-      if (changes == null) {
-        changes = []
-      }
-      if (comments == null) {
-        comments = []
-      }
-      this.emit('ranges:clear')
-      this.ranges.changes = changes
-      this.ranges.comments = comments
-      this.ranges.track_changes = this.doc.track_changes
-      for (const op of this._filterOps(this.doc.getInflightOp() || [])) {
-        this.ranges.setIdSeed(this.doc.track_changes_id_seeds.inflight)
-        this.ranges.applyOp(op, { user_id: this.track_changes_as })
-      }
-      for (const op of this._filterOps(this.doc.getPendingOp() || [])) {
-        this.ranges.setIdSeed(this.doc.track_changes_id_seeds.pending)
-        this.ranges.applyOp(op, { user_id: this.track_changes_as })
-      }
-      return this.emit('ranges:redraw')
-    }
-
-    _filterOps(ops) {
-      // Read-only token users can't see/edit comment, so we filter out comment
-      // ops to avoid highlighting comment ranges.
-      if (window.isRestrictedTokenMember) {
-        return ops.filter(op => op.c == null)
-      } else {
-        return ops
-      }
-    }
   }
   Document.initClass()
   return Document
 })()
-
-function __guard__(value, transform) {
-  return typeof value !== 'undefined' && value !== null
-    ? transform(value)
-    : undefined
-}

@@ -4,6 +4,7 @@ import _ from 'lodash'
     max-len
  */
 import App from '../../../base'
+import staticPath from '../../../utils/staticPath'
 import UndoManager from './aceEditor/undo/UndoManager'
 import AutoCompleteManager from './aceEditor/auto-complete/AutoCompleteManager'
 import SpellCheckManager from './aceEditor/spell-check/SpellCheckManager'
@@ -11,62 +12,56 @@ import SpellCheckAdapter from './aceEditor/spell-check/SpellCheckAdapter'
 import HighlightsManager from './aceEditor/highlights/HighlightsManager'
 import CursorPositionManager from './aceEditor/cursor-position/CursorPositionManager'
 import CursorPositionAdapter from './aceEditor/cursor-position/CursorPositionAdapter'
-import TrackChangesManager from './aceEditor/track-changes/TrackChangesManager'
-import TrackChangesAdapter from './aceEditor/track-changes/TrackChangesAdapter'
 import MetadataManager from './aceEditor/metadata/MetadataManager'
 import 'ace/ace'
 import 'ace/ext-searchbox'
 import 'ace/ext-modelist'
-import 'ace/keybinding-vim'
+import 'ace/mode-latex'
 import '../../metadata/services/metadata'
 import '../../graphics/services/graphics'
 import '../../preamble/services/preamble'
 import '../../files/services/files'
-let syntaxValidationEnabled
+import { localStorage } from '../../../modules/storage'
 const { EditSession } = ace.require('ace/edit_session')
 const ModeList = ace.require('ace/ext/modelist')
-const { Vim } = ace.require('ace/keyboard/vim')
 const SearchBox = ace.require('ace/ext/searchbox')
 
 // Set the base path that ace will fetch modes/snippets/workers from
-if (window.aceBasePath !== '') {
-  syntaxValidationEnabled = true
-  ace.config.set('basePath', window.aceBasePath)
-  ace.config.set('workerPath', window.aceBasePath)
-} else {
-  syntaxValidationEnabled = false
-}
+const syntaxValidationEnabled = true
+ace.config.set('basePath', staticPath('/vendor/ace-builds/src-min-noconflict'))
 
 // By default, don't use workers - enable them per-session as required
 ace.config.setDefaultValue('session', 'useWorker', false)
 
-// Ace loads its script itself, so we need to hook in to be able to clear
-// the cache.
-if (ace.config._moduleUrl == null) {
-  ace.config._moduleUrl = ace.config.moduleUrl
-  ace.config.moduleUrl = function (...args) {
-    const url = ace.config._moduleUrl(...Array.from(args || []))
-    return url
-  }
-}
+// CSP disallows loading JS from the main origin.
+ace.config.set('loadWorkerFromBlob', true)
 
-App.directive(
-  'aceEditor',
-  function (
+const deps = [
+  'ide',
+  '$timeout',
+  '$compile',
+  '$rootScope',
+  'eventTracking',
+  '$cacheFactory',
+  'metadata',
+  'graphics',
+  'preamble',
+  'files',
+]
+
+App.directive('aceEditor', [
+  ...deps,
+  function aceEditorDirective(
     ide,
     $timeout,
     $compile,
     $rootScope,
     eventTracking,
-    localStorage,
     $cacheFactory,
     metadata,
     graphics,
     preamble,
-    files,
-    $http,
-    $q,
-    $window
+    files
   ) {
     monkeyPatchSearch($rootScope, $compile)
 
@@ -88,16 +83,9 @@ App.directive(
         navigateHighlights: '=',
         fileName: '=',
         onCtrlEnter: '=', // Compile
-        onCtrlJ: '=', // Toggle the review panel
-        onCtrlShiftC: '=', // Add a new comment
-        onCtrlShiftA: '=', // Toggle track-changes on/off
         onSave: '=', // Cmd/Ctrl-S or :w in Vim
         syntaxValidation: '=',
-        reviewPanel: '=',
-        eventsBridge: '=',
-        trackChanges: '=',
         docId: '=',
-        rendererData: '=',
         lineHeight: '=',
         fontFamily: '=',
       },
@@ -142,19 +130,6 @@ App.directive(
             document.replace(range, text)
           }
         })
-
-        ide.$scope.$on('symbol-palette-toggled', (event, isToggled) => {
-          if (!isToggled) {
-            editor.focus()
-          }
-        })
-
-        ide.$scope.$on('galileo-toggled', (event, isToggled) => {
-          if (!isToggled) {
-            editor.focus()
-          }
-        })
-
         scope.$watch('autoPairDelimiters', autoPairDelimiters => {
           if (autoPairDelimiters) {
             return editor.setOption('behavioursEnabled', true)
@@ -175,8 +150,6 @@ App.directive(
           spellCheckManager = new SpellCheckManager(
             scope,
             $cacheFactory,
-            $http,
-            $q,
             new SpellCheckAdapter(editor)
           )
         }
@@ -189,13 +162,6 @@ App.directive(
           new CursorPositionAdapter(editor),
           localStorage
         )
-        const trackChangesManager = new TrackChangesManager(
-          scope,
-          editor,
-          element,
-          new TrackChangesAdapter(editor)
-        )
-
         const metadataManager = new MetadataManager(
           scope,
           editor,
@@ -241,10 +207,11 @@ App.directive(
         })
 
         /* eslint-enable no-unused-vars */
+        let registerOnSaveCallback = () => {}
 
         scope.$watch('onSave', function (callback) {
           if (callback != null) {
-            Vim.defineEx('write', 'w', callback)
+            registerOnSaveCallback(callback)
             editor.commands.addCommand({
               name: 'save',
               bindKey: {
@@ -362,54 +329,6 @@ App.directive(
           }
         })
 
-        scope.$watch('onCtrlJ', function (callback) {
-          if (callback != null) {
-            return editor.commands.addCommand({
-              name: 'toggle-review-panel',
-              bindKey: {
-                win: 'Ctrl-J',
-                mac: 'Command-J',
-              },
-              exec: editor => {
-                return callback()
-              },
-              readOnly: true,
-            })
-          }
-        })
-
-        scope.$watch('onCtrlShiftC', function (callback) {
-          if (callback != null) {
-            return editor.commands.addCommand({
-              name: 'add-new-comment',
-              bindKey: {
-                win: 'Ctrl-Shift-C',
-                mac: 'Command-Shift-C',
-              },
-              exec: editor => {
-                return callback()
-              },
-              readOnly: true,
-            })
-          }
-        })
-
-        scope.$watch('onCtrlShiftA', function (callback) {
-          if (callback != null) {
-            return editor.commands.addCommand({
-              name: 'toggle-track-changes',
-              bindKey: {
-                win: 'Ctrl-Shift-A',
-                mac: 'Command-Shift-A',
-              },
-              exec: editor => {
-                return callback()
-              },
-              readOnly: true,
-            })
-          }
-        })
-
         // Make '/' work for search in vim mode.
         editor.showCommandLine = arg => {
           if (arg === '/') {
@@ -481,10 +400,21 @@ App.directive(
         )
 
         scope.$watch('keybindings', function (value) {
-          if (['vim', 'emacs'].includes(value)) {
-            return editor.setKeyboardHandler(`ace/keyboard/${value}`)
-          } else {
-            return editor.setKeyboardHandler(null)
+          switch (value) {
+            case 'vim':
+              editor.setKeyboardHandler('ace/keyboard/vim', () => {
+                const { Vim } = ace.require('ace/keyboard/vim')
+                registerOnSaveCallback = cb => Vim.defineEx('write', 'w', cb)
+                if (scope.onSave) registerOnSaveCallback(scope.onSave)
+              })
+              break
+            case 'emacs':
+              registerOnSaveCallback = () => {}
+              editor.setKeyboardHandler('ace/keyboard/emacs')
+              break
+            default:
+              registerOnSaveCallback = () => {}
+              editor.setKeyboardHandler(null)
           }
         })
 
@@ -590,55 +520,6 @@ App.directive(
           return scope.$emit(`${scope.name}:change`)
         }
 
-        let currentFirstVisibleRow = null
-        const emitMiddleVisibleRowChanged = () => {
-          const firstVisibleRow = editor.getFirstVisibleRow()
-          if (firstVisibleRow === currentFirstVisibleRow) return
-
-          currentFirstVisibleRow = firstVisibleRow
-          const lastVisibleRow = editor.getLastVisibleRow()
-          scope.$emit(
-            `scroll:editor:update`,
-            Math.floor((firstVisibleRow + lastVisibleRow) / 2)
-          )
-        }
-
-        const onScroll = function (scrollTop) {
-          if (scope.eventsBridge == null) {
-            return
-          }
-          const height = editor.renderer.layerConfig.maxHeight
-          emitMiddleVisibleRowChanged()
-          return scope.eventsBridge.emit('aceScroll', scrollTop, height)
-        }
-
-        const onScrollbarVisibilityChanged = function (event, vRenderer) {
-          if (scope.eventsBridge == null) {
-            return
-          }
-          return scope.eventsBridge.emit(
-            'aceScrollbarVisibilityChanged',
-            vRenderer.scrollBarV.isVisible,
-            vRenderer.scrollBarV.width
-          )
-        }
-
-        if (scope.eventsBridge != null) {
-          editor.renderer.on(
-            'scrollbarVisibilityChanged',
-            onScrollbarVisibilityChanged
-          )
-
-          scope.eventsBridge.on('externalScroll', position =>
-            editor.getSession().setScrollTop(position)
-          )
-          scope.eventsBridge.on('refreshScrollPosition', function () {
-            const session = editor.getSession()
-            session.setScrollTop(session.getScrollTop() + 1)
-            return session.setScrollTop(session.getScrollTop() - 1)
-          })
-        }
-
         const onSessionChangeForSpellCheck = function (e) {
           spellCheckManager.onSessionChange()
           if (e.oldSession != null) {
@@ -668,37 +549,6 @@ App.directive(
             'nativecontextmenu',
             spellCheckManager.onContextMenu
           )
-        }
-
-        const initTrackChanges = function () {
-          if (!trackChangesManager) return
-
-          trackChangesManager.rangesTracker = scope.sharejsDoc.ranges
-
-          // Force onChangeSession in order to set up highlights etc.
-          trackChangesManager.onChangeSession()
-
-          editor.on('changeSelection', trackChangesManager.onChangeSelection)
-
-          // Selection also moves with updates elsewhere in the document
-          editor.on('change', trackChangesManager.onChangeSelection)
-
-          editor.on('changeSession', trackChangesManager.onChangeSession)
-          editor.on('cut', trackChangesManager.onCut)
-          editor.on('paste', trackChangesManager.onPaste)
-          editor.renderer.on('resize', trackChangesManager.onResize)
-        }
-
-        const tearDownTrackChanges = function () {
-          if (!trackChangesManager) return
-          trackChangesManager.tearDown()
-          editor.off('changeSelection', trackChangesManager.onChangeSelection)
-
-          editor.off('change', trackChangesManager.onChangeSelection)
-          editor.off('changeSession', trackChangesManager.onChangeSession)
-          editor.off('cut', trackChangesManager.onCut)
-          editor.off('paste', trackChangesManager.onPaste)
-          editor.renderer.off('resize', trackChangesManager.onResize)
         }
 
         const initUndo = function () {
@@ -817,7 +667,6 @@ App.directive(
             initSpellCheck()
           }
 
-          initTrackChanges()
           initUndo()
 
           resetScrollMargins()
@@ -825,10 +674,6 @@ App.directive(
           // need to set annotations after attaching because attaching
           // deletes and then inserts document content
           session.setAnnotations(scope.annotations)
-
-          if (scope.eventsBridge != null) {
-            session.on('changeScrollTop', onScroll)
-          }
 
           $rootScope.hasLintingError = false
           session.on('changeAnnotation', function () {
@@ -850,17 +695,11 @@ App.directive(
             }
           })
 
-          setTimeout(() =>
-            // Let any listeners init themselves
-            onScroll(editor.renderer.getScrollTop())
-          )
-
           return editor.focus()
         }
 
         function detachFromAce(sharejs_doc) {
           tearDownSpellCheck()
-          tearDownTrackChanges()
           tearDownUndo()
           sharejs_doc.detachFromAce()
           sharejs_doc.off('remoteop.recordRemote')
@@ -871,20 +710,6 @@ App.directive(
           const doc = session.getDocument()
           return doc.off('change', onChange)
         }
-
-        if (scope.rendererData != null) {
-          editor.renderer.on('changeCharacterSize', () => {
-            scope.$apply(
-              () => (scope.rendererData.lineHeight = editor.renderer.lineHeight)
-            )
-          })
-        }
-
-        scope.$watch('rendererData', function (rendererData) {
-          if (rendererData != null) {
-            return (rendererData.lineHeight = editor.renderer.lineHeight)
-          }
-        })
 
         scope.$on('$destroy', function () {
           if (scope.sharejsDoc != null) {
@@ -897,11 +722,6 @@ App.directive(
             if (session != null) {
               session.destroy()
             }
-            return scope.eventsBridge.emit(
-              'aceScrollbarVisibilityChanged',
-              false,
-              0
-            )
           }
         })
 
@@ -970,8 +790,8 @@ App.directive(
 </div>\
 `,
     }
-  }
-)
+  },
+])
 
 function monkeyPatchSearch($rootScope, $compile) {
   const searchHtml = `\

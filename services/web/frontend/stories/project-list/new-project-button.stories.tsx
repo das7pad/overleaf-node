@@ -51,7 +51,7 @@ export const Success = () => {
 
   useFetchMock(fetchMock => {
     fetchMock.post(
-      'express:/project/new',
+      'express:/api/project/new',
       {
         status: 200,
         body: {
@@ -72,7 +72,7 @@ export const Error = () => {
 
   useFetchMock(fetchMock => {
     fetchMock.post(
-      'express:/project/new',
+      'express:/api/project/new',
       {
         status: 400,
         body: {

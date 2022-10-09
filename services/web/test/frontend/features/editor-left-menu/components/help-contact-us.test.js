@@ -4,7 +4,8 @@ import HelpContactUs from '../../../../../frontend/js/features/editor-left-menu/
 import { renderWithEditorContext } from '../../../helpers/render-with-context'
 import fetchMock from 'fetch-mock'
 
-describe('<HelpContactUs />', function () {
+// eslint-disable-next-line mocha/no-skipped-tests
+describe.skip('<HelpContactUs />', function () {
   beforeEach(function () {
     window.metaAttributesCache = new Map()
     window.metaAttributesCache.set('ol-user', {

@@ -6,10 +6,8 @@ import type { Option } from './settings-menu-select'
 
 export default function SettingsEditorTheme() {
   const { t } = useTranslation()
-  const editorThemes = getMeta('ol-editorThemes') as string[] | undefined
-  const legacyEditorThemes = getMeta('ol-legacyEditorThemes') as
-    | string[]
-    | undefined
+  const editorThemes = getMeta('ol-editorThemes', []) as string[]
+  const legacyEditorThemes = getMeta('ol-legacyEditorThemes', []) as string[]
 
   const options = useMemo(() => {
     const editorThemeOptions: Array<Option> =
@@ -18,12 +16,17 @@ export default function SettingsEditorTheme() {
         label: theme.replace(/_/g, ' '),
       })) ?? []
 
-    const dividerOption: Option = {
-      value: '-',
-      label: '—————————————————',
-      ariaHidden: 'true',
-      disabled: true,
-    }
+    const dividerOptions: Array<Option> =
+      editorThemes.length > 0 && legacyEditorThemes.length > 0
+        ? [
+            {
+              value: '-',
+              label: '—————————————————',
+              ariaHidden: 'true',
+              disabled: true,
+            },
+          ]
+        : []
 
     const legacyEditorThemeOptions: Array<Option> =
       legacyEditorThemes?.map(theme => ({
@@ -31,7 +34,11 @@ export default function SettingsEditorTheme() {
         label: theme.replace(/_/g, ' '),
       })) ?? []
 
-    return [...editorThemeOptions, dividerOption, ...legacyEditorThemeOptions]
+    return [
+      ...editorThemeOptions,
+      ...dividerOptions,
+      ...legacyEditorThemeOptions,
+    ]
   }, [editorThemes, legacyEditorThemes])
 
   return (

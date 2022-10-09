@@ -1,5 +1,5 @@
 import { expect } from 'chai'
-import { renderHook } from '@testing-library/react-hooks'
+import { renderHook } from '@testing-library/react-hooks/dom'
 import {
   SSOProvider,
   useSSOContext,

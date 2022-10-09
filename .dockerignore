@@ -1,0 +1,8 @@
+services/web/generated
+services/web/node_modules
+services/web/public/LICENSE
+services/web/public/fonts
+services/web/public/js
+services/web/public/manifest.json
+services/web/public/stylesheets
+services/web/public/vendor

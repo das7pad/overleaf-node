@@ -30,10 +30,7 @@ export function handleOutputFiles(outputFiles, projectId, data) {
     data.pdfDownloadDomain
   )}?${params}`
 
-  // build the URL for downloading the PDF
-  params.set('popupDownload', 'true') // save PDF download as file
-
-  outputFile.pdfDownloadUrl = `/download/project/${projectId}/build/${outputFile.build}/output/output.pdf?${params}`
+  outputFile.pdfDownloadUrl = outputFile.pdfUrl
 
   return outputFile
 }
@@ -65,9 +62,9 @@ export const handleLogFiles = async (outputFiles, data, signal) => {
     }
   }
 
-  const logFile = outputFiles.get('output.log')
-
-  if (logFile) {
+  async function fetchLogFile() {
+    const logFile = outputFiles.get('output.log')
+    if (!logFile) return
     try {
       const response = await fetch(buildURL(logFile, data.pdfDownloadDomain), {
         signal,
@@ -95,9 +92,9 @@ export const handleLogFiles = async (outputFiles, data, signal) => {
     }
   }
 
-  const blgFile = outputFiles.get('output.blg')
-
-  if (blgFile) {
+  async function fetchBlgFile() {
+    const blgFile = outputFiles.get('output.blg')
+    if (!blgFile) return
     try {
       const response = await fetch(buildURL(blgFile, data.pdfDownloadDomain), {
         signal,
@@ -117,6 +114,8 @@ export const handleLogFiles = async (outputFiles, data, signal) => {
       console.warn(e) // ignore failure to fetch/parse the log file, but log a warning
     }
   }
+
+  await Promise.all([fetchLogFile(), fetchBlgFile()])
 
   result.logEntries.all = [
     ...result.logEntries.errors,

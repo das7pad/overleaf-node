@@ -26,7 +26,7 @@ describe('<ModalContentNewProjectForm />', function () {
   it('submits form', async function () {
     const projectId = 'ab123'
 
-    const newProjectMock = fetchMock.post('/project/new', {
+    const newProjectMock = fetchMock.post('/api/project/new', {
       status: 200,
       body: {
         project_id: projectId,
@@ -60,7 +60,7 @@ describe('<ModalContentNewProjectForm />', function () {
   it('shows error when project name contains "/"', async function () {
     const errorMessage = 'Project name cannot contain / characters'
 
-    const newProjectMock = fetchMock.post('/project/new', {
+    const newProjectMock = fetchMock.post('/api/project/new', {
       status: 400,
       body: errorMessage,
     })
@@ -86,7 +86,7 @@ describe('<ModalContentNewProjectForm />', function () {
   it('shows error when project name contains "\\" character', async function () {
     const errorMessage = 'Project name cannot contain \\ characters'
 
-    const newProjectMock = fetchMock.post('/project/new', {
+    const newProjectMock = fetchMock.post('/api/project/new', {
       status: 400,
       body: errorMessage,
     })
@@ -112,7 +112,7 @@ describe('<ModalContentNewProjectForm />', function () {
   it('shows error when project name is too long ', async function () {
     const errorMessage = 'Project name is too long'
 
-    const newProjectMock = fetchMock.post('/project/new', {
+    const newProjectMock = fetchMock.post('/api/project/new', {
       status: 400,
       body: errorMessage,
     })

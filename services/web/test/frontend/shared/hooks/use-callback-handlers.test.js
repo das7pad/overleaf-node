@@ -1,5 +1,5 @@
 import sinon from 'sinon'
-import { renderHook } from '@testing-library/react-hooks'
+import { renderHook } from '@testing-library/react-hooks/dom'
 import useCallbackHandlers from '../../../../frontend/js/shared/hooks/use-callback-handlers'
 
 describe('useCallbackHandlers', function () {

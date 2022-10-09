@@ -1,5 +1,10 @@
+/* global process */
+import * as PDFJS from 'pdfjs-dist'
+import * as PDFJSViewer from 'pdfjs-dist/web/pdf_viewer'
 import { captureException } from '../../../infrastructure/error-reporter'
 import { generatePdfCachingTransportFactory } from './pdf-caching-transport'
+import staticPath from '../../../utils/staticPath'
+import 'pdfjs-dist/web/pdf_viewer.css'
 
 const params = new URLSearchParams(window.location.search)
 const disableFontFace = params.get('disable-font-face') === 'true'
@@ -7,28 +12,29 @@ const disableStream = process.env.NODE_ENV !== 'test'
 
 const DEFAULT_RANGE_CHUNK_SIZE = 128 * 1024 // 128K chunks
 
+// Download worker from CDN
+PDFJS.GlobalWorkerOptions.workerSrc = staticPath(
+  '/vendor/pdfjs-dist/build/pdf.worker.min.js'
+)
+
+let worker
+function getPDFJSWorker() {
+  if (!worker && typeof window !== 'undefined' && 'Worker' in window) {
+    worker = new PDFJS.PDFWorker()
+  }
+  return worker
+}
+// prefetch
+setTimeout(getPDFJSWorker, 1)
+
 export default class PDFJSWrapper {
   constructor(container) {
     this.container = container
   }
 
   async init() {
-    const {
-      PDFJS,
-      PDFJSViewer,
-      cMapUrl,
-      imageResourcesPath,
-      standardFontDataUrl,
-    } = await import('./pdf-js-versions').then(m => {
-      return m.default
-    })
-
-    this.PDFJS = PDFJS
     this.genPdfCachingTransport = generatePdfCachingTransportFactory(PDFJS)
-    this.PDFJSViewer = PDFJSViewer
-    this.cMapUrl = cMapUrl
-    this.standardFontDataUrl = standardFontDataUrl
-    this.imageResourcesPath = imageResourcesPath
+    this.PDFJS = PDFJS
 
     // create the event bus
     const eventBus = new PDFJSViewer.EventBus()
@@ -47,7 +53,7 @@ export default class PDFJSWrapper {
     const viewer = new PDFJSViewer.PDFViewer({
       container: this.container,
       eventBus,
-      imageResourcesPath,
+      imageResourcesPath: staticPath('/vendor/pdfjs-dist/web/images/'),
       linkService,
       // l10n, // commented out since it currently breaks `aria-label` rendering in pdf pages
       enableScripting: false, // default is false, but set explicitly to be sure
@@ -84,17 +90,18 @@ export default class PDFJSWrapper {
         //  custom range transport. Restore it by bumping the chunk size.
         rangeChunkSize = pdfFile.size
       }
-      this.loadDocumentTask = this.PDFJS.getDocument({
+      this.loadDocumentTask = PDFJS.getDocument({
         url,
-        cMapUrl: this.cMapUrl,
+        cMapUrl: staticPath('/vendor/pdfjs-dist/cmaps/'),
         cMapPacked: true,
-        standardFontDataUrl: this.standardFontDataUrl,
+        standardFontDataUrl: staticPath('/vendor/pdfjs-dist/standard_fonts/'),
         disableFontFace,
         rangeChunkSize,
         disableAutoFetch: true,
         disableStream,
         textLayerMode: 2, // PDFJSViewer.TextLayerMode.ENABLE,
         range: rangeTransport,
+        worker: getPDFJSWorker(),
       })
 
       this.loadDocumentTask.promise

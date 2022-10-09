@@ -7,7 +7,7 @@ import OError from '@overleaf/o-error'
 
 type FetchPath = string
 // Custom config types are merged with `fetch`s RequestInit type
-type FetchConfig = {
+export type FetchConfig = {
   swallowAbortError?: boolean
   body?: Record<string, unknown>
 } & Omit<RequestInit, 'body'>
@@ -52,6 +52,7 @@ export class FetchError extends OError {
   public options?: RequestInit
   public response?: Response
   public data?: any
+  public retryAfter?: number
 
   constructor(
     message: string,
@@ -74,6 +75,11 @@ export class FetchError extends OError {
     this.options = options
     this.response = response
     this.data = data
+
+    if (response?.status === 429) {
+      this.retryAfter =
+        parseInt(response.headers.get('Retry-After') || '3', 10) * 1000
+    }
   }
 
   getUserFacingMessage() {
@@ -107,20 +113,25 @@ function fetchJSON<T>(
     ...otherOptions
   }: FetchConfig
 ) {
+  headers = new Headers(headers)
+  headers.set('Accept', 'application/json')
+  if (path.includes('/jwt/') && headers.get('Authorization')) {
+    credentials = 'omit'
+  }
   const options: RequestInit = {
     ...otherOptions,
-    headers: {
-      ...headers,
-      'Content-Type': 'application/json',
-      'X-Csrf-Token': window.csrfToken,
-      Accept: 'application/json',
-    },
+    headers,
     credentials,
     method,
   }
 
   if (method !== 'GET' && method !== 'HEAD') {
-    options.body = JSON.stringify(body)
+    if (body instanceof FormData) {
+      options.body = body
+    } else {
+      headers.set('Content-Type', 'application/json')
+      options.body = JSON.stringify(body)
+    }
   }
 
   // The returned Promise and the `.then(handleSuccess, handleError)` handlers are needed
@@ -180,6 +191,15 @@ function fetchJSON<T>(
 }
 
 async function parseResponseBody(response: Response) {
+  if (response.status === 204) {
+    // Consume response body, if any.
+    // Explicit consuming results in more accurate timing in dev-tools.
+    try {
+      await response.text()
+    } catch (e) {}
+    return {}
+  }
+
   const contentType = response.headers.get('Content-Type')
 
   if (!contentType) {

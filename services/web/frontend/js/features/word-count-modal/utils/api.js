@@ -1,10 +1,18 @@
-import { getJSON } from '../../../infrastructure/fetch-json'
+import { projectJWTPOSTJSON } from '../../../infrastructure/jwt-fetch-json'
 
-export function fetchWordCount(projectId, clsiServerId, options) {
-  let query = ''
-  if (clsiServerId) {
-    query = `?clsiserverid=${clsiServerId}`
-  }
-
-  return getJSON(`/project/${projectId}/wordcount${query}`, options)
+export function fetchWordCount({
+  projectId,
+  clsiServerId,
+  imageName,
+  fileName,
+  signal,
+}) {
+  return projectJWTPOSTJSON(`/project/${projectId}/wordcount`, {
+    body: {
+      clsiServerId,
+      imageName,
+      fileName,
+    },
+    signal,
+  }).then(texcount => ({ texcount }))
 }

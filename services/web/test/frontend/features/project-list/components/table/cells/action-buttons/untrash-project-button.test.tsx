@@ -35,7 +35,7 @@ describe('<UntrashProjectButton />', function () {
   it('untrashes the project and updates the view data', async function () {
     const project = Object.assign({}, trashedProject)
     const untrashProjectMock = fetchMock.delete(
-      `express:/project/:projectId/trash`,
+      `express:/api/project/:projectId/trash`,
       {
         status: 200,
       },
@@ -49,8 +49,8 @@ describe('<UntrashProjectButton />', function () {
 
     await waitFor(
       () =>
-        expect(untrashProjectMock.called(`/project/${project.id}/trash`)).to.be
-          .true
+        expect(untrashProjectMock.called(`/api/project/${project.id}/trash`)).to
+          .be.true
     )
   })
 })
