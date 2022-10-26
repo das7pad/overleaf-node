@@ -5,7 +5,7 @@
 
   body > .content& {
     padding-top: @header-height;
-    padding-bottom: 0;
+    padding-bottom: 0 !important;
     min-height: calc(~'100vh -' @header-height);
   }
 
@@ -606,6 +606,12 @@
     .menu-item-button-icon {
       left: 11px;
     }
+  }
+}
+
+body.thin-footer {
+  .project-list-main-react {
+    padding-bottom: @footer-height;
   }
 }
 
