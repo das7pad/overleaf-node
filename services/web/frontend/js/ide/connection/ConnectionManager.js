@@ -417,7 +417,7 @@ Something went wrong connecting to your project. Please refresh if this continue
             window.dispatchEvent(
               new CustomEvent('project:joined', { detail: this.$scope.project })
             )
-            this.$scope.$broadcast('project:joined')
+            this.$scope.$broadcast('project:joined', project, permissionsLevel)
           })
         }
       )

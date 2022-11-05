@@ -174,7 +174,7 @@ App.controller(
     ide.outlineManager = new OutlineManager(ide, $scope)
 
     let inited = false
-    $scope.$on('project:joined', function () {
+    $scope.$on('project:joined', function (_project, permissionsLevel) {
       if (inited) {
         return
       }
@@ -194,12 +194,8 @@ If the project has been renamed please look in your project list for a new proje
 `
         )
       }
-      // NOTE: $scope.permissions.write is not immediately available.
-      $timeout(function () {
-        if ($scope.permissions.write) {
-          ide.metadataManager.loadProjectMetaFromServer()
-        }
-      }, 1)
+      if (permissionsLevel === 'readOnly') return
+      ide.metadataManager.loadProjectMetaFromServer()
     })
 
     // Count the first 'doc:opened' as a sign that the ide is loaded

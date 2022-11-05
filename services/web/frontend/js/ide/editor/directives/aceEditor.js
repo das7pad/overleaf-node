@@ -521,7 +521,7 @@ App.directive('aceEditor', [
         }
 
         const onSessionChangeForSpellCheck = function (e) {
-          spellCheckManager.onSessionChange()
+          if (e.oldSession) spellCheckManager.onSessionChange()
           if (e.oldSession != null) {
             e.oldSession.getDocument().off('change', spellCheckManager.onChange)
           }
@@ -534,7 +534,7 @@ App.directive('aceEditor', [
 
         const initSpellCheck = function () {
           if (!spellCheckManager) return
-          spellCheckManager.init()
+          spellCheckManager.reset()
           editor.on('changeSession', onSessionChangeForSpellCheck)
           onSessionChangeForSpellCheck({
             session: editor.getSession(),
