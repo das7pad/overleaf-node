@@ -1,7 +1,10 @@
 import { lazy, memo } from 'react'
 import { useDetachCompileContext as useCompileContext } from '../../../shared/context/detach-compile-context'
-import { loadCss } from '../../../utils/loadCss'
+import { loadCss, loadImage } from '../../../utils/loadAssets'
 import getMeta from '../../../utils/meta'
+import staticPath from '../../../utils/staticPath'
+import shadowURL from 'pdfjs-dist/web/images/shadow.png'
+import spinnerURL from 'pdfjs-dist/web/images/loading-icon.gif'
 
 const PdfJsViewer = lazy(() =>
   import(/* webpackChunkName: "pdf-js-viewer" */ './pdf-js-viewer')
@@ -16,6 +19,10 @@ setTimeout(
     ).catch(() => {}),
   1
 )
+setTimeout(() => {
+  loadImage(staticPath(shadowURL), 'pdf-js shadow.png').catch(() => {})
+  loadImage(staticPath(spinnerURL), 'pdf-js spinner').catch(() => {})
+}, 100)
 
 function PdfViewer() {
   const { pdfUrl, pdfFile, pdfViewer } = useCompileContext()

@@ -3,7 +3,7 @@
 // the correct state) and the translations have been loaded (so we don't see a
 // flash of untranslated text).
 import getMeta from '../utils/meta'
-import { loadCss } from '../utils/loadCss'
+import { loadCss } from '../utils/loadAssets'
 
 const ideCssPromise = loadCss(
   getMeta('ol-ide-css'),
