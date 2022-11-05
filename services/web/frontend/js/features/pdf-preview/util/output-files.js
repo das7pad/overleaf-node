@@ -12,10 +12,11 @@ export function handleOutputFiles(outputFiles, projectId, data) {
   if (!outputFile) return null
 
   // build the URL for viewing the PDF in the preview UI
-  const params = new URLSearchParams({
-    compileGroup: data.compileGroup,
-  })
+  const params = new URLSearchParams()
 
+  if (data.compileGroup) {
+    params.set('compileGroup', data.compileGroup)
+  }
   if (data.clsiServerId) {
     params.set('clsiserverid', data.clsiServerId)
   }
