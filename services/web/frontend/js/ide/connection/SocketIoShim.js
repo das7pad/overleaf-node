@@ -320,7 +320,9 @@ export default class SocketIoShim {
     )
     // http -> ws; https -> wss
     url.protocol = url.protocol.replace(/^http/, 'ws')
-    url.searchParams.set('bootstrap', this._bootstrap)
-    return new WebSocket(url, 'v6.real-time.overleaf.com')
+    return new WebSocket(url, [
+      'v7.real-time.overleaf.com',
+      this._bootstrap + '.bootstrap.v7.real-time.overleaf.com',
+    ])
   }
 }
