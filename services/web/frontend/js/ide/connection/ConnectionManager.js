@@ -165,7 +165,7 @@ export default ConnectionManager = (function () {
         const connectionJobId = this.$scope.connection.jobId
         setTimeout(() => {
           this.joinProject(connectionJobId)
-        }, 100)
+        }, 0)
       })
 
       this.ide.socket.on('connectionRejected', err => {
