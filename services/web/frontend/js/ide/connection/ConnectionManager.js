@@ -9,7 +9,6 @@
  */
 
 import SocketIoShim from './SocketIoShim'
-import { clearProjectJWT } from '../../infrastructure/jwt-fetch-json'
 
 let ConnectionManager
 const ONEHOUR = 1000 * 60 * 60
@@ -96,14 +95,6 @@ export default ConnectionManager = (function () {
       this.updateConnectionManagerState('connecting')
       this.ide.socket = new SocketIoShim()
 
-      // Clear project jwt when detecting a changed epoch.
-      this.ide.socket.on('project:membership:changed', () => {
-        clearProjectJWT()
-      })
-      this.ide.socket.on('project:tokens:changed', () => {
-        clearProjectJWT()
-      })
-
       // handle network-level websocket errors (e.g. failed dns lookups)
 
       let connectionAttempt = 1
@@ -116,17 +107,11 @@ export default ConnectionManager = (function () {
         }
         this.updateConnectionManagerState('error')
         sl_console.log('socket.io error', err)
-        if (!window.location.href.match(/ws=fallback/)) {
-          // if we tried to load a custom websocket location and failed
-          // try reloading and falling back to the siteUrl
-          window.location = window.location.href + '?ws=fallback'
-        } else {
-          this.connected = false
-          return this.$scope.$apply(() => {
-            return (this.$scope.state.error =
-              "Unable to connect, please view the <u><a href='/learn/Kb/Connection_problems'>connection problems guide</a></u> to fix the issue.")
-          })
-        }
+        this.connected = false
+        return this.$scope.$apply(() => {
+          return (this.$scope.state.error =
+            "Unable to connect, please view the <u><a href='/learn/Kb/Connection_problems'>connection problems guide</a></u> to fix the issue.")
+        })
       }
       this.ide.socket.on('error', connectionErrorHandler)
 
@@ -241,6 +226,8 @@ The editor will refresh automatically in ${delay} seconds.\
         sl_console.log('Reconnect gracefully')
         this.reconnectGracefully()
       })
+
+      this.ide.socket.connect()
     }
 
     updateConnectionManagerState(state) {

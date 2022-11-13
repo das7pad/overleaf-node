@@ -1,6 +1,10 @@
 import getMeta from '../../utils/meta'
-import { isExpired } from '../../infrastructure/jwt-fetch-json'
-import { getJSON } from '../../infrastructure/fetch-json'
+import {
+  clearProjectJWT,
+  getProjectJWT,
+  isExpired,
+  refreshProjectJWT,
+} from '../../infrastructure/jwt-fetch-json'
 
 const CODE_CONNECT_TIMEOUT = 4000
 const CODE_CLIENT_REQUESTED_DISCONNECT = 4001
@@ -10,23 +14,27 @@ export default class SocketIoShim {
   constructor() {
     this._events = new Map()
 
+    this.on('bootstrap', blob => {
+      this._bootstrap = blob
+      this._emit('connectionAccepted', blob)
+    })
     this.on('connectionAccepted', (_, publicId, id) => {
       this.id = id || publicId
-      this._startHealthCheck()
     })
     this.on('connectionRejected', blob => {
       if (blob && blob.code === 'BadWsBootstrapBlob') {
-        this._bootstrap = undefined
+        clearProjectJWT()
       }
     })
+
+    // Clear project jwt when detecting a changed epoch.
     this.on('project:membership:changed', () => {
-      this._bootstrap = undefined
+      clearProjectJWT()
     })
     this.on('project:tokens:changed', () => {
-      this._bootstrap = undefined
+      clearProjectJWT()
     })
 
-    this._populateWsBootstrapBlob(getMeta('ol-wsBootstrap'))
     this._ws = {
       protocol: '',
       readyState: WebSocket.CLOSED,
@@ -60,23 +68,17 @@ export default class SocketIoShim {
   }
 
   connect() {
-    if (!this._bootstrap || isExpired(this._bootstrap)) {
-      const c = new AbortController()
-      const t = setTimeout(() => c.abort(), TIMEOUT)
-      getJSON(`/api/project/${getMeta('ol-project_id')}/ws/bootstrap`, {
-        signal: c.signal,
-      })
-        .then(async blob => {
-          this._populateWsBootstrapBlob(blob)
-
-          this._connect()
-        })
+    if (this.connected || this._ws.readyState === WebSocket.CONNECTING) return
+    const jwt = getProjectJWT()
+    if (!jwt || isExpired(jwt)) {
+      clearProjectJWT()
+      refreshProjectJWT()
+        .then(jwt => this._connect(jwt))
         .catch(reason => {
           this._emit('error', `client bootstrap failed: ${reason}`)
         })
-        .finally(() => clearTimeout(t))
     } else {
-      this._connect()
+      this._connect(jwt)
     }
   }
 
@@ -105,16 +107,12 @@ export default class SocketIoShim {
 
     let transformedCallback = cb
     switch (event) {
-      case 'joinProject':
-        transformedCallback = (err, res) => {
-          if (err) {
-            return cb(err)
-          }
-          const { project, privilegeLevel, connectedClients } = res
-          const protocolVersion = 6
-          cb(null, project, privilegeLevel, protocolVersion, connectedClients)
-        }
-        break
+      case 'joinProject': {
+        const { project, privilegeLevel, connectedClients } = this._bootstrap
+        const protocolVersion = 8
+        cb(null, project, privilegeLevel, protocolVersion, connectedClients)
+        return
+      }
       case 'joinDoc':
         transformedCallback = (err, res) => {
           if (err) {
@@ -197,8 +195,8 @@ export default class SocketIoShim {
     return true
   }
 
-  _connect() {
-    const newSocket = this._createWebsocket()
+  _connect(jwt) {
+    const newSocket = this._createWebsocket(jwt)
     this._ws = newSocket
 
     // reset the rpc tracking
@@ -234,6 +232,7 @@ export default class SocketIoShim {
           this._emit('disconnect', event.reason)
         }
       }
+      this._startHealthCheck()
       this._emit('connect')
     }
     newSocket.onerror = event => {
@@ -289,10 +288,6 @@ export default class SocketIoShim {
     this._emit(event, ...args)
   }
 
-  _populateWsBootstrapBlob({ bootstrap }) {
-    this._bootstrap = bootstrap
-  }
-
   _startHealthCheck() {
     const healthCheckEmitter = setInterval(() => {
       if (!this.connected) {
@@ -313,7 +308,7 @@ export default class SocketIoShim {
     this.on('disconnect', cleanup)
   }
 
-  _createWebsocket() {
+  _createWebsocket(jwt) {
     const url = new URL(
       getMeta('ol-wsUrl') || '/socket.io',
       window.location.origin
@@ -321,8 +316,8 @@ export default class SocketIoShim {
     // http -> ws; https -> wss
     url.protocol = url.protocol.replace(/^http/, 'ws')
     return new WebSocket(url, [
-      'v7.real-time.overleaf.com',
-      this._bootstrap + '.bootstrap.v7.real-time.overleaf.com',
+      'v8.real-time.overleaf.com',
+      jwt + '.bootstrap.v8.real-time.overleaf.com',
     ])
   }
 }
