@@ -31,6 +31,9 @@ export function isExpired(jwt: string) {
 }
 
 export function getProjectJWT() {
+  if (!JWTs.has('ol-jwtCompile')) {
+    JWTs.set('ol-jwtCompile', getMeta('ol-jwtCompile'))
+  }
   return JWTs.get('ol-jwtCompile')
 }
 
@@ -61,7 +64,14 @@ async function getJWT(name: string, refreshEndpoint: string) {
 
 async function refresh(name: string, refreshEndpoint: string) {
   if (!pendingJWTRefresh.has(refreshEndpoint)) {
-    pendingJWTRefresh.set(refreshEndpoint, getJSON(refreshEndpoint))
+    const c = new AbortController()
+    const t = setTimeout(() => c.abort(), 10 * 1000)
+    pendingJWTRefresh.set(
+      refreshEndpoint,
+      getJSON(refreshEndpoint, { signal: c.signal }).finally(() =>
+        clearTimeout(t)
+      )
+    )
   }
   const pending = pendingJWTRefresh.get(refreshEndpoint)
   let jwt
