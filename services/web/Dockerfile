@@ -1,4 +1,4 @@
-FROM node:16.18.0 AS cache
+FROM node:18.12.1 AS cache
 
 WORKDIR /overleaf/services/web
 
