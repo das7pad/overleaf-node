@@ -1,21 +1,30 @@
-import sinon from 'sinon'
 import fetchMock from 'fetch-mock'
 import { expect } from 'chai'
 import { fireEvent, screen, waitFor } from '@testing-library/react'
 import { renderWithEditorContext } from '../../../helpers/render-with-context'
 import GrammarlyWarning from '../../../../../frontend/js/features/source-editor/components/grammarly-warning'
-import * as grammarlyModule from '../../../../../frontend/js/shared/utils/grammarly'
 import localStorage from '../../../../../frontend/js/infrastructure/local-storage'
 
 describe('<GrammarlyWarning />', function () {
-  let grammarlyStub
+  const grammarlyStub = {
+    add() {
+      const el = document.createElement('grammarly-desktop-integration')
+      document.body.appendChild(el)
+    },
+    restore() {
+      document.querySelector('grammarly-desktop-integration')?.remove()
+    },
+    returns(v) {
+      if (v) {
+        this.add()
+      } else {
+        this.restore()
+      }
+    },
+  }
 
   before(function () {
     window.metaAttributesCache = new Map()
-  })
-
-  beforeEach(function () {
-    grammarlyStub = sinon.stub(grammarlyModule, 'default')
   })
 
   afterEach(function () {
