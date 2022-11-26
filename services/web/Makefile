@@ -212,6 +212,7 @@ build_and_publish_cache:
 	$(MAKE) build_cache
 	$(MAKE) push_cache
 
+prepare_ci_stage: pull_node
 pull_node:
 	docker pull $(IMAGE_NODE)
 	docker tag $(IMAGE_NODE) node:18.12.1
