@@ -407,9 +407,10 @@ export function LocalCompileProvider({ children }) {
         setRawLog(null)
 
         handleLogFiles(outputFiles, data, abortController.signal).then(
-          result => {
+          async result => {
             setRawLog(result.log)
             setLogEntries(result.logEntries)
+            await ide.loadingManager.ready()
             setLogEntryAnnotations(
               buildLogEntryAnnotations(
                 result.logEntries.all,

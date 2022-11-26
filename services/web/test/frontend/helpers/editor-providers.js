@@ -54,6 +54,9 @@ export function EditorProviders({
     getRootDocDirname: () => '',
     getRootDocPath: () => '',
   },
+  loadingManager = {
+    ready: async () => {},
+  },
   editorManager = {
     getCurrentDocId: () => 'foo',
     getCurrentDocValue: () => {},
@@ -103,6 +106,7 @@ export function EditorProviders({
     clsiServerId,
     editorManager,
     fileTreeManager,
+    loadingManager,
     metadataManager,
   }
 

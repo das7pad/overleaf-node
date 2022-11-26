@@ -18,7 +18,7 @@ class LoadingManager {
       this.resolveSocketPromise = resolve
     })
 
-    Promise.all([socketPromise, ideCssPromise])
+    this.p = Promise.all([socketPromise, ideCssPromise])
       .then(() => {
         this.$scope.$apply(() => {
           this.$scope.state.load_progress = 100
@@ -34,6 +34,10 @@ class LoadingManager {
 
   socketLoaded() {
     this.resolveSocketPromise()
+  }
+
+  ready() {
+    return this.p
   }
 }
 

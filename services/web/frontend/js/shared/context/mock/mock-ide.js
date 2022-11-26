@@ -72,5 +72,8 @@ export const getMockIde = () => {
     fileTreeManager: {
       getEntityPathById: () => null,
     },
+    loadingManager: {
+      ready: async () => {},
+    },
   }
 }
