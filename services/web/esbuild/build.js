@@ -1,42 +1,19 @@
 const Path = require('path')
 const esbuild = require('esbuild')
-const { notifyFrontendAboutRebuild } = require('./autoReload')
 const { CONFIGS, inflateConfig } = require('./configs')
-const { trackOutput } = require('./inMemory')
-const { logWithTimestamp, trackDurationInMS } = require('./utils')
-const { extendManifest, writeManifest } = require('./manifest')
+const handleBuildResult = require('./plugins/handleBuildResult')
+const { trackDurationInMS } = require('./utils')
+const { writeManifest } = require('./manifest')
 
 const ROOT = Path.dirname(__dirname)
-
-async function onRebuild(name, error, result) {
-  if (error) {
-    logWithTimestamp('watch build failed.')
-    notifyFrontendAboutRebuild(name, error, result)
-    return
-  }
-  logWithTimestamp('watch build succeeded.')
-
-  trackOutput(name, result.outputFiles)
-  try {
-    extendManifest(result.metafile)
-  } catch (error) {
-    logWithTimestamp('writing manifest failed in watch mode:', error)
-  }
-  notifyFrontendAboutRebuild(name, error, result)
-}
 
 async function buildConfig({ isWatchMode, inMemory, autoReload }, cfg) {
   cfg = inflateConfig(cfg)
   const { DESCRIPTION } = cfg
   delete cfg.DESCRIPTION
 
-  if (isWatchMode) {
-    cfg.watch = {
-      async onRebuild(error, result) {
-        await onRebuild(DESCRIPTION, error, result)
-      },
-    }
-  }
+  if (!cfg.plugins) cfg.plugins = []
+  cfg.plugins.push(handleBuildResult(DESCRIPTION))
   if (inMemory) {
     cfg.write = false
   }
@@ -48,11 +25,14 @@ async function buildConfig({ isWatchMode, inMemory, autoReload }, cfg) {
   }
 
   const done = trackDurationInMS()
-  const { metafile, outputFiles } = await esbuild.build(cfg)
+  const ctx = await esbuild.context(cfg)
+  if (isWatchMode) {
+    ctx.watch()
+  } else {
+    await ctx.rebuild()
+  }
   const duration = done()
 
-  trackOutput(DESCRIPTION, outputFiles)
-  extendManifest(metafile)
   return { DESCRIPTION, duration }
 }
 

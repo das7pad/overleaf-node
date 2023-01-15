@@ -12,10 +12,7 @@ async function buildTestBundle(entrypoint, platform, target) {
   const cfg = {
     entryNames: '[dir]/[name]',
     entryPoints: [entrypoint],
-    plugins: [
-      valLoader(Path.join(ROOT, 'test/frontend/allTests.js')),
-      valLoader(Path.join(ROOT, 'test/karma/allTests.js')),
-    ],
+    plugins: [valLoader(Path.join(ROOT, 'test/frontend/allTests.js'))],
     outdir: OUTPUT_PATH,
     platform,
     target,
@@ -26,7 +23,7 @@ async function buildTestBundle(entrypoint, platform, target) {
   }
 
   try {
-    await esbuild.build(inflateConfig(cfg))
+    await (await esbuild.context(inflateConfig(cfg))).rebuild()
   } catch (error) {
     console.error('esbuild error:', error)
     throw new Error(`esbuild failed: ${error.message}`)

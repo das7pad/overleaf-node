@@ -3,13 +3,7 @@ module.exports = function (pattern) {
     name: 'valLoader@' + pattern,
     setup(build) {
       build.onLoad({ filter: new RegExp(pattern) }, function (args) {
-        const {
-          code: contents,
-          watchDirs,
-          watchFiles,
-        } = require(args.path)({
-          isWatchMode: !!build.initialOptions.watch,
-        })
+        const { code: contents, watchDirs, watchFiles } = require(args.path)()
         return {
           contents,
           watchDirs,
