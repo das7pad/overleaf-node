@@ -18,7 +18,7 @@ DOCKER_COMPOSE_FLAGS ?= -f docker-compose.yml
 DOCKER_COMPOSE := docker-compose $(DOCKER_COMPOSE_FLAGS)
 
 export DOCKER_REGISTRY ?= docker.io
-export IMAGE_NODE ?= $(DOCKER_REGISTRY)/node:18.12.1
+export IMAGE_NODE ?= $(DOCKER_REGISTRY)/node:18.13.0
 export IMAGE_PROJECT ?= $(DOCKER_REGISTRY)/overleaf/web
 
 export CACHE_CONTENT_SHA := $(shell \
@@ -215,7 +215,7 @@ build_and_publish_cache:
 prepare_ci_stage: pull_node
 pull_node:
 	docker pull $(IMAGE_NODE)
-	docker tag $(IMAGE_NODE) node:18.12.1
+	docker tag $(IMAGE_NODE) node:18.13.0
 
 pull_cache:
 	docker pull $(IMAGE_CACHE_CONTENT_SHA)
