@@ -142,13 +142,7 @@ export default class SocketIoShim {
     if (['joinDoc', 'leaveDoc', 'applyOtUpdate'].includes(event)) {
       payload.d = args.shift()
     }
-    if (
-      [
-        'joinProject',
-        'applyOtUpdate',
-        'clientTracking.updatePosition',
-      ].includes(event)
-    ) {
+    if (['applyOtUpdate', 'clientTracking.updatePosition'].includes(event)) {
       payload.b = args[0]
     }
     if (event === 'joinDoc') {
