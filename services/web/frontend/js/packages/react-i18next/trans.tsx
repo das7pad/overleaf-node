@@ -1,5 +1,5 @@
-import { cloneElement, ReactElement, ReactNode } from 'react'
-import t from '../../infrastructure/t'
+import React, { cloneElement, ReactElement, ReactNode } from 'react'
+import t from './t'
 
 export function _recursiveComponentSubstitute(
   chunk: string,

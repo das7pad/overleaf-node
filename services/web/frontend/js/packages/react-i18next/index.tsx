@@ -1,4 +1,4 @@
-import t from '../../infrastructure/t'
+import t from './t'
 
 export { Trans } from './trans'
 
