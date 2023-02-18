@@ -9,6 +9,13 @@ PWD = $(shell pwd)
 SUDO_UID ?= $(shell id -u)
 SUDO_GID ?= $(shell id -g)
 
+# Helper for creating reproducible artifacts
+REFERENCE_DATE := 2022-01-01T00:00Z
+TAR_FLAGS_REPRODUCIBLE := --sort=name --mtime=$(REFERENCE_DATE)
+TAR_CREATE_REPRODUCIBLE := tar --create $(TAR_FLAGS_REPRODUCIBLE)
+TOUCH_FLAGS_REPRODUCIBLE := -m -d $(REFERENCE_DATE)
+TOUCH_REPRODUCIBLE := touch $(TOUCH_FLAGS_REPRODUCIBLE)
+
 export BUILD_NUMBER ?= local
 export BRANCH_NAME ?= $(shell $(git) rev-parse --abbrev-ref HEAD || echo main)
 export COMMIT ?= $(shell $(git) rev-parse HEAD || echo HEAD)
@@ -18,11 +25,13 @@ DOCKER_COMPOSE_FLAGS ?= -f docker-compose.yml
 DOCKER_COMPOSE := docker-compose $(DOCKER_COMPOSE_FLAGS)
 
 export DOCKER_REGISTRY ?= docker.io
-export IMAGE_NODE ?= $(DOCKER_REGISTRY)/node:18.13.0
+export IMAGE_NODE ?= $(DOCKER_REGISTRY)/node:18.14.1
 export IMAGE_PROJECT ?= $(DOCKER_REGISTRY)/overleaf/web
 
 export CACHE_CONTENT_SHA := $(shell \
-	cat docker_cleanup.sh Dockerfile package.json package-lock.json \
+	$(TAR_CREATE_REPRODUCIBLE) \
+	 	docker_cleanup.sh Dockerfile package.json package-lock.json \
+	 	frontend/js/packages/ \
 	| sha256sum \
 	| cut -d' ' -f1 \
 )
@@ -31,13 +40,6 @@ export IMAGE_CACHE_CONTENT_SHA := $(IMAGE_PROJECT):cache-$(CACHE_CONTENT_SHA)
 
 SUFFIX ?=
 export IMAGE_CI ?= ci/web:$(BRANCH_NAME)-$(BUILD_NUMBER)$(SUFFIX)
-
-# Helper for creating reproducible artifacts
-REFERENCE_DATE := 2022-01-01T00:00Z
-TAR_FLAGS_REPRODUCIBLE := --sort=name --mtime=$(REFERENCE_DATE)
-TAR_CREATE_REPRODUCIBLE := tar --create $(TAR_FLAGS_REPRODUCIBLE)
-TOUCH_FLAGS_REPRODUCIBLE := -m -d $(REFERENCE_DATE)
-TOUCH_REPRODUCIBLE := touch $(TOUCH_FLAGS_REPRODUCIBLE)
 
 test: lint
 lint:
@@ -215,7 +217,7 @@ build_and_publish_cache:
 prepare_ci_stage: pull_node
 pull_node:
 	docker pull $(IMAGE_NODE)
-	docker tag $(IMAGE_NODE) node:18.13.0
+	docker tag $(IMAGE_NODE) node:18.14.1
 
 pull_cache:
 	docker pull $(IMAGE_CACHE_CONTENT_SHA)
