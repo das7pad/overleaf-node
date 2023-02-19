@@ -1,4 +1,5 @@
-FROM node:18.14.1 AS cache
+ARG IMAGE_NODE
+FROM $IMAGE_NODE
 
 WORKDIR /overleaf/services/web
 
@@ -8,7 +9,3 @@ COPY frontend/js/packages/react-i18next ./frontend/js/packages/react-i18next
 
 ENV CYPRESS_INSTALL_BINARY=0
 RUN /docker_cleanup.sh npm ci
-
-FROM cache as dev
-
-COPY . .

@@ -30,7 +30,7 @@ export IMAGE_PROJECT ?= $(DOCKER_REGISTRY)/overleaf/web
 
 export CACHE_CONTENT_SHA := $(shell \
 	$(TAR_CREATE_REPRODUCIBLE) \
-	 	docker_cleanup.sh Dockerfile package.json package-lock.json \
+	 	docker_cleanup.sh Dockerfile.cache package.json package-lock.json \
 	 	frontend/js/packages/ \
 	| sha256sum \
 	| cut -d' ' -f1 \
@@ -209,39 +209,26 @@ endif
 ensure_cache_exists:
 	$(MAKE) pull_cache || $(MAKE) build_and_publish_cache
 
-build_and_publish_cache:
-	$(MAKE) pull_node
-	$(MAKE) build_cache
-	$(MAKE) push_cache
-
-prepare_ci_stage: pull_node
-pull_node:
-	docker pull $(IMAGE_NODE)
-	docker tag $(IMAGE_NODE) node:18.14.1
-
 pull_cache:
 	docker pull $(IMAGE_CACHE_CONTENT_SHA)
 
-push_cache:
+build_and_publish_cache:
+	docker build \
+		--pull \
+		--force-rm=true \
+		--build-arg IMAGE_NODE=$(IMAGE_NODE) \
+		--tag $(IMAGE_CACHE_CONTENT_SHA) \
+		--file Dockerfile.cache \
+		.
 	docker push $(IMAGE_CACHE_CONTENT_SHA)
 
-prepare_ci_stage: build_dev_with_cache
-build_dev_with_cache: pull_cache
-	$(MAKE) build_dev
-
-build_cache:
-	docker build \
-		--force-rm=true \
-		--tag $(IMAGE_CACHE_CONTENT_SHA) \
-		--target cache \
-		.
-
+prepare_ci_stage: build_dev
 build_dev:
 	docker build \
 		--force-rm=true \
-		--cache-from $(IMAGE_CACHE_CONTENT_SHA) \
+		--build-arg IMAGE_CACHE_CONTENT_SHA=$(IMAGE_CACHE_CONTENT_SHA) \
 		--tag $(IMAGE_CI)-dev \
-		--target dev \
+		--file Dockerfile.dev \
 		.
 
 prepare_ci_stage: output/
