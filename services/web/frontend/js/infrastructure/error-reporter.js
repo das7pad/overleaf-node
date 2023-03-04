@@ -12,7 +12,7 @@ function sleep(ms) {
 
 function sentryReporter() {
   return (
-    sleep(100)
+    sleep(150)
       .then(() => import('@sentry/browser'))
       .then(Sentry => {
         let eventCount = 0
