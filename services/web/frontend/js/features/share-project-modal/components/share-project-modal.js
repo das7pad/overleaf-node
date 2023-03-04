@@ -1,18 +1,24 @@
 import React, {
   createContext,
+  lazy,
+  Suspense,
   useCallback,
   useContext,
   useEffect,
   useState,
 } from 'react'
 import PropTypes from 'prop-types'
-import ShareProjectModalContent from './share-project-modal-content'
 import {
   useProjectContext,
   projectShape,
 } from '../../../shared/context/project-context'
 import { useSplitTestContext } from '../../../shared/context/split-test-context'
 import { sendMB } from '../../../infrastructure/event-tracking'
+import { FullSizeLoadingSpinner } from '../../../shared/components/loading-spinner'
+
+const ShareProjectModalContent = lazy(() =>
+  import('./share-project-modal-content')
+)
 
 const ShareProjectContext = createContext()
 
@@ -104,7 +110,7 @@ const ShareProjectModal = React.memo(function ShareProjectModal({
     [project]
   )
 
-  if (!project) {
+  if (!project || !show) {
     return null
   }
 
@@ -119,13 +125,15 @@ const ShareProjectModal = React.memo(function ShareProjectModal({
         setError,
       }}
     >
-      <ShareProjectModalContent
-        animation={animation}
-        cancel={cancel}
-        error={error}
-        inFlight={inFlight}
-        show={show}
-      />
+      <Suspense fallback={<FullSizeLoadingSpinner delay={500} />}>
+        <ShareProjectModalContent
+          animation={animation}
+          cancel={cancel}
+          error={error}
+          inFlight={inFlight}
+          show={show}
+        />
+      </Suspense>
     </ShareProjectContext.Provider>
   )
 })
