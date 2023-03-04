@@ -55,7 +55,7 @@ function openNewBus() {
     setTimeout(openNewBus, 1000)
   })
 }
-openNewBus()
+setTimeout(openNewBus, 1)
 
 // Use a dummy export map for marking this file as ES6.
 export {}
