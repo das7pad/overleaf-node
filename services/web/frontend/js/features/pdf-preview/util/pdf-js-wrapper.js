@@ -18,14 +18,10 @@ PDFJS.GlobalWorkerOptions.workerSrc = staticPath(
 )
 
 let worker
-function getPDFJSWorker() {
-  if (!worker && typeof window !== 'undefined' && 'Worker' in window) {
-    worker = new PDFJS.PDFWorker()
-  }
-  return worker
+if (typeof window !== 'undefined' && 'Worker' in window) {
+  // prefetch worker
+  worker = new PDFJS.PDFWorker()
 }
-// prefetch
-setTimeout(getPDFJSWorker, 1)
 
 export default class PDFJSWrapper {
   constructor(container) {
@@ -101,7 +97,7 @@ export default class PDFJSWrapper {
         disableStream,
         textLayerMode: 2, // PDFJSViewer.TextLayerMode.ENABLE,
         range: rangeTransport,
-        worker: getPDFJSWorker(),
+        worker,
       })
 
       this.loadDocumentTask.promise
