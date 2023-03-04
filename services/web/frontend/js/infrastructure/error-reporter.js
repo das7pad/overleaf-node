@@ -6,9 +6,14 @@ const reporterPromise = getMeta('ol-sentry')?.dsn
   ? sentryReporter()
   : nullReporter()
 
+function sleep(ms) {
+  return new Promise(resolve => setTimeout(resolve, ms))
+}
+
 function sentryReporter() {
   return (
-    import(/* webpackMode: "eager" */ '@sentry/browser')
+    sleep(100)
+      .then(() => import('@sentry/browser'))
       .then(Sentry => {
         let eventCount = 0
 
