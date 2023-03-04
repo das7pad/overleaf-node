@@ -35,4 +35,16 @@ LoadingSpinner.propTypes = {
   delay: PropTypes.number,
 }
 
+export function FullSizeLoadingSpinner({ delay = 0 }) {
+  return (
+    <div className="pdf-loading-spinner-container">
+      <LoadingSpinner delay={delay} />
+    </div>
+  )
+}
+
+FullSizeLoadingSpinner.propTypes = {
+  delay: PropTypes.number,
+}
+
 export default LoadingSpinner

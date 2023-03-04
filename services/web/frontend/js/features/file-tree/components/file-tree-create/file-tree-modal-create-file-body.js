@@ -1,14 +1,17 @@
+import { lazy, Suspense } from 'react'
 import { useTranslation } from 'react-i18next'
 import FileTreeCreateNewDoc from './modes/file-tree-create-new-doc'
 import FileTreeImportFromUrl from './modes/file-tree-import-from-url'
 import FileTreeImportFromProject from './modes/file-tree-import-from-project'
-import FileTreeUploadDoc from './modes/file-tree-upload-doc'
 import FileTreeModalCreateFileMode from './file-tree-modal-create-file-mode'
 import FileTreeCreateNameProvider from '../../contexts/file-tree-create-name'
 import { useFileTreeActionable } from '../../contexts/file-tree-actionable'
 import { useFileTreeData } from '../../../../shared/context/file-tree-data-context'
+import { FullSizeLoadingSpinner } from '../../../../shared/components/loading-spinner'
 
 const createFileModeModules = []
+
+const FileTreeUploadDoc = lazy(() => import('./modes/file-tree-upload-doc'))
 
 export default function FileTreeModalCreateFileBody() {
   const { t } = useTranslation()
@@ -84,7 +87,11 @@ export default function FileTreeModalCreateFileBody() {
               </FileTreeCreateNameProvider>
             )}
 
-            {newFileCreateMode === 'upload' && <FileTreeUploadDoc />}
+            {newFileCreateMode === 'upload' && (
+              <Suspense fallback={<FullSizeLoadingSpinner delay={500} />}>
+                <FileTreeUploadDoc />
+              </Suspense>
+            )}
 
             {createFileModeModules.map(
               ({ import: { CreateFilePane }, path }) => (

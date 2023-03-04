@@ -1,7 +1,8 @@
 import BlankProjectModal from './blank-project-modal'
 import ExampleProjectModal from './example-project-modal'
-import UploadProjectModal from './upload-project-modal'
 import { Nullable } from '../../../../../../types/utils'
+import { lazy, Suspense } from 'react'
+import { FullSizeLoadingSpinner } from '../../../../shared/components/loading-spinner'
 
 export type NewProjectButtonModalVariant =
   | 'blank_project'
@@ -13,6 +14,8 @@ type NewProjectButtonModalProps = {
   onHide: () => void
 }
 
+const UploadProjectModal = lazy(() => import('./upload-project-modal'))
+
 function NewProjectButtonModal({ modal, onHide }: NewProjectButtonModalProps) {
   switch (modal) {
     case 'blank_project':
@@ -20,7 +23,11 @@ function NewProjectButtonModal({ modal, onHide }: NewProjectButtonModalProps) {
     case 'example_project':
       return <ExampleProjectModal onHide={onHide} />
     case 'upload_project':
-      return <UploadProjectModal onHide={onHide} />
+      return (
+        <Suspense fallback={<FullSizeLoadingSpinner delay={500} />}>
+          <UploadProjectModal onHide={onHide} />
+        </Suspense>
+      )
     default:
       return null
   }
