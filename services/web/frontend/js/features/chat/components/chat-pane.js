@@ -1,8 +1,7 @@
-import React, { useEffect } from 'react'
+import React, { lazy, Suspense, useEffect } from 'react'
 import PropTypes from 'prop-types'
 import { useTranslation } from 'react-i18next'
 
-import MessageList from './message-list'
 import MessageInput from './message-input'
 import InfiniteScroll from './infinite-scroll'
 import ChatFallbackError from './chat-fallback-error'
@@ -12,7 +11,11 @@ import { useUserContext } from '../../../shared/context/user-context'
 import withErrorBoundary from '../../../infrastructure/error-boundary'
 import { FetchError } from '../../../infrastructure/fetch-json'
 import { useChatContext } from '../context/chat-context'
-import LoadingSpinner from '../../../shared/components/loading-spinner'
+import LoadingSpinner, {
+  FullSizeLoadingSpinner,
+} from '../../../shared/components/loading-spinner'
+
+const MessageList = lazy(() => import('./message-list'))
 
 const ChatPane = React.memo(function ChatPane() {
   const { t } = useTranslation()
@@ -56,7 +59,7 @@ const ChatPane = React.memo(function ChatPane() {
     throw error
   }
 
-  if (!user) {
+  if (!user || !chatIsOpen) {
     return null
   }
 
@@ -73,11 +76,13 @@ const ChatPane = React.memo(function ChatPane() {
           <h2 className="sr-only">{t('chat')}</h2>
           {status === 'pending' && <LoadingSpinner delay={500} />}
           {shouldDisplayPlaceholder && <Placeholder />}
-          <MessageList
-            messages={messages}
-            userId={user.id}
-            resetUnreadMessages={markMessagesAsRead}
-          />
+          <Suspense fallback={<FullSizeLoadingSpinner delay={500} />}>
+            <MessageList
+              messages={messages}
+              userId={user.id}
+              resetUnreadMessages={markMessagesAsRead}
+            />
+          </Suspense>
         </div>
       </InfiniteScroll>
       <MessageInput
