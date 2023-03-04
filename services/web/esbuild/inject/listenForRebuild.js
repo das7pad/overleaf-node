@@ -23,19 +23,19 @@ function onEpoch({ data }) {
 }
 
 function onRebuild({ data }) {
-  const { name, error, warnings } = JSON.parse(data)
+  const { name, errors, warnings } = JSON.parse(data)
 
-  if (error) {
+  if (errors.length > 0) {
     console.group('esbuild rebuild failed:', name)
-    for (const message of error.errors || []) {
+    for (const message of errors) {
       formatMessage('error', message)
     }
-    for (const message of error.warnings || []) {
+    for (const message of warnings) {
       formatMessage('warning', message)
     }
     console.groupEnd()
   } else {
-    if (warnings.length) {
+    if (warnings.length > 0) {
       console.group('esbuild rebuild produced warnings:', name)
       for (const message of warnings) {
         formatMessage('warning', message)

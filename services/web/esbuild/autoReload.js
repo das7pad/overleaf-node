@@ -37,11 +37,11 @@ function writeSSE(response, event, data) {
   response.write('\n\n')
 }
 
-function notifyFrontendAboutRebuild(name, error, result) {
-  const warnings = result && result.warnings
+function notifyFrontendAboutRebuild(name, result) {
+  const { warnings, errors } = result
   const blob = JSON.stringify({
     name,
-    error,
+    errors,
     warnings,
   })
   bus.emit('rebuild', blob)
