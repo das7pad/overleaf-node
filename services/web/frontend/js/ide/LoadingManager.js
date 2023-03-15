@@ -20,13 +20,13 @@ class LoadingManager {
 
     this.p = Promise.all([socketPromise, ideCssPromise])
       .then(() => {
-        this.$scope.$apply(() => {
+        this.$scope.$applyAsync(() => {
           this.$scope.state.load_progress = 100
           this.$scope.state.loading = false
         })
       })
       .catch(err => {
-        this.$scope.$apply(() => {
+        this.$scope.$applyAsync(() => {
           this.$scope.state.error = err.message
         })
       })

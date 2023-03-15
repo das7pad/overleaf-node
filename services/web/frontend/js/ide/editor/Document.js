@@ -527,71 +527,69 @@ export default Document = (function () {
           doc_id: this.doc_id,
           version: this.doc.getVersion(),
         })
-        return this.ide.socket.emit(
-          'joinDoc',
-          this.doc_id,
-          this.doc.getVersion(),
-          { encodeRanges: true },
-          (error, snapshot, version, updates) => {
-            if (error != null) {
-              return callback(error)
-            }
-            this.joined = true
-            this.doc.catchUp(updates)
-            return callback()
-          }
-        )
+        this.ide.socket
+          .rpc({
+            action: 'joinDoc',
+            docId: this.doc_id,
+            body: { fromVersion: this.doc.getVersion() },
+          })
+          .then(
+            ({ updates }) => {
+              this.joined = true
+              this.doc.catchUp(updates)
+              callback()
+            },
+            err => callback(err)
+          )
       } else {
         this.ide.pushEvent('joinDoc:new', {
           doc_id: this.doc_id,
         })
-        return this.ide.socket.emit(
-          'joinDoc',
-          this.doc_id,
-          { encodeRanges: true },
-          (error, snapshot, version, updates) => {
-            if (error != null) {
-              return callback(error)
-            }
-            this.joined = true
-            this.ide.pushEvent('joinDoc:inited', {
-              doc_id: this.doc_id,
-              version,
-            })
-            this.doc = new ShareJsDoc(
-              this.doc_id,
-              snapshot,
-              version,
-              this.ide.socket,
-              this.ide.globalEditorWatchdogManager
-            )
-            this._bindToShareJsDocEvents()
-            return callback()
-          }
-        )
+        this.ide.socket
+          .rpc({
+            action: 'joinDoc',
+            docId: this.doc_id,
+            body: { fromVersion: -1 },
+          })
+          .then(
+            ({ snapshot, version }) => {
+              this.joined = true
+              this.ide.pushEvent('joinDoc:inited', {
+                doc_id: this.doc_id,
+                version,
+              })
+              this.doc = new ShareJsDoc(
+                this.doc_id,
+                snapshot,
+                version,
+                this.ide.socket,
+                this.ide.globalEditorWatchdogManager
+              )
+              this._bindToShareJsDocEvents()
+              callback()
+            },
+            err => callback(err)
+          )
       }
     }
 
     _leaveDoc(callback) {
-      if (callback == null) {
-        callback = function () {}
-      }
       this.ide.pushEvent('leaveDoc', {
         doc_id: this.doc_id,
       })
       sl_console.log('[_leaveDoc] Sending leaveDoc request')
-      return this.ide.socket.emit('leaveDoc', this.doc_id, error => {
-        if (error != null) {
-          return callback(error)
-        }
-        this.joined = false
-        for (callback of Array.from(this._leaveCallbacks || [])) {
-          sl_console.log('[_leaveDoc] Calling buffered callback', callback)
-          callback(error)
-        }
-        delete this._leaveCallbacks
-        return callback(error)
-      })
+      this.ide.socket.rpc({ action: 'leaveDoc', docId: this.doc_id }).then(
+        () => {
+          this.joined = false
+          for (const callback of Array.from(this._leaveCallbacks || [])) {
+            sl_console.log('[_leaveDoc] Calling buffered callback', callback)
+            callback()
+          }
+          delete this._leaveCallbacks
+          callback()
+        },
+        error => callback(error)
+      )
     }
 
     _cleanUp() {

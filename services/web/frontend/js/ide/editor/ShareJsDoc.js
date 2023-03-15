@@ -68,16 +68,15 @@ export default ShareJsDoc = (function () {
             }
             update.meta.tc = this.track_changes_id_seeds.inflight
           }
-          return this.socket.emit(
-            'applyOtUpdate',
-            this.doc_id,
-            update,
-            error => {
-              if (error != null) {
-                return this._handleError(error)
-              }
-            }
-          )
+          delete update.doc
+          this.socket
+            .rpc({
+              action: 'applyUpdate',
+              docId: this.doc_id,
+              body: update,
+              async: true,
+            })
+            .catch(error => this._handleError(error))
         },
         state: 'ok',
         id: this.socket.publicId,

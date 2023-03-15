@@ -61,12 +61,18 @@ export default OnlineUsersManager = (function () {
       }
 
       this.getConnectedUsers = () => {
-        this.ide.socket.emit(
-          'clientTracking.getConnectedUsers',
-          (_error, connectedUsers) => {
-            this.storeConnectedUsers(connectedUsers || [])
-          }
-        )
+        this.ide.socket
+          .rpc({
+            action: 'clientTracking.getConnectedUsers',
+          })
+          .then(
+            ({ connectedClients }) => {
+              this.storeConnectedUsers(connectedClients || [])
+            },
+            () => {
+              // ignore errors
+            }
+          )
       }
       this.$scope.$on('project:joined', () => {
         const connectedUsers = this.$scope.connectedUsers
@@ -209,7 +215,18 @@ export default OnlineUsersManager = (function () {
           return
         }
         this.submittedCursorData = cursorData
-        this.ide.socket.emit('clientTracking.updatePosition', cursorData)
+        const docId = cursorData.doc_id
+        delete cursorData.doc_id
+        this.ide.socket
+          .rpc({
+            action: 'clientTracking.updatePosition',
+            docId,
+            body: cursorData,
+            async: true,
+          })
+          .catch(() => {
+            // cursor updates are optional
+          })
       }, this.cursorUpdateInterval)
     }
   }

@@ -12,14 +12,11 @@ const TIMEOUT = 30 * 1000
 
 export default class SocketIoShim {
   constructor() {
+    this._connectionCounter = 0
     this._events = new Map()
 
-    this.on('bootstrap', blob => {
-      this._bootstrap = blob
-      this._emit('connectionAccepted', blob)
-    })
-    this.on('connectionAccepted', (_, publicId, id) => {
-      this.id = id || publicId
+    this.on('bootstrap', ({ publicId }) => {
+      this.id = publicId
     })
     this.on('connectionRejected', blob => {
       if (blob && blob.code === 'BadWsBootstrapBlob') {
@@ -67,8 +64,16 @@ export default class SocketIoShim {
     return this._ws.readyState === WebSocket.OPEN
   }
 
+  get connecting() {
+    return this._ws.readyState === WebSocket.CONNECTING
+  }
+
+  get reconnecting() {
+    return this.connecting && this._connectionCounter > 0
+  }
+
   connect() {
-    if (this.connected || this._ws.readyState === WebSocket.CONNECTING) return
+    if (this.connected || this.connecting) return
     const jwt = getProjectJWT()
     if (!jwt || isExpired(jwt)) {
       clearProjectJWT()
@@ -90,83 +95,27 @@ export default class SocketIoShim {
     this._emit('disconnect', reason)
   }
 
-  emit(event, ...args) {
-    const cb = typeof args[args.length - 1] === 'function' && args.pop()
-
+  async rpc({ action, docId, body, async = false }) {
     if (!this.connected) {
       // sending on a connecting/closing/closed ws throws INVALID_STATE_ERR
       // discard the event as it is associated with an old session anyway.
       // -> a new connection can start from scratch
-      sl_console.log('[SocketShimV6] ws not ready, discarding', event, args)
-      if (cb) {
-        const cancelledError = new Error('rpc cancelled: ws is not ready')
-        setTimeout(cb, 0, cancelledError)
-      }
-      return
+      sl_console.log('[SocketIoShim] ws not ready, discarding', action)
+      throw new Error('rpc cancelled: ws is not ready')
     }
-
-    let transformedCallback = cb
-    switch (event) {
-      case 'joinProject': {
-        const { project, privilegeLevel, connectedClients } = this._bootstrap
-        const protocolVersion = 8
-        cb(null, project, privilegeLevel, protocolVersion, connectedClients)
-        return
-      }
-      case 'joinDoc':
-        transformedCallback = (err, res) => {
-          if (err) {
-            return cb(err)
-          }
-          const { snapshot, version, updates } = res
-          cb(null, snapshot, version, updates)
-        }
-        break
-      case 'clientTracking.getConnectedUsers':
-        transformedCallback = (err, res) => {
-          if (err) {
-            return cb(err)
-          }
-          const { connectedClients } = res
-          cb(null, connectedClients)
-        }
-        break
+    let cbId = this._nextCallbackId++
+    if (async) {
+      cbId = -cbId // A negative cbId indicates a lazy success callback.
     }
-
-    const payload = { a: event, b: args }
-    if (transformedCallback) {
-      const cbId = this._nextCallbackId++
-      this._callbacks.set(cbId, transformedCallback)
-      payload.c = cbId
+    const payload = { a: action, b: body, c: cbId, d: docId }
+    const blob = JSON.stringify(payload)
+    if (blob.length > 7 * 1024 * 1024) {
+      throw new Error('payload too large')
     }
-    if (['joinDoc', 'leaveDoc', 'applyOtUpdate'].includes(event)) {
-      payload.d = args.shift()
-    }
-    if (['applyOtUpdate', 'clientTracking.updatePosition'].includes(event)) {
-      payload.b = args[0]
-    }
-    if (event === 'joinDoc') {
-      payload.b = { fromVersion: typeof args[0] === 'number' ? args[0] : -1 }
-    }
-    if (event === 'clientTracking.updatePosition') {
-      payload.d = payload.b.doc_id
-      delete payload.b.doc_id
-    }
-    if (event === 'applyOtUpdate') {
-      delete payload.b.doc
-      let isUpdate = false
-      for (const op of payload.b.op) {
-        if (op.i || op.d) {
-          isUpdate = true
-          break
-        }
-      }
-      payload.a = isUpdate ? 'applyUpdate' : 'addComment'
-    }
-    if (Array.isArray(payload.b) && payload.b.length === 0) {
-      delete payload.b
-    }
-    this._ws.send(JSON.stringify(payload))
+    this._ws.send(blob)
+    return new Promise((resolve, reject) => {
+      this._callbacks.set(cbId, { resolve, reject })
+    })
   }
 
   on(event, listener) {
@@ -192,6 +141,7 @@ export default class SocketIoShim {
   _connect(jwt) {
     const newSocket = this._createWebsocket(jwt)
     this._ws = newSocket
+    this._connectionCounter++
 
     // reset the rpc tracking
     const callbacks = (this._callbacks = new Map())
@@ -206,7 +156,7 @@ export default class SocketIoShim {
     }, TIMEOUT)
     newSocket.onopen = () => {
       if (this._ws !== newSocket) {
-        sl_console.log('[SocketShimV6] replaced: ignoring connect')
+        sl_console.log('[SocketIoShim] replaced: ignoring connect')
         return
       }
       clearTimeout(this._connectTimeoutHandler)
@@ -215,11 +165,13 @@ export default class SocketIoShim {
           // there are pending RPCs that need cancelling
           const cancelledError = new Error('rpc cancelled: ws is closed')
           // detach -- do not block the event loop for too long.
-          callbacks.forEach(cb => setTimeout(cb, 0, cancelledError))
+          callbacks.forEach(({ reject }) =>
+            setTimeout(reject, 0, cancelledError)
+          )
           callbacks.clear()
         }
         if (this._ws !== newSocket) {
-          sl_console.log('[SocketShimV6] replaced: ignoring disconnect', event)
+          sl_console.log('[SocketIoShim] replaced: ignoring disconnect', event)
           return
         }
         if (event.code !== CODE_CLIENT_REQUESTED_DISCONNECT) {
@@ -231,7 +183,7 @@ export default class SocketIoShim {
     }
     newSocket.onerror = event => {
       if (this._ws !== newSocket) {
-        sl_console.log('[SocketShimV6] replaced: ignoring error', event)
+        sl_console.log('[SocketIoShim] replaced: ignoring error', event)
         return
       }
       clearTimeout(this._connectTimeoutHandler)
@@ -245,41 +197,49 @@ export default class SocketIoShim {
   _emit(event, ...args) {
     const listeners = this._events.get(event)
     if (!listeners) {
-      sl_console.log('[SocketShimV6] missing handler', event)
+      sl_console.log('[SocketIoShim] missing handler', event)
       return
-    }
-    switch (event) {
-      case 'connectionAccepted':
-        args = [null, args[0].publicId]
-        break
     }
     listeners.slice().forEach(listener => {
       listener.apply(null, args)
     })
   }
 
+  _callCallback(callbacks, cbId, err, body) {
+    if (callbacks.has(cbId)) {
+      const { resolve, reject } = callbacks.get(cbId)
+      callbacks.delete(cbId)
+      if (err) {
+        reject(err)
+      } else {
+        resolve(body)
+      }
+    } else {
+      sl_console.log('[SocketIoShim] unknown cbId', cbId, body)
+    }
+  }
+
   _onMessage(callbacks, parsed) {
-    let { c: cbId, n: event, b: args, e: err } = parsed
-    if (!args) {
-      args = []
-    }
-    if (!Array.isArray(args)) {
-      args = [args]
-    }
-    if (cbId || err) {
-      args.unshift(err)
+    const {
+      c: cbId,
+      n: event,
+      b: body,
+      e: err,
+      s: lazySuccessResponses,
+    } = parsed
+    if (lazySuccessResponses) {
+      for (const { c: otherCbId } of lazySuccessResponses) {
+        this._callCallback(callbacks, otherCbId)
+      }
     }
     if (cbId) {
-      if (callbacks.has(cbId)) {
-        const cb = callbacks.get(cbId)
-        callbacks.delete(cbId)
-        cb.apply(null, args)
-      } else {
-        sl_console.log('[SocketShimV6] unknown cbId', cbId, args)
+      this._callCallback(callbacks, cbId, err, body)
+    } else {
+      if (Array.isArray(body)) {
+        this._emit(event, ...body)
       }
-      return
+      this._emit(event, body)
     }
-    this._emit(event, ...args)
   }
 
   _startHealthCheck() {
@@ -287,9 +247,13 @@ export default class SocketIoShim {
       if (!this.connected) {
         clearInterval(healthCheckEmitter)
       }
-      this.emit('ping', () => {
-        clearTimeout(timeout)
-      })
+      this.rpc({ action: 'ping' })
+        .catch(err => {
+          this.disconnect(`client health check failed: ${err}`)
+        })
+        .finally(() => {
+          clearTimeout(timeout)
+        })
       const timeout = setTimeout(() => {
         if (!this.connected) return
         this.disconnect('client health check timeout')
