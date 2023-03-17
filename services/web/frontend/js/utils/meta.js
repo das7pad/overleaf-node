@@ -106,7 +106,6 @@ function convertBulkDataToMeta() {
   _setMeta('ol-userSettings', user.ace)
   _setMeta('ol-validRootDocExtensions', settings.validRootDocExtensions)
   _setMeta('ol-wikiEnabled', settings.wikiEnabled)
-  _setMeta('ol-wsBootstrap', b.wsBootstrap)
   _setMeta('ol-wsRetryHandshake', settings.wsRetryHandshake)
   _setMeta('ol-wsUrl', settings.wsUrl)
 }
