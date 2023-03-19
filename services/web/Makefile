@@ -25,7 +25,7 @@ DOCKER_COMPOSE_FLAGS ?= -f docker-compose.yml
 DOCKER_COMPOSE := docker-compose $(DOCKER_COMPOSE_FLAGS)
 
 export DOCKER_REGISTRY ?= docker.io
-export IMAGE_NODE ?= $(DOCKER_REGISTRY)/node:18.14.1
+export IMAGE_NODE ?= $(DOCKER_REGISTRY)/node:18.15.0
 export IMAGE_PROJECT ?= $(DOCKER_REGISTRY)/overleaf/web
 
 export CACHE_CONTENT_SHA := $(shell \
