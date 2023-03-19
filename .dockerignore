@@ -1,5 +1,6 @@
 services/web/generated
-services/web/node_modules
+services/web/.pnp.*
+services/web/.yarn
 services/web/public/LICENSE
 services/web/public/fonts
 services/web/public/js

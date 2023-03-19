@@ -5,19 +5,18 @@ services:
     image: ${IMAGE_CI}-dev
     user: node
     environment:
-      NODE_OPTIONS: "--unhandled-rejections=strict --trace-deprecation --enable-source-maps"
+      NODE_OPTIONS: "--trace-deprecation --enable-source-maps"
       # Disable ansi-color output, it breaks the xunit xml parser in Jenkins.
       # https://github.com/chalk/chalk/blob/v4.1.0/readme.md#chalksupportscolor
       FORCE_COLOR: '0'
     entrypoint:
-      - npx
+      - yarn
       - mocha
       - --exit
       - --delay
       - --reporter
       - xunit
       - --reporter-options
-    command:
       - output=/home/node/jsdom.xml,suiteName='JSDOMTests'
       - test/frontend/buildAndRun.js
     volumes:

@@ -8,6 +8,9 @@ endif
 PWD = $(shell pwd)
 SUDO_UID ?= $(shell id -u)
 SUDO_GID ?= $(shell id -g)
+export NODE_OPTIONS := \
+ --trace-deprecation \
+ --require ./.pnp.cjs \
 
 # Helper for creating reproducible artifacts
 REFERENCE_DATE := 2022-01-01T00:00Z
@@ -28,14 +31,26 @@ export DOCKER_REGISTRY ?= docker.io
 export IMAGE_NODE ?= $(DOCKER_REGISTRY)/node:18.15.0
 export IMAGE_PROJECT ?= $(DOCKER_REGISTRY)/overleaf/web
 
-export CACHE_CONTENT_SHA := $(shell \
-	$(TAR_CREATE_REPRODUCIBLE) \
-	 	docker_cleanup.sh Dockerfile.cache package.json package-lock.json \
-	 	frontend/js/packages/ \
+CACHE_CONTENT_SHA := $(shell \
+	( \
+		echo $(IMAGE_NODE) && \
+		$(TAR_CREATE_REPRODUCIBLE) \
+			docker_cleanup.sh Dockerfile.cache Dockerfile.yarn \
+			package.json yarn.lock .yarnrc.yml \
+			frontend/js/packages/ \
+	) \
+	| sha256sum \
+	| cut -d' ' -f1 \
+)
+YARN_CONTENT_SHA := $(shell \
+	( \
+		echo $(IMAGE_NODE) && cat Dockerfile.yarn \
+	) \
 	| sha256sum \
 	| cut -d' ' -f1 \
 )
 
+export IMAGE_YARN := ci/web:yarn-$(YARN_CONTENT_SHA)
 export IMAGE_CACHE_CONTENT_SHA := $(IMAGE_PROJECT):cache-$(CACHE_CONTENT_SHA)
 
 SUFFIX ?=
@@ -46,13 +61,21 @@ lint:
 test: format
 format:
 
-LINT_RUNNER = docker run --rm --network none $(IMAGE_CI)-dev npx
+LINT_RUNNER = docker run --rm --network none $(IMAGE_CI)-dev yarn
 LINT_RUNNER_LOCAL = \
-	docker run --rm -it --network none -v $(PWD):$(PWD) -w $(PWD) $(IMAGE_NODE) \
-	npx
+	docker run --rm -it --network none -v $(PWD):$(PWD) -w $(PWD) $(IMAGE_YARN) \
+ 	yarn
 
-ifneq (,$(wildcard node_modules/eslint))
+ifneq (,$(wildcard .yarn/cache/))
 LINT_RUNNER = $(LINT_RUNNER_LOCAL)
+
+LOCAL_YARN_TARGETS = \
+	lint_full lint_partial lint_fix_full lint_fix_partial \
+	format_full format_partial format_fix_full format_fix_partial \
+	type_check \
+	test_frontend \
+
+$(LOCAL_YARN_TARGETS): ensure_yarn_exists
 endif
 
 test: type_check
@@ -212,11 +235,22 @@ ensure_cache_exists:
 pull_cache:
 	docker pull $(IMAGE_CACHE_CONTENT_SHA)
 
-build_and_publish_cache:
+ensure_yarn_exists:
+	docker images -q $(IMAGE_YARN) | grep -q -e . || $(MAKE) build_yarn
+
+build_yarn:
 	docker build \
 		--pull \
 		--force-rm=true \
 		--build-arg IMAGE_NODE=$(IMAGE_NODE) \
+		--tag $(IMAGE_YARN) \
+		--file Dockerfile.yarn \
+		.
+
+build_and_publish_cache: build_yarn
+	docker build \
+		--force-rm=true \
+		--build-arg IMAGE_YARN=$(IMAGE_YARN) \
 		--tag $(IMAGE_CACHE_CONTENT_SHA) \
 		--file Dockerfile.cache \
 		.
@@ -237,7 +271,7 @@ output/:
 
 clean_ci_stage: clean_stage_images
 clean_stage_images:
-	docker rmi --force $(IMAGE_CI)-dev
+	docker rmi --force $(IMAGE_CI)-dev $(IMAGE_YARN)
 
 clean_ci_stage: clean_stale_cache
 # Delete all but the last three cache images (tail indexes from 1)

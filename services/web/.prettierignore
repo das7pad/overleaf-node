@@ -1,7 +1,6 @@
 frontend/js/vendor
 frontend/stylesheets/components/nvd3.less
 generated/
-node_modules
-package-lock.json
+.yarn/
 public/js
 public/vendor

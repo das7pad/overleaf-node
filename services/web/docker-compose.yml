@@ -2,13 +2,19 @@ version: "3.1"
 
 services:
   test_frontend:
-    image: node:18.15.0
+    image: ${IMAGE_YARN}
     user: node
     volumes:
       - .:/overleaf/services/web
     working_dir: /overleaf/services/web
-    command: npm run test:frontend
     environment:
-      MOCHA_GREP: ${MOCHA_GREP}
-      NODE_OPTIONS: "--unhandled-rejections=strict --trace-deprecation --enable-source-maps"
+      NODE_OPTIONS: "--trace-deprecation --enable-source-maps"
+      NODE_ENV: test
+    entrypoint:
+      - yarn
+      - mocha
+      - --exit
+      - --delay
+      - --grep=${MOCHA_GREP:-}
+      - test/frontend/buildAndRun.js
     network_mode: none

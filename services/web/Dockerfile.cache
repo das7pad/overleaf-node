@@ -1,11 +1,11 @@
-ARG IMAGE_NODE
-FROM $IMAGE_NODE
+ARG IMAGE_YARN
+FROM $IMAGE_YARN
 
 WORKDIR /overleaf/services/web
 
 COPY docker_cleanup.sh /
-COPY package.json package-lock.json ./
+COPY package.json yarn.lock .yarnrc.yml ./
 COPY frontend/js/packages/react-i18next ./frontend/js/packages/react-i18next
 
 ENV CYPRESS_INSTALL_BINARY=0
-RUN /docker_cleanup.sh npm ci
+RUN /docker_cleanup.sh yarn install

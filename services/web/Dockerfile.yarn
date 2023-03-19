@@ -1,0 +1,6 @@
+ARG IMAGE_NODE
+FROM $IMAGE_NODE
+
+ENV COREPACK_HOME=/corepack
+RUN corepack enable
+RUN corepack yarn@3.5.0 --version

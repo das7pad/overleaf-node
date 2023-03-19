@@ -1,6 +1,8 @@
 const fs = require('fs')
 const Path = require('path')
+const pnpapi = require('pnpapi')
 
+const FRONTEND_PATH = Path.join(__dirname, 'frontend')
 const VENDOR_PATH = Path.join(__dirname, 'public', 'vendor')
 
 const PATTERNS = []
@@ -15,7 +17,7 @@ const PATTERNS = []
       // lazy loaded ace files -- minified: keymaps, modes, themes, worker
       'ace-builds/src-min-noconflict/',
     ].map(path => {
-      return { from: `node_modules/${path}`, to: `${VENDOR_PATH}/${path}` }
+      return { from: path, to: `${VENDOR_PATH}/${path}` }
     })
   )
   .concat(
@@ -28,7 +30,7 @@ const PATTERNS = []
       'jax/output/HTML-CSS/fonts/TeX/',
     ].map(from => {
       return {
-        context: 'node_modules/mathjax',
+        context: 'mathjax',
         from,
         to: `${VENDOR_PATH}/mathjax-2-7-9`,
       }
@@ -40,7 +42,7 @@ const PATTERNS = []
       'highlight.pack.js',
     ].map(path => {
       return {
-        from: `frontend/js/vendor/libs/${path}`,
+        from: `${FRONTEND_PATH}/js/vendor/libs/${path}`,
         to: `${VENDOR_PATH}/${path}`,
       }
     })
@@ -51,7 +53,7 @@ const PATTERNS = []
       'highlight-github.css',
     ].map(path => {
       return {
-        from: `frontend/stylesheets/vendor/${path}`,
+        from: `${FRONTEND_PATH}/stylesheets/vendor/${path}`,
         to: `${VENDOR_PATH}/stylesheets/${path}`,
       }
     })
@@ -60,6 +62,13 @@ const PATTERNS = []
     if (context) {
       to = Path.join(to, from)
       from = Path.join(context, from)
+    }
+    if (!from.startsWith('/')) {
+      const pkg = Path.dirname(from)
+      from = Path.join(
+        pnpapi.resolveToUnqualified(pkg, '.'),
+        Path.relative(pkg, from)
+      )
     }
     return { from, to }
   })

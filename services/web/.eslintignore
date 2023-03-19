@@ -1,6 +1,6 @@
 frontend/js/vendor
 generated/
-node_modules
+.yarn/
 package-lock.json
 public/js
 public/vendor
