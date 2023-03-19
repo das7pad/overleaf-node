@@ -59,6 +59,7 @@ const OutlineItem = memo(function OutlineItem({
       className={mainItemClasses}
       aria-expanded={ariaExpandedValue}
       role="treeitem"
+      aria-selected={isHighlighted}
       aria-current={isHighlighted}
       aria-label={outlineItem.title}
     >

@@ -248,7 +248,6 @@ export function useSelectableEntity(id, isFile) {
   const props = useMemo(
     () => ({
       className: classNames({ selected: isVisuallySelected }),
-      'aria-selected': isVisuallySelected,
       onClick: handleClick,
       onContextMenu: handleContextMenu,
       onKeyPress: handleKeyPress,
@@ -256,7 +255,7 @@ export function useSelectableEntity(id, isFile) {
     [handleClick, handleContextMenu, handleKeyPress, isVisuallySelected]
   )
 
-  return { isSelected, props }
+  return { isSelected, isVisuallySelected, props }
 }
 
 const layoutContextPropTypes = {

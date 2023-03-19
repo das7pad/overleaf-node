@@ -9,15 +9,17 @@ import iconTypeFromName from '../util/icon-type-from-name'
 import classnames from 'classnames'
 
 function FileTreeDoc({ name, id, isFile, isLinkedFile }) {
-  const { isSelected, props: selectableEntityProps } = useSelectableEntity(
-    id,
-    isFile
-  )
+  const {
+    isSelected,
+    isVisuallySelected,
+    props: selectableEntityProps,
+  } = useSelectableEntity(id, isFile)
 
   return (
     <li
       role="treeitem"
       {...selectableEntityProps}
+      aria-selected={isVisuallySelected}
       aria-label={name}
       tabIndex="0"
     >

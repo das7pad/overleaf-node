@@ -17,7 +17,11 @@ import usePersistedState from '../../../shared/hooks/use-persisted-state'
 function FileTreeFolder({ name, id, folders, docs, files }) {
   const { t } = useTranslation()
 
-  const { isSelected, props: selectableEntityProps } = useSelectableEntity(id)
+  const {
+    isSelected,
+    isVisuallySelected,
+    props: selectableEntityProps,
+  } = useSelectableEntity(id)
 
   const { selectedEntityParentIds } = useFileTreeSelectable(id)
 
@@ -64,6 +68,7 @@ function FileTreeFolder({ name, id, folders, docs, files }) {
       <li
         role="treeitem"
         {...selectableEntityProps}
+        aria-selected={isVisuallySelected}
         aria-expanded={expanded}
         aria-label={name}
         tabIndex="0"
