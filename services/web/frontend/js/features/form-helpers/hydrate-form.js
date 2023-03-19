@@ -45,7 +45,7 @@ function formSubmitHelper(formEl) {
 
       // Handle redirects
       if (data.redir || data.redirect) {
-        window.location = data.redir || data.redirect
+        window.location.assign(data.redir || data.redirect)
         return
       }
 

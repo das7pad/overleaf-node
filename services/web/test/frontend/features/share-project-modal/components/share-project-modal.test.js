@@ -84,6 +84,17 @@ describe('<ShareProjectModal/>', function () {
     handleHide: sinon.stub(),
   }
   let sendMBSpy
+  const reloadStub = sinon.stub()
+  const originalLocation = window.location
+
+  beforeEach(function () {
+    Object.defineProperty(window, 'location', {
+      value: {
+        reload: reloadStub,
+        href: originalLocation.href,
+      },
+    })
+  })
 
   beforeEach(function () {
     sendMBSpy = sinon.spy(eventTracking, 'sendMB')
@@ -94,6 +105,9 @@ describe('<ShareProjectModal/>', function () {
   })
 
   afterEach(function () {
+    Object.defineProperty(window, 'location', {
+      value: originalLocation,
+    })
     sendMBSpy.restore()
     fetchMock.restore()
     cleanUpContext()
@@ -539,13 +553,6 @@ describe('<ShareProjectModal/>', function () {
       )
     })
 
-    // Monkey patch window.location.reload()
-    // jsdom does not implement the underlying `navigation` constructs.
-    const oldLocation = window.location
-    delete window.location
-    const reloadStub = sinon.stub()
-    window.location = { reload: reloadStub }
-
     const confirmButton = screen.getByRole('button', {
       name: 'Change owner',
     })
@@ -557,9 +564,6 @@ describe('<ShareProjectModal/>', function () {
 
     expect(fetchMock.done()).to.be.true
     expect(reloadStub.calledOnce).to.be.true
-
-    // Restore location object
-    window.location = oldLocation
   })
 
   it('sends invites to input email addresses', async function () {

@@ -297,12 +297,12 @@ The editor will refresh automatically in ${delay} seconds.\
         (err != null ? err.message : undefined) === 'not authorized' ||
         (err != null ? err.message : undefined) === 'invalid session'
       ) {
-        return (window.location = `/login?redir=${encodeURI(
-          window.location.pathname
-        )}`)
+        window.location.assign(
+          `/login?redir=${encodeURI(window.location.pathname)}`
+        )
       } else {
         this.ide.socket.disconnect()
-        return this.ide.showGenericMessageModal(
+        this.ide.showGenericMessageModal(
           'Something went wrong connecting',
           `\
 Something went wrong connecting to your project. Please refresh if this continues to happen.\
