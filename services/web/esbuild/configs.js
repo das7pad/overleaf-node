@@ -54,6 +54,9 @@ const CONFIGS = [
     },
     jsx: 'automatic',
     tsconfig: Path.join(ROOT, 'tsconfig.json'),
+    alias: {
+      ace: 'ace-builds/src-noconflict',
+    },
   },
 
   {

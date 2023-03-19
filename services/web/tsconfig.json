@@ -12,10 +12,7 @@
     "skipLibCheck": true /* Skip type checking of declaration files. */,
     "forceConsistentCasingInFileNames": true /* Disallow inconsistently-cased references to the same file. */,
     "types": ["cypress", "@testing-library/cypress"],
-    "baseUrl": ".",
-    "paths": {
-      "ace/*": ["node_modules/ace-builds/src-noconflict/*"]
-    }
+    "baseUrl": "."
   },
   "include": [
     "frontend/js/**/*.*",
