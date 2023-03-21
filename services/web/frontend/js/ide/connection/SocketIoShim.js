@@ -127,15 +127,10 @@ export default class SocketIoShim {
 
   removeListener(event, listener) {
     const listeners = this._events.get(event)
-    if (!listeners) {
-      return false
-    }
-    const position = listeners.indexOf(listener)
-    if (position === -1) {
-      return false
-    }
-    listeners.splice(position, 1)
-    return true
+    if (!listeners) return
+    const idx = listeners.indexOf(listener)
+    if (idx === -1) return
+    listeners.splice(idx, 1)
   }
 
   _connect(jwt) {
@@ -180,7 +175,6 @@ export default class SocketIoShim {
         }
       }
       this._startHealthCheck(newSocket)
-      this._emit('connect')
     }
     newSocket.onerror = event => {
       if (this._ws !== newSocket) {
@@ -221,16 +215,10 @@ export default class SocketIoShim {
   }
 
   _onMessage(callbacks, parsed) {
-    const {
-      c: cbId,
-      n: event,
-      b: body,
-      e: err,
-      s: lazySuccessResponses,
-    } = parsed
-    if (lazySuccessResponses) {
-      for (const { c: otherCbId } of lazySuccessResponses) {
-        this._callCallback(callbacks, otherCbId)
+    const { c: cbId, n: event, b: body, e: err, s: successCbIds } = parsed
+    if (successCbIds) {
+      for (const { c: successCbId } of successCbIds) {
+        this._callCallback(callbacks, successCbId)
       }
     }
     if (cbId) {
@@ -270,11 +258,7 @@ export default class SocketIoShim {
   }
 
   _createWebsocket(jwt) {
-    const url = new URL(
-      getMeta('ol-wsUrl') || '/socket.io',
-      window.location.origin
-    )
-    // http -> ws; https -> wss
+    const url = new URL(getMeta('ol-wsUrl'), window.location.origin)
     url.protocol = url.protocol.replace(/^http/, 'ws')
     return new WebSocket(url, [
       'v8.real-time.overleaf.com',

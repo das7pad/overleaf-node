@@ -107,24 +107,12 @@ export default ConnectionManager = (function () {
         this.updateConnectionManagerState('error')
         sl_console.log('socket.io error', err)
         this.connected = false
-        return this.$scope.$apply(() => {
-          return (this.$scope.state.error =
-            "Unable to connect, please view the <u><a href='/learn/Kb/Connection_problems'>connection problems guide</a></u> to fix the issue.")
+        this.$scope.$apply(() => {
+          this.$scope.state.error =
+            "Unable to connect, please view the <u><a href='/learn/Kb/Connection_problems'>connection problems guide</a></u> to fix the issue."
         })
       }
       this.ide.socket.on('error', connectionErrorHandler)
-
-      // The "connect" event is the first event we get back. It only
-      // indicates that the websocket is connected, we still need to
-      // pass authentication to join a project.
-
-      this.ide.socket.on('connect', () => {
-        // state should be 'connecting'...
-        // remove connection error handler when connected, avoid unwanted fallbacks
-        this.ide.socket.removeListener('error', connectionErrorHandler)
-        sl_console.log('[socket.io connect] Connected')
-        this.updateConnectionManagerState('authenticating')
-      })
 
       // The next event we should get is an authentication response
       // from the server, either "bootstrap" or
@@ -133,6 +121,7 @@ export default ConnectionManager = (function () {
       this.ide.socket.on(
         'bootstrap',
         ({ publicId, project, privilegeLevel, connectedClients }) => {
+          this.ide.socket.removeListener('error', connectionErrorHandler)
           this.ide.socket.publicId = publicId
           this.connected = true
           this.ide.pushEvent('connected')
@@ -191,7 +180,7 @@ export default ConnectionManager = (function () {
         this.shuttingDown = true // prevent reconnection attempts
         this.$scope.$apply(() => {
           this.$scope.permissions.write = false
-          return (this.$scope.connection.forced_disconnect = true)
+          this.$scope.connection.forced_disconnect = true
         })
         // flush changes before disconnecting
         this.ide.$scope.$broadcast('flush-changes')
@@ -249,8 +238,6 @@ The editor will refresh automatically in ${delay} seconds.\
         this.$scope.$applyAsync(() => {})
       } else if (state === 'reconnectFailed') {
         // reconnect attempt failed
-      } else if (state === 'authenticating') {
-        // socket connection has been established, trying to authenticate
       } else if (state === 'ready') {
         // project has been joined
       } else if (state === 'waitingCountdown') {
@@ -428,7 +415,7 @@ Something went wrong connecting to your project. Please refresh if this continue
 
       const removeHandler = () => {
         this.ide.socket.removeListener('error', handleFailure)
-        this.ide.socket.removeListener('connect', handleSuccess)
+        this.ide.socket.removeListener('bootstrap', handleSuccess)
       }
       const handleFailure = () => {
         sl_console.log('[ConnectionManager] tryReconnect: failed')
@@ -441,7 +428,7 @@ Something went wrong connecting to your project. Please refresh if this continue
         removeHandler()
       }
       this.ide.socket.on('error', handleFailure)
-      this.ide.socket.on('connect', handleSuccess)
+      this.ide.socket.on('bootstrap', handleSuccess)
 
       // use socket.io connect() here to make a single attempt, the
       // reconnect() method makes multiple attempts
@@ -484,9 +471,9 @@ Something went wrong connecting to your project. Please refresh if this continue
         new Date() - this.lastUserAction > this.disconnectAfterMs
       if (this.userIsInactive && this.connected) {
         this.disconnect()
-        return this.$scope.$apply(() => {
-          return (this.$scope.connection.inactive_disconnect = true)
-        }) // 5 minutes
+        this.$scope.$apply(() => {
+          this.$scope.connection.inactive_disconnect = true
+        })
       }
     }
 
