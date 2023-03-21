@@ -78,7 +78,7 @@ export default class SocketIoShim {
     if (!jwt || isExpired(jwt)) {
       clearProjectJWT()
       refreshProjectJWT()
-        .then(jwt => this._connect(jwt))
+        .then(() => this.connect())
         .catch(reason => {
           this._emit('error', `client bootstrap failed: ${reason}`)
         })
@@ -144,7 +144,8 @@ export default class SocketIoShim {
     this._connectionCounter++
 
     // reset the rpc tracking
-    const callbacks = (this._callbacks = new Map())
+    const callbacks = new Map()
+    this._callbacks = callbacks
     this._nextCallbackId = 1
 
     clearTimeout(this._connectTimeoutHandler)
@@ -178,7 +179,7 @@ export default class SocketIoShim {
           this._emit('disconnect', event.reason)
         }
       }
-      this._startHealthCheck()
+      this._startHealthCheck(newSocket)
       this._emit('connect')
     }
     newSocket.onerror = event => {
@@ -242,28 +243,30 @@ export default class SocketIoShim {
     }
   }
 
-  _startHealthCheck() {
-    const healthCheckEmitter = setInterval(() => {
-      if (!this.connected) {
-        clearInterval(healthCheckEmitter)
+  _startHealthCheck(ws) {
+    let waitingForPong = false
+    const healthCheckInterval = setInterval(() => {
+      if (ws !== this._ws || !this.connected) {
+        clearInterval(healthCheckInterval)
+        return
       }
+      if (waitingForPong) {
+        this.disconnect('client health check timeout')
+        return
+      }
+      waitingForPong = true
       this.rpc({ action: 'ping' })
+        .then(() => {
+          waitingForPong = false
+        })
         .catch(err => {
+          if (ws !== this._ws || !this.connected) return
           this.disconnect(`client health check failed: ${err}`)
         })
-        .finally(() => {
-          clearTimeout(timeout)
-        })
-      const timeout = setTimeout(() => {
-        if (!this.connected) return
-        this.disconnect('client health check timeout')
-      }, TIMEOUT)
     }, TIMEOUT)
-    const cleanup = () => {
-      clearInterval(healthCheckEmitter)
-      this.removeListener('disconnect', cleanup)
-    }
-    this.on('disconnect', cleanup)
+    ws.addEventListener('close', () => {
+      clearInterval(healthCheckInterval)
+    })
   }
 
   _createWebsocket(jwt) {
