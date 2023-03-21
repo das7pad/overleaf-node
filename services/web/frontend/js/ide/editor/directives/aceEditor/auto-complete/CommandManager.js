@@ -32,17 +32,6 @@ class Parser {
     // Safari regex is super slow, freezes browser for minutes on end,
     // hacky solution: limit iterations
     let command
-    let limit = null
-    if (
-      __guard__(
-        typeof window !== 'undefined' && window !== null
-          ? window._ide
-          : undefined,
-        x => x.browserIsSafari
-      )
-    ) {
-      limit = 5000
-    }
 
     // fully formed commands
     const realCommands = []
@@ -50,13 +39,7 @@ class Parser {
     // and could be partially typed or malformed
     const incidentalCommands = []
     const seen = {}
-    let iterations = 0
     while ((command = this.nextCommand())) {
-      iterations += 1
-      if (limit && iterations > limit) {
-        return realCommands
-      }
-
       const docState = this.doc
 
       let optionalArgs = 0

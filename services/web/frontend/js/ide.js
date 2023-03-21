@@ -58,7 +58,7 @@ App.controller(
   'IdeController',
   function ($scope, $timeout, ide, eventTracking, metadata) {
     // Don't freak out if we're already in an apply callback
-    let err, pdfLayout, userAgent
+    let pdfLayout
     $scope.$originalApply = $scope.$apply
     $scope.$apply = function (fn) {
       if (fn == null) {
@@ -212,8 +212,6 @@ If the project has been renamed please look in your project list for a new proje
 
     ide.localStorage = localStorage
 
-    ide.browserIsSafari = false
-
     $scope.switchToFlatLayout = function (view) {
       $scope.ui.pdfLayout = 'flat'
       $scope.ui.view = view
@@ -270,18 +268,6 @@ If the project has been renamed please look in your project list for a new proje
         event.preventDefault()
         $scope.recompileViaKey()
       }
-    }
-
-    try {
-      ;({ userAgent } = navigator)
-      ide.browserIsSafari =
-        userAgent &&
-        /.*Safari\/.*/.test(userAgent) &&
-        !/.*Chrome\/.*/.test(userAgent) &&
-        !/.*Chromium\/.*/.test(userAgent)
-    } catch (error) {
-      err = error
-      console.error(err)
     }
 
     // Listen for editor:lint event from CM6 linter
