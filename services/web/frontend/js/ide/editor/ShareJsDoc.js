@@ -53,7 +53,7 @@ export default ShareJsDoc = (function () {
             Math.random() < window.disconnectOnUpdate
           ) {
             sl_console.log('Disconnecting on update', update)
-            window._ide.socket.socket.disconnect()
+            window._ide.socket.disconnect()
           }
           if (
             window.dropUpdates != null &&

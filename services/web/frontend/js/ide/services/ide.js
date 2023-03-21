@@ -51,17 +51,8 @@ App.factory(
       }
       meta.user_id = window.user_id
       meta.project_id = window.project_id
-      meta.client_id = __guard__(
-        ide.socket != null ? ide.socket.socket : undefined,
-        x => x.sessionid
-      )
-      meta.transport = __guard__(
-        __guard__(
-          ide.socket != null ? ide.socket.socket : undefined,
-          x2 => x2.transport
-        ),
-        x1 => x1.name
-      )
+      meta.client_id = ide.socket?.publicId
+      meta.transport = ide.socket?.protocol
       meta.client_now = new Date()
       const errorObj = {}
       if (typeof error === 'object') {
@@ -155,9 +146,3 @@ App.controller(
     }
   }
 )
-
-function __guard__(value, transform) {
-  return typeof value !== 'undefined' && value !== null
-    ? transform(value)
-    : undefined
-}

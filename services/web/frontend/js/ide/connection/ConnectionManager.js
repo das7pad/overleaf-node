@@ -102,7 +102,7 @@ export default ConnectionManager = (function () {
           window.wsRetryHandshake &&
           connectionAttempt++ < window.wsRetryHandshake
         ) {
-          return setTimeout(() => this.ide.socket.socket.connect(), 100)
+          return setTimeout(() => this.ide.socket.connect(), 100)
         }
         this.updateConnectionManagerState('error')
         sl_console.log('socket.io error', err)
@@ -120,9 +120,8 @@ export default ConnectionManager = (function () {
 
       this.ide.socket.on(
         'bootstrap',
-        ({ publicId, project, privilegeLevel, connectedClients }) => {
+        ({ project, privilegeLevel, connectedClients }) => {
           this.ide.socket.removeListener('error', connectionErrorHandler)
-          this.ide.socket.publicId = publicId
           this.connected = true
           this.ide.pushEvent('connected')
           this.$scope.$applyAsync(() => {
@@ -308,11 +307,6 @@ Something went wrong connecting to your project. Please refresh if this continue
         sl_console.log('[disconnect] shutting down ConnectionManager')
         this.updateConnectionManagerState('inactive')
         this.shuttingDown = true // prevent reconnection attempts
-      } else if (this.ide.socket.socket && !this.ide.socket.socket.connected) {
-        sl_console.log(
-          '[socket.io] skipping disconnect because socket.io has not connected'
-        )
-        return
       }
       sl_console.log('[socket.io] disconnecting client')
       return this.ide.socket.disconnect()
@@ -430,9 +424,7 @@ Something went wrong connecting to your project. Please refresh if this continue
       this.ide.socket.on('error', handleFailure)
       this.ide.socket.on('bootstrap', handleSuccess)
 
-      // use socket.io connect() here to make a single attempt, the
-      // reconnect() method makes multiple attempts
-      this.ide.socket.socket.connect()
+      this.ide.socket.connect()
       // record the time of the last attempt to connect
       this.lastConnectionAttempt = new Date()
     }

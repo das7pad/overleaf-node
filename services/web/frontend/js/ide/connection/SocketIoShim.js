@@ -14,9 +14,10 @@ export default class SocketIoShim {
   constructor() {
     this._connectionCounter = 0
     this._events = new Map()
+    this._publicId = ''
 
     this.on('bootstrap', ({ publicId }) => {
-      this.id = publicId
+      this._publicId = publicId
     })
     this.on('connectionRejected', blob => {
       if (blob && blob.code === 'BadWsBootstrapBlob') {
@@ -32,31 +33,12 @@ export default class SocketIoShim {
       clearProjectJWT()
     })
 
-    this._ws = {
+    this._ws = /** @type{WebSocket} */ {
       protocol: '',
       readyState: WebSocket.CLOSED,
       send: () => {},
       close: () => {},
     }
-
-    // socket.io v0 interface
-    const self = this
-    this.socket = {
-      get connected() {
-        return self.connected
-      },
-      get sessionid() {
-        return self.id
-      },
-      transport: {
-        get name() {
-          return self._ws.protocol || 'websocket-v6-dead'
-        },
-      },
-      connect: self.connect.bind(self),
-      disconnect: self.disconnect.bind(self),
-    }
-
     this.connect()
   }
 
@@ -66,6 +48,14 @@ export default class SocketIoShim {
 
   get connecting() {
     return this._ws.readyState === WebSocket.CONNECTING
+  }
+
+  get publicId() {
+    return this._publicId
+  }
+
+  get protocol() {
+    return this._ws.protocol
   }
 
   get reconnecting() {

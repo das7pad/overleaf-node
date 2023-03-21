@@ -80,7 +80,7 @@ export default Document = (function () {
       super()
       this.ide = ide
       this.doc_id = doc_id
-      this.connected = this.ide.socket.socket.connected
+      this.connected = this.ide.socket.connected
       this.joined = false
       this.wantToBeJoined = false
       this._checkAceConsistency = () => this._checkConsistency(this.ace)
@@ -446,7 +446,7 @@ export default Document = (function () {
         Math.random() < window.disconnectOnAck
       ) {
         sl_console.log('Disconnecting on ack', update)
-        window._ide.socket.socket.disconnect()
+        window._ide.socket.disconnect()
         // Pretend we never received the ack
         return
       }
