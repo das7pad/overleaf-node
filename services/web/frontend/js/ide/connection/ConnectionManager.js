@@ -37,7 +37,6 @@ export default class ConnectionManager {
     })
 
     this.connected = false
-    this.userIsInactive = false
     this.shuttingDown = false
 
     this.$scope.connection = {
@@ -147,8 +146,7 @@ export default class ConnectionManager {
 
       if (!this.$scope.connection.state.match(/^waiting/)) {
         if (
-          !this.$scope.connection.forced_disconnect &&
-          !this.userIsInactive &&
+          !this.userIsInactiveSince(DISCONNECT_AFTER_MS) &&
           !this.shuttingDown
         ) {
           this.startAutoReconnectCountdown()
@@ -434,13 +432,16 @@ Something went wrong connecting to your project. Please refresh if this continue
   }
 
   disconnectIfInactive() {
-    this.userIsInactive = new Date() - this.lastUserAction > DISCONNECT_AFTER_MS
-    if (this.userIsInactive && this.connected) {
+    if (this.userIsInactiveSince(DISCONNECT_AFTER_MS) && this.connected) {
       this.disconnect()
       this.$scope.$apply(() => {
         this.$scope.connection.inactive_disconnect = true
       })
     }
+  }
+
+  userIsInactiveSince(since) {
+    return new Date() - this.lastUserAction > since
   }
 
   reconnectGracefully(force) {
@@ -454,12 +455,13 @@ Something went wrong connecting to your project. Please refresh if this continue
         return
       }
     }
-    const userIsInactive =
-      new Date() - this.lastUserAction > RECONNECT_GRACEFULLY_RETRY_INTERVAL_MS
     const maxIntervalReached =
       new Date() - this.reconnectGracefullyStarted >
       MAX_RECONNECT_GRACEFULLY_INTERVAL_MS
-    if (userIsInactive || maxIntervalReached) {
+    if (
+      this.userIsInactiveSince(RECONNECT_GRACEFULLY_RETRY_INTERVAL_MS) ||
+      maxIntervalReached
+    ) {
       sl_console.log(
         "[reconnectGracefully] User didn't do anything for last 5 seconds, reconnecting"
       )
