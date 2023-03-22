@@ -9,6 +9,7 @@
  */
 
 import SocketIoShim from './SocketIoShim'
+import getMeta from '../../utils/meta'
 
 let ConnectionManager
 const ONEHOUR = 1000 * 60 * 60
@@ -93,10 +94,7 @@ export default ConnectionManager = (function () {
 
       let connectionAttempt = 1
       const connectionErrorHandler = err => {
-        if (
-          window.wsRetryHandshake &&
-          connectionAttempt++ < window.wsRetryHandshake
-        ) {
+        if (connectionAttempt++ < getMeta('ol-wsRetryHandshake')) {
           return setTimeout(() => this.ide.socket.connect(), 100)
         }
         this.updateConnectionManagerState('error')
