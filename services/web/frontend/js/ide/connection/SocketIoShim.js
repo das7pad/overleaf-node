@@ -39,7 +39,6 @@ export default class SocketIoShim {
       send: () => {},
       close: () => {},
     }
-    this.connect()
   }
 
   get connected() {
