@@ -43,11 +43,6 @@ export default ConnectionManager = (function () {
         }
       })
 
-      this.userIsLeavingPage = false
-      window.addEventListener('beforeunload', () => {
-        this.userIsLeavingPage = true
-      }) // Don't return true or it will show a pop up
-
       this.connected = false
       this.userIsInactive = false
       this.shuttingDown = false
@@ -326,11 +321,6 @@ Something went wrong connecting to your project. Please refresh if this continue
         countdown = 60 + Math.floor(Math.random() * 120)
       } else {
         countdown = 3 + Math.floor(Math.random() * 7)
-      }
-
-      if (this.userIsLeavingPage) {
-        // user will have pressed refresh or back etc
-        return
       }
 
       this.$scope.$apply(() => {
