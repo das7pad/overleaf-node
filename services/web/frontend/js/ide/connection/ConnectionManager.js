@@ -31,12 +31,10 @@ export default class ConnectionManager {
     // trigger a reconnect immediately if network comes back online
     window.addEventListener('online', () => {
       sl_console.log('[online] browser notified online')
-      if (!this.connected) {
+      if (!this.ide.socket.connected) {
         return this.tryReconnectWithRateLimit({ force: true })
       }
     })
-
-    this.connected = false
 
     this.$scope.connection = {
       debug: sl_debugging,
@@ -56,14 +54,17 @@ export default class ConnectionManager {
     this.lastUserAction = new Date()
     this.$scope.$on('cursor:editor:update', () => {
       this.lastUserAction = new Date() // time of last edit
-      if (!this.connected) {
+      if (!this.ide.socket.connected) {
         // user is editing, try to reconnect
         return this.tryReconnectWithRateLimit()
       }
     })
 
     document.querySelector('body').addEventListener('click', e => {
-      if (!this.connected && e.target.id !== 'try-reconnect-now-button') {
+      if (
+        !this.ide.socket.connected &&
+        e.target.id !== 'try-reconnect-now-button'
+      ) {
         // user is editing, try to reconnect
         return this.tryReconnectWithRateLimit()
       }
@@ -86,7 +87,6 @@ export default class ConnectionManager {
       }
       this.updateConnectionManagerState('error')
       sl_console.log('socket.io error', err)
-      this.connected = false
       this.$scope.$apply(() => {
         this.$scope.state.error =
           "Unable to connect, please view the <u><a href='/learn/Kb/Connection_problems'>connection problems guide</a></u> to fix the issue."
@@ -102,7 +102,6 @@ export default class ConnectionManager {
       'bootstrap',
       ({ project, privilegeLevel, connectedClients }) => {
         this.ide.socket.removeListener('error', connectionErrorHandler)
-        this.connected = true
         this.ide.pushEvent('connected')
         this.$scope.$applyAsync(() => {
           this.updateConnectionManagerState('ready')
@@ -136,7 +135,6 @@ export default class ConnectionManager {
 
     this.ide.socket.on('disconnect', () => {
       sl_console.log('[socket.io disconnect] Disconnected')
-      this.connected = false
       this.ide.pushEvent('disconnected')
 
       if (!this.$scope.connection.state.match(/^waiting/)) {
@@ -304,7 +302,7 @@ Something went wrong connecting to your project. Please refresh if this continue
     })
 
     setTimeout(() => {
-      if (!this.connected && !this.countdownTimeoutId) {
+      if (!this.ide.socket.connected && !this.countdownTimeoutId) {
         this.countdownTimeoutId = setTimeout(
           () => this.decreaseCountdown(connectionId),
           1000
@@ -414,7 +412,10 @@ Something went wrong connecting to your project. Please refresh if this continue
   }
 
   disconnectIfInactive() {
-    if (this.userIsInactiveSince(DISCONNECT_AFTER_MS) && this.connected) {
+    if (
+      this.userIsInactiveSince(DISCONNECT_AFTER_MS) &&
+      this.ide.socket.connected
+    ) {
       this.disconnect()
       this.$scope.$apply(() => {
         this.$scope.connection.inactive_disconnect = true
