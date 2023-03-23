@@ -26,7 +26,7 @@ export default class ConnectionManager {
     this.$scope = $scope
 
     setInterval(() => {
-      return this.disconnectIfInactive()
+      this.disconnectIfInactive()
     }, ONE_HOUR_IN_MS)
 
     // trigger a reconnect immediately if network comes back online
@@ -139,13 +139,10 @@ export default class ConnectionManager {
       sl_console.log('[socket.io disconnect] Disconnected')
       this.ide.pushEvent('disconnected')
 
-      if (
-        !this.userIsInactiveSince(DISCONNECT_AFTER_MS) &&
-        this.ide.socket.canReconnect
-      ) {
-        this.startAutoReconnectCountdown()
-      } else {
+      if (this.userIsInactiveSince(DISCONNECT_AFTER_MS)) {
         this.updateConnectionManagerState('inactive')
+      } else {
+        this.startAutoReconnectCountdown()
       }
     })
 
@@ -242,17 +239,19 @@ Something went wrong connecting to your project. Please refresh if this continue
   }
 
   reconnectImmediately() {
+    this.reconnectGracefullyUntil = null
     this.disconnect()
-    return this.tryReconnect()
+    this.tryReconnect()
   }
 
   disconnect() {
     sl_console.log('[socket.io] disconnecting client')
-    return this.ide.socket.disconnect()
+    this.ide.socket.disconnect()
   }
 
   startAutoReconnectCountdown() {
     sl_console.log('[ConnectionManager] starting autoReconnect countdown')
+    if (!this.ide.socket.canReconnect) return
     let countdown
     if (this.userIsInactiveSince(TWO_MINUTES_IN_MS)) {
       countdown = 60 + Math.floor(Math.random() * 2 * 60)
@@ -286,9 +285,7 @@ Something went wrong connecting to your project. Please refresh if this continue
 
   tryReconnect() {
     sl_console.log('[ConnectionManager] tryReconnect')
-    if (!this.ide.socket.canReconnect) {
-      return
-    }
+    if (!this.ide.socket.canReconnect) return
     sl_console.log('[ConnectionManager] Starting new connection')
 
     const removeHandler = () => {
@@ -327,7 +324,6 @@ Something went wrong connecting to your project. Please refresh if this continue
   }
 
   tryReconnectWithRateLimit(backoff) {
-    if (!this.ide.socket.canReconnect) return
     if (new Date() - this.$scope.connection.lastConnectionAttempt < backoff) {
       this.startAutoReconnectCountdown()
     } else {
@@ -353,41 +349,28 @@ Something went wrong connecting to your project. Please refresh if this continue
     return this.$scope.connection.reconnection_countdown <= ms / 1000
   }
 
-  reconnectGracefully(force) {
-    if (this.reconnectGracefullyStarted == null) {
-      this.reconnectGracefullyStarted = new Date()
-    } else {
-      if (!force) {
-        sl_console.log(
-          '[reconnectGracefully] reconnection is already in process, so skipping'
-        )
-        return
-      }
+  reconnectGracefully() {
+    if (!this.reconnectGracefullyUntil) {
+      this.reconnectGracefullyUntil = new Date(
+        Date.now() + MAX_RECONNECT_GRACEFULLY_INTERVAL_MS
+      )
     }
-    const maxIntervalReached =
-      new Date() - this.reconnectGracefullyStarted >
-      MAX_RECONNECT_GRACEFULLY_INTERVAL_MS
-    if (
-      this.userIsInactiveSince(RECONNECT_GRACEFULLY_RETRY_INTERVAL_MS) ||
-      maxIntervalReached
-    ) {
+    if (this.userIsInactiveSince(RECONNECT_GRACEFULLY_RETRY_INTERVAL_MS)) {
       sl_console.log(
         "[reconnectGracefully] User didn't do anything for last 5 seconds, reconnecting"
       )
-      this._reconnectGracefullyNow()
+      this.reconnectImmediately()
+    } else if (this.reconnectGracefullyUntil < new Date()) {
+      sl_console.log('[reconnectGracefully] graceful period expired, forcing')
+      this.reconnectImmediately()
     } else {
       sl_console.log(
         '[reconnectGracefully] User is working, will try again in 5 seconds'
       )
       this.updateConnectionManagerState('waitingGracefully')
       setTimeout(() => {
-        this.reconnectGracefully(true)
+        this.reconnectGracefully()
       }, RECONNECT_GRACEFULLY_RETRY_INTERVAL_MS)
     }
-  }
-
-  _reconnectGracefullyNow() {
-    this.reconnectGracefullyStarted = null
-    return this.reconnectImmediately()
   }
 }
