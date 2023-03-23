@@ -32,9 +32,7 @@ export default class ConnectionManager {
     // trigger a reconnect immediately if network comes back online
     window.addEventListener('online', () => {
       sl_console.log('[online] browser notified online')
-      if (!this.ide.socket.connected) {
-        this.tryReconnectInForeground()
-      }
+      if (!this.$scope.connection.inactive_disconnect) this.ensureIsConnected()
     })
 
     ide.socket = new SocketIoShim()
@@ -140,7 +138,7 @@ export default class ConnectionManager {
       this.ide.pushEvent('disconnected')
 
       if (this.userIsInactiveSince(DISCONNECT_AFTER_MS)) {
-        this.updateConnectionManagerState('inactive')
+        this.enterInactiveMode()
       } else {
         this.startAutoReconnectCountdown()
       }
@@ -149,10 +147,7 @@ export default class ConnectionManager {
     // Site administrators can send the forceDisconnect event to all users
 
     this.ide.socket.on('forceDisconnect', (message, delay = 10) => {
-      this.updateConnectionManagerState('inactive')
-      this.$scope.$apply(() => {
-        this.$scope.permissions.write = false
-      })
+      this.enterInactiveMode()
       // flush changes before disconnecting
       this.ide.$scope.$broadcast('flush-changes')
       setTimeout(() => this.ide.socket.disconnect(), 1000)
@@ -176,43 +171,19 @@ The editor will refresh automatically in ${delay} seconds.\
     this.updateConnectionManagerState('connecting')
   }
 
+  enterInactiveMode() {
+    this.updateConnectionManagerState('inactive')
+    this.$scope.$apply(() => {
+      this.$scope.permissions.write = false
+      this.$scope.connection.inactive_disconnect = true
+    })
+  }
+
   updateConnectionManagerState(state) {
-    sl_console.log(
-      `[updateConnectionManagerState] from ${this.$scope.connection.state} to ${state}`
-    )
+    const from = this.$scope.connection.state
+    sl_console.log(`[updateConnectionManagerState] from ${from} to ${state}`)
     this.$scope.connection.state = state
     if (this.$scope.connection.debug) this.$scope.$applyAsync(() => {})
-
-    if (state === 'connecting') {
-      // initial connection
-    } else if (state === 'reconnecting') {
-      // reconnection after a connection has failed
-      this.$scope.connection.inactive_disconnect = false
-      this.stopReconnectCountdownTimer()
-      // if reconnecting takes more than 1s (it doesn't, usually) show the
-      // 'reconnecting...' warning
-      setTimeout(() => this.$scope.$applyAsync(() => {}), 1001)
-      this.$scope.$applyAsync(() => {})
-    } else if (state === 'reconnectFailed') {
-      // reconnect attempt failed
-    } else if (state === 'ready') {
-      // project has been joined
-    } else if (state === 'waitingCountdown') {
-      // disconnected and waiting to reconnect via the countdown timer
-    } else if (state === 'waitingGracefully') {
-      // disconnected and waiting to reconnect gracefully
-      this.stopReconnectCountdownTimer()
-    } else if (state === 'inactive') {
-      // disconnected and not trying to reconnect (inactive)
-      this.$scope.connection.inactive_disconnect = true
-      this.$scope.$applyAsync(() => {})
-    } else if (state === 'error') {
-      // something is wrong
-    } else {
-      sl_console.log(
-        `[WARN] [updateConnectionManagerState] got unrecognised state ${state}`
-      )
-    }
   }
 
   // Error reporting, which can reload the page if appropriate
@@ -265,7 +236,6 @@ Something went wrong connecting to your project. Please refresh if this continue
     clearTimeout(this.reconnectCountdownInterval)
     this.reconnectCountdownInterval = setInterval(() => {
       if (this.$scope.connection.reconnection_countdown === 0) {
-        this.stopReconnectCountdownTimer()
         this.tryReconnect()
       }
       // Update the UI every second
@@ -274,19 +244,15 @@ Something went wrong connecting to your project. Please refresh if this continue
     this.updateConnectionManagerState('waitingCountdown')
   }
 
-  stopReconnectCountdownTimer() {
-    if (this.reconnectCountdownInterval) {
-      sl_console.log('[ConnectionManager] cancelling existing reconnect timer')
-      clearTimeout(this.reconnectCountdownInterval)
-      this.reconnectCountdownInterval = null
-      this.$scope.connection.reconnectAt = null
-    }
-  }
-
   tryReconnect() {
     sl_console.log('[ConnectionManager] tryReconnect')
+    clearTimeout(this.reconnectCountdownInterval)
+    this.$scope.connection.reconnectAt = null
+    this.$scope.$applyAsync(() => {})
+
     if (!this.ide.socket.canReconnect) return
     sl_console.log('[ConnectionManager] Starting new connection')
+    this.$scope.connection.inactive_disconnect = false
 
     const removeHandler = () => {
       this.ide.socket.removeListener('error', handleFailure)
@@ -305,8 +271,12 @@ Something went wrong connecting to your project. Please refresh if this continue
     this.ide.socket.on('error', handleFailure)
     this.ide.socket.on('bootstrap', handleSuccess)
 
-    this.ide.socket.connect()
     this.$scope.connection.lastConnectionAttempt = new Date()
+    this.ide.socket.connect()
+
+    // Show "reconnecting..." when reconnecting takes more than 1s.
+    setTimeout(() => this.$scope.$applyAsync(() => {}), 1001)
+    this.$scope.$applyAsync(() => {})
     this.updateConnectionManagerState('reconnecting')
   }
 
