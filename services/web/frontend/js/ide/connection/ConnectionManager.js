@@ -10,6 +10,7 @@ import SocketIoShim from './SocketIoShim'
 import getMeta from '../../utils/meta'
 
 const ONE_HOUR_IN_MS = 1000 * 60 * 60
+const TWO_MINUTES_IN_MS = 2 * 60 * 1000
 const DISCONNECT_AFTER_MS = ONE_HOUR_IN_MS * 24
 
 // rate limit on reconnects for user clicking "try now"
@@ -32,7 +33,7 @@ export default class ConnectionManager {
     window.addEventListener('online', () => {
       sl_console.log('[online] browser notified online')
       if (!this.ide.socket.connected) {
-        return this.tryReconnectWithRateLimit({ force: true })
+        this.tryReconnectInForeground()
       }
     })
 
@@ -42,7 +43,7 @@ export default class ConnectionManager {
       get reconnecting() {
         return ide.socket.reconnecting
       },
-      lastConnectionAttempt: null,
+      lastConnectionAttempt: new Date(),
       get stillReconnecting() {
         return (
           this.reconnecting && new Date() - this.lastConnectionAttempt > 1000
@@ -51,33 +52,29 @@ export default class ConnectionManager {
       get forced_disconnect() {
         return ide.socket.forcedDisconnect
       },
+      reconnectAt: null,
+      get reconnection_countdown() {
+        if (!this.reconnectAt) return 0
+        if (!ide.socket.canReconnect) return 0
+        const seconds = Math.ceil((this.reconnectAt - new Date()) / 1000)
+        if (seconds > 0) return seconds
+        return 0
+      },
       inactive_disconnect: false,
-      jobId: 0,
     }
 
     this.$scope.tryReconnectNow = () => {
       // user manually requested reconnection via "Try now" button
-      return this.tryReconnectWithRateLimit({ force: true })
+      this.tryReconnectInForeground()
     }
 
     this.lastUserAction = new Date()
     this.$scope.$on('cursor:editor:update', () => {
       this.lastUserAction = new Date() // time of last edit
-      if (!this.ide.socket.connected) {
-        // user is editing, try to reconnect
-        return this.tryReconnectWithRateLimit()
-      }
+      this.ensureIsConnected()
     })
 
-    document.querySelector('body').addEventListener('click', e => {
-      if (
-        !this.ide.socket.connected &&
-        e.target.id !== 'try-reconnect-now-button'
-      ) {
-        // user is editing, try to reconnect
-        return this.tryReconnectWithRateLimit()
-      }
-    })
+    document.body.addEventListener('click', () => this.ensureIsConnected())
 
     if (this.$scope.state.loading) {
       this.$scope.state.load_progress = 70
@@ -129,7 +126,7 @@ export default class ConnectionManager {
       )
       // real time sends a 'retry' message if the process was shutting down
       if (err && err.message === 'retry') {
-        return this.tryReconnectWithRateLimit()
+        return this.tryReconnectInBackground()
       }
       // we have failed authentication, usually due to an invalid session cookie
       return this.reportConnectionError(err)
@@ -142,15 +139,13 @@ export default class ConnectionManager {
       sl_console.log('[socket.io disconnect] Disconnected')
       this.ide.pushEvent('disconnected')
 
-      if (!this.$scope.connection.state.match(/^waiting/)) {
-        if (
-          !this.userIsInactiveSince(DISCONNECT_AFTER_MS) &&
-          this.ide.socket.canReconnect
-        ) {
-          this.startAutoReconnectCountdown()
-        } else {
-          this.updateConnectionManagerState('inactive')
-        }
+      if (
+        !this.userIsInactiveSince(DISCONNECT_AFTER_MS) &&
+        this.ide.socket.canReconnect
+      ) {
+        this.startAutoReconnectCountdown()
+      } else {
+        this.updateConnectionManagerState('inactive')
       }
     })
 
@@ -185,20 +180,17 @@ The editor will refresh automatically in ${delay} seconds.\
   }
 
   updateConnectionManagerState(state) {
-    this.$scope.connection.jobId += 1
-    const jobId = this.$scope.connection.jobId
     sl_console.log(
-      `[updateConnectionManagerState ${jobId}] from ${this.$scope.connection.state} to ${state}`
+      `[updateConnectionManagerState] from ${this.$scope.connection.state} to ${state}`
     )
     this.$scope.connection.state = state
-
-    this.$scope.connection.inactive_disconnect = false
-    this.$scope.connection.reconnection_countdown = null
+    if (this.$scope.connection.debug) this.$scope.$applyAsync(() => {})
 
     if (state === 'connecting') {
       // initial connection
     } else if (state === 'reconnecting') {
       // reconnection after a connection has failed
+      this.$scope.connection.inactive_disconnect = false
       this.stopReconnectCountdownTimer()
       // if reconnecting takes more than 1s (it doesn't, usually) show the
       // 'reconnecting...' warning
@@ -210,35 +202,20 @@ The editor will refresh automatically in ${delay} seconds.\
       // project has been joined
     } else if (state === 'waitingCountdown') {
       // disconnected and waiting to reconnect via the countdown timer
-      this.stopReconnectCountdownTimer()
     } else if (state === 'waitingGracefully') {
       // disconnected and waiting to reconnect gracefully
       this.stopReconnectCountdownTimer()
     } else if (state === 'inactive') {
       // disconnected and not trying to reconnect (inactive)
+      this.$scope.connection.inactive_disconnect = true
+      this.$scope.$applyAsync(() => {})
     } else if (state === 'error') {
       // something is wrong
     } else {
       sl_console.log(
-        `[WARN] [updateConnectionManagerState ${jobId}] got unrecognised state ${state}`
+        `[WARN] [updateConnectionManagerState] got unrecognised state ${state}`
       )
     }
-  }
-
-  expectConnectionManagerState(state, jobId) {
-    if (
-      this.$scope.connection.state === state &&
-      (!jobId || jobId === this.$scope.connection.jobId)
-    ) {
-      return true
-    }
-
-    sl_console.log(
-      `[WARN] [state mismatch] expected state ${state}${
-        jobId ? '/' + jobId : ''
-      } when in ${this.$scope.connection.state}/${this.$scope.connection.jobId}`
-    )
-    return false
   }
 
   // Error reporting, which can reload the page if appropriate
@@ -275,73 +252,35 @@ Something went wrong connecting to your project. Please refresh if this continue
   }
 
   startAutoReconnectCountdown() {
-    this.updateConnectionManagerState('waitingCountdown')
-    const connectionId = this.$scope.connection.jobId
+    sl_console.log('[ConnectionManager] starting autoReconnect countdown')
     let countdown
-    sl_console.log('[ConnectionManager] starting autoreconnect countdown')
-    const twoMinutes = 2 * 60 * 1000
-    if (
-      this.lastUserAction != null &&
-      new Date() - this.lastUserAction > twoMinutes
-    ) {
-      // between 1 minute and 3 minutes
-      countdown = 60 + Math.floor(Math.random() * 120)
+    if (this.userIsInactiveSince(TWO_MINUTES_IN_MS)) {
+      countdown = 60 + Math.floor(Math.random() * 2 * 60)
     } else {
       countdown = 3 + Math.floor(Math.random() * 7)
     }
+    const ms = countdown * 1000
+    if (this._isReconnectingSoon(ms)) return
 
-    this.$scope.$apply(() => {
-      this.$scope.connection.reconnection_countdown = countdown
-    })
-
-    setTimeout(() => {
-      if (!this.ide.socket.connected && !this.countdownTimeoutId) {
-        this.countdownTimeoutId = setTimeout(
-          () => this.decreaseCountdown(connectionId),
-          1000
-        )
+    this.$scope.connection.reconnectAt = new Date(Date.now() + ms)
+    clearTimeout(this.reconnectCountdownInterval)
+    this.reconnectCountdownInterval = setInterval(() => {
+      if (this.$scope.connection.reconnection_countdown === 0) {
+        this.stopReconnectCountdownTimer()
+        this.tryReconnect()
       }
-    }, 200)
+      // Update the UI every second
+      this.$scope.$applyAsync(() => {})
+    }, 1000)
+    this.updateConnectionManagerState('waitingCountdown')
   }
 
   stopReconnectCountdownTimer() {
-    // clear timeout and set to null so we know there is no countdown running
-    if (this.countdownTimeoutId != null) {
+    if (this.reconnectCountdownInterval) {
       sl_console.log('[ConnectionManager] cancelling existing reconnect timer')
-      clearTimeout(this.countdownTimeoutId)
-      this.countdownTimeoutId = null
-    }
-  }
-
-  decreaseCountdown(connectionId) {
-    this.countdownTimeoutId = null
-    if (this.$scope.connection.reconnection_countdown == null) {
-      return
-    }
-    if (!this.expectConnectionManagerState('waitingCountdown', connectionId)) {
-      sl_console.log(
-        `[ConnectionManager] Aborting stale countdown ${connectionId}`
-      )
-      return
-    }
-
-    sl_console.log(
-      '[ConnectionManager] decreasing countdown',
-      this.$scope.connection.reconnection_countdown
-    )
-    this.$scope.$apply(() => {
-      this.$scope.connection.reconnection_countdown--
-    })
-
-    if (this.$scope.connection.reconnection_countdown <= 0) {
-      this.$scope.$apply(() => {
-        this.tryReconnect()
-      })
-    } else {
-      this.countdownTimeoutId = setTimeout(
-        () => this.decreaseCountdown(connectionId),
-        1000
-      )
+      clearTimeout(this.reconnectCountdownInterval)
+      this.reconnectCountdownInterval = null
+      this.$scope.connection.reconnectAt = null
     }
   }
 
@@ -360,7 +299,7 @@ Something went wrong connecting to your project. Please refresh if this continue
       sl_console.log('[ConnectionManager] tryReconnect: failed')
       removeHandler()
       this.updateConnectionManagerState('reconnectFailed')
-      this.tryReconnectWithRateLimit({ force: true })
+      this.tryReconnectInForeground()
     }
     const handleSuccess = () => {
       sl_console.log('[ConnectionManager] tryReconnect: success')
@@ -370,39 +309,30 @@ Something went wrong connecting to your project. Please refresh if this continue
     this.ide.socket.on('bootstrap', handleSuccess)
 
     this.ide.socket.connect()
-    // record the time of the last attempt to connect
     this.$scope.connection.lastConnectionAttempt = new Date()
     this.updateConnectionManagerState('reconnecting')
   }
 
-  tryReconnectWithRateLimit(options) {
-    // bail out if we cannot reconnect
-    if (!this.ide.socket.canReconnect) {
-      return
+  ensureIsConnected() {
+    if (!this.ide.socket.connected) this.tryReconnectInForeground()
+  }
+
+  tryReconnectInForeground() {
+    this.tryReconnectWithRateLimit(MIN_RETRY_INTERVAL_MS)
+  }
+
+  tryReconnectInBackground() {
+    if (this._isReconnectingSoon(BACKGROUND_RETRY_INTERVAL_MS)) return
+    this.tryReconnectWithRateLimit(BACKGROUND_RETRY_INTERVAL_MS)
+  }
+
+  tryReconnectWithRateLimit(backoff) {
+    if (!this.ide.socket.canReconnect) return
+    if (new Date() - this.$scope.connection.lastConnectionAttempt < backoff) {
+      this.startAutoReconnectCountdown()
+    } else {
+      this.tryReconnect()
     }
-    // bail out if we are going to reconnect soon anyway
-    const reconnectingSoon =
-      this.$scope.connection.reconnection_countdown != null &&
-      this.$scope.connection.reconnection_countdown <= 5
-    const clickedTryNow = options != null ? options.force : undefined // user requested reconnection
-    if (reconnectingSoon && !clickedTryNow) {
-      return
-    }
-    // bail out if we tried reconnecting recently
-    const allowedInterval = clickedTryNow
-      ? MIN_RETRY_INTERVAL_MS
-      : BACKGROUND_RETRY_INTERVAL_MS
-    if (
-      this.$scope.connection.lastConnectionAttempt != null &&
-      new Date() - this.$scope.connection.lastConnectionAttempt <
-        allowedInterval
-    ) {
-      if (this.$scope.connection.state !== 'waitingCountdown') {
-        this.startAutoReconnectCountdown()
-      }
-      return
-    }
-    this.tryReconnect()
   }
 
   disconnectIfInactive() {
@@ -411,14 +341,16 @@ Something went wrong connecting to your project. Please refresh if this continue
       this.ide.socket.connected
     ) {
       this.disconnect()
-      this.$scope.$apply(() => {
-        this.$scope.connection.inactive_disconnect = true
-      })
     }
   }
 
   userIsInactiveSince(since) {
     return new Date() - this.lastUserAction > since
+  }
+
+  _isReconnectingSoon(ms) {
+    if (!this.$scope.connection.reconnectAt) return false
+    return this.$scope.connection.reconnection_countdown <= ms / 1000
   }
 
   reconnectGracefully(force) {

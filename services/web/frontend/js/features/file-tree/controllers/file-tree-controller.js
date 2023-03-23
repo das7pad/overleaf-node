@@ -29,26 +29,9 @@ App.controller(
       window.dispatchEvent(new CustomEvent('editor.openDoc', { detail: docId }))
     })
 
-    // Set isConnected to true if:
-    // - connection state is 'ready', OR
-    // - connection state is 'waitingCountdown' and reconnection_countdown is null
-    // The added complexity is needed  because in Firefox on page reload the
-    // connection state goes into 'waitingCountdown' before being hidden and we
-    // don't want to show a disconnect UI.
-    function updateIsConnected() {
-      if ($scope.connection) {
-        const isReady = $scope.connection.state === 'ready'
-        const willStartCountdown =
-          $scope.connection.state === 'waitingCountdown' &&
-          $scope.connection.reconnection_countdown === null
-        $scope.isConnected = isReady || willStartCountdown
-      } else {
-        $scope.isConnected = false
-      }
-    }
-
-    $scope.$watch('connection.state', updateIsConnected)
-    $scope.$watch('connection.reconnection_countdown', updateIsConnected)
+    $scope.$watch('connection.state', () => {
+      $scope.isConnected = $scope.connection?.state === 'ready'
+    })
 
     $scope.onInit = () => {
       // HACK: resize the vertical pane on init after a 0ms timeout. We do not
