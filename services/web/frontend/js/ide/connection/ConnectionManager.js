@@ -36,9 +36,12 @@ export default class ConnectionManager {
       }
     })
 
+    ide.socket = new SocketIoShim()
     this.$scope.connection = {
       debug: sl_debugging,
-      reconnecting: false,
+      get reconnecting() {
+        return ide.socket.reconnecting
+      },
       stillReconnecting: false,
       // If we need to force everyone to reload the editor
       forced_disconnect: false,
@@ -69,10 +72,6 @@ export default class ConnectionManager {
         return this.tryReconnectWithRateLimit()
       }
     })
-
-    // initial connection attempt
-    this.ide.socket = new SocketIoShim()
-    this.updateConnectionManagerState('connecting')
 
     if (this.$scope.state.loading) {
       this.$scope.state.load_progress = 70
@@ -177,6 +176,7 @@ The editor will refresh automatically in ${delay} seconds.\
     })
 
     this.ide.socket.connect()
+    this.updateConnectionManagerState('connecting')
   }
 
   updateConnectionManagerState(state) {
@@ -187,7 +187,6 @@ The editor will refresh automatically in ${delay} seconds.\
     )
     this.$scope.connection.state = state
 
-    this.$scope.connection.reconnecting = this.ide.socket.reconnecting
     this.$scope.connection.stillReconnecting = false
     this.$scope.connection.inactive_disconnect = false
     this.$scope.connection.reconnection_countdown = null
