@@ -70,8 +70,8 @@ export default class ConnectionManager {
     })
 
     // initial connection attempt
-    this.updateConnectionManagerState('connecting')
     this.ide.socket = new SocketIoShim()
+    this.updateConnectionManagerState('connecting')
 
     if (this.$scope.state.loading) {
       this.$scope.state.load_progress = 70
@@ -189,7 +189,7 @@ The editor will refresh automatically in ${delay} seconds.\
     )
     this.$scope.connection.state = state
 
-    this.$scope.connection.reconnecting = false
+    this.$scope.connection.reconnecting = this.ide.socket.reconnecting
     this.$scope.connection.stillReconnecting = false
     this.$scope.connection.inactive_disconnect = false
     this.$scope.connection.reconnection_countdown = null
@@ -199,18 +199,17 @@ The editor will refresh automatically in ${delay} seconds.\
     } else if (state === 'reconnecting') {
       // reconnection after a connection has failed
       this.stopReconnectCountdownTimer()
-      this.$scope.connection.reconnecting = true
       // if reconnecting takes more than 1s (it doesn't, usually) show the
       // 'reconnecting...' warning
       setTimeout(() => {
-        if (
-          this.$scope.connection.reconnecting &&
-          this.$scope.connection.jobId === jobId
-        ) {
-          this.$scope.$applyAsync(() => {
+        this.$scope.$applyAsync(() => {
+          if (
+            this.ide.socket.reconnecting &&
+            this.$scope.connection.jobId === jobId
+          ) {
             this.$scope.connection.stillReconnecting = true
-          })
-        }
+          }
+        })
       }, 1000)
       this.$scope.$applyAsync(() => {})
     } else if (state === 'reconnectFailed') {
@@ -300,7 +299,6 @@ Something went wrong connecting to your project. Please refresh if this continue
     }
 
     this.$scope.$apply(() => {
-      this.$scope.connection.reconnecting = false
       this.$scope.connection.stillReconnecting = false
       this.$scope.connection.reconnection_countdown = countdown
     })
@@ -345,7 +343,6 @@ Something went wrong connecting to your project. Please refresh if this continue
     })
 
     if (this.$scope.connection.reconnection_countdown <= 0) {
-      this.$scope.connection.reconnecting = false
       this.$scope.$apply(() => {
         this.tryReconnect()
       })
@@ -359,14 +356,9 @@ Something went wrong connecting to your project. Please refresh if this continue
 
   tryReconnect() {
     sl_console.log('[ConnectionManager] tryReconnect')
-    if (
-      this.connected ||
-      !this.ide.socket.canReconnect ||
-      this.$scope.connection.reconnecting
-    ) {
+    if (!this.ide.socket.canReconnect) {
       return
     }
-    this.updateConnectionManagerState('reconnecting')
     sl_console.log('[ConnectionManager] Starting new connection')
 
     const removeHandler = () => {
@@ -389,13 +381,10 @@ Something went wrong connecting to your project. Please refresh if this continue
     this.ide.socket.connect()
     // record the time of the last attempt to connect
     this.lastConnectionAttempt = new Date()
+    this.updateConnectionManagerState('reconnecting')
   }
 
   tryReconnectWithRateLimit(options) {
-    // bail out if the reconnect is already in progress
-    if (this.$scope.connection.reconnecting || this.connected) {
-      return
-    }
     // bail out if we cannot reconnect
     if (!this.ide.socket.canReconnect) {
       return
