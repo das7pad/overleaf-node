@@ -338,7 +338,7 @@ export default EditorManager = (function () {
 
           // Do not re-join after re-connecting.
           sharejs_doc.leaveAndCleanUp()
-          this.ide.connectionManager.disconnect({ permanent: true })
+          this.ide.socket.forceDisconnect()
           this.ide.reportError(error, meta)
           captureException(new Error(message), {
             extra: { error, meta },

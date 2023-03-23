@@ -37,7 +37,6 @@ export default class ConnectionManager {
     })
 
     this.connected = false
-    this.shuttingDown = false
 
     this.$scope.connection = {
       debug: sl_debugging,
@@ -64,11 +63,7 @@ export default class ConnectionManager {
     })
 
     document.querySelector('body').addEventListener('click', e => {
-      if (
-        !this.shuttingDown &&
-        !this.connected &&
-        e.target.id !== 'try-reconnect-now-button'
-      ) {
+      if (!this.connected && e.target.id !== 'try-reconnect-now-button') {
         // user is editing, try to reconnect
         return this.tryReconnectWithRateLimit()
       }
@@ -147,7 +142,7 @@ export default class ConnectionManager {
       if (!this.$scope.connection.state.match(/^waiting/)) {
         if (
           !this.userIsInactiveSince(DISCONNECT_AFTER_MS) &&
-          !this.shuttingDown
+          this.ide.socket.canReconnect
         ) {
           this.startAutoReconnectCountdown()
         } else {
@@ -160,7 +155,6 @@ export default class ConnectionManager {
 
     this.ide.socket.on('forceDisconnect', (message, delay = 10) => {
       this.updateConnectionManagerState('inactive')
-      this.shuttingDown = true // prevent reconnection attempts
       this.$scope.$apply(() => {
         this.$scope.permissions.write = false
         this.$scope.connection.forced_disconnect = true
@@ -284,12 +278,7 @@ Something went wrong connecting to your project. Please refresh if this continue
     return this.tryReconnect()
   }
 
-  disconnect(options) {
-    if (options && options.permanent) {
-      sl_console.log('[disconnect] shutting down ConnectionManager')
-      this.updateConnectionManagerState('inactive')
-      this.shuttingDown = true // prevent reconnection attempts
-    }
+  disconnect() {
     sl_console.log('[socket.io] disconnecting client')
     return this.ide.socket.disconnect()
   }
@@ -372,7 +361,7 @@ Something went wrong connecting to your project. Please refresh if this continue
     sl_console.log('[ConnectionManager] tryReconnect')
     if (
       this.connected ||
-      this.shuttingDown ||
+      !this.ide.socket.canReconnect ||
       this.$scope.connection.reconnecting
     ) {
       return
@@ -405,6 +394,10 @@ Something went wrong connecting to your project. Please refresh if this continue
   tryReconnectWithRateLimit(options) {
     // bail out if the reconnect is already in progress
     if (this.$scope.connection.reconnecting || this.connected) {
+      return
+    }
+    // bail out if we cannot reconnect
+    if (!this.ide.socket.canReconnect) {
       return
     }
     // bail out if we are going to reconnect soon anyway

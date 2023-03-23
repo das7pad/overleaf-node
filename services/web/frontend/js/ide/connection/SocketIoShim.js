@@ -10,11 +10,24 @@ const CODE_CONNECT_TIMEOUT = 4000
 const CODE_CLIENT_REQUESTED_DISCONNECT = 4001
 const TIMEOUT = 30 * 1000
 
+function getStubWebSocket(readyState) {
+  return {
+    protocol: '',
+    readyState,
+    send: () => {},
+    close() {
+      this.readyState = WebSocket.CLOSING
+    },
+  }
+}
+
 export default class SocketIoShim {
   constructor() {
     this._connectionCounter = 0
     this._events = new Map()
+    this._forcedDisconnect = false
     this._publicId = ''
+    this._ws = /** @type{WebSocket} */ getStubWebSocket(WebSocket.CLOSED)
 
     this.on('bootstrap', ({ publicId }) => {
       this._publicId = publicId
@@ -24,6 +37,9 @@ export default class SocketIoShim {
         clearProjectJWT()
       }
     })
+    this.on('forceDisconnect', () => {
+      this._forcedDisconnect = true
+    })
 
     // Clear project jwt when detecting a changed epoch.
     this.on('project:membership:changed', () => {
@@ -32,13 +48,10 @@ export default class SocketIoShim {
     this.on('project:tokens:changed', () => {
       clearProjectJWT()
     })
+  }
 
-    this._ws = /** @type{WebSocket} */ {
-      protocol: '',
-      readyState: WebSocket.CLOSED,
-      send: () => {},
-      close: () => {},
-    }
+  get canReconnect() {
+    return !(this.connected || this.connecting || this._forcedDisconnect)
   }
 
   get connected() {
@@ -49,31 +62,43 @@ export default class SocketIoShim {
     return this._ws.readyState === WebSocket.CONNECTING
   }
 
-  get publicId() {
-    return this._publicId
-  }
-
   get protocol() {
     return this._ws.protocol
   }
 
+  get publicId() {
+    return this._publicId
+  }
+
   get reconnecting() {
-    return this.connecting && this._connectionCounter > 0
+    return this.connecting && this._connectionCounter > 1
   }
 
   connect() {
-    if (this.connected || this.connecting) return
+    if (!this.canReconnect) return
+    this._connectionCounter++
     const jwt = getProjectJWT()
     if (!jwt || isExpired(jwt)) {
+      const stubWs = getStubWebSocket(WebSocket.CONNECTING)
+      this._ws = stubWs
       clearProjectJWT()
       refreshProjectJWT()
-        .then(() => this.connect())
+        .then(jwt => {
+          if (stubWs.readyState !== WebSocket.CONNECTING) return
+          this._connect(jwt)
+        })
         .catch(reason => {
+          stubWs.readyState = WebSocket.CLOSED
           this._emit('error', `client bootstrap failed: ${reason}`)
         })
     } else {
       this._connect(jwt)
     }
+  }
+
+  forceDisconnect() {
+    this._forcedDisconnect = true
+    this.disconnect()
   }
 
   disconnect(reason = 'client requested disconnect') {
@@ -125,7 +150,6 @@ export default class SocketIoShim {
   _connect(jwt) {
     const newSocket = this._createWebsocket(jwt)
     this._ws = newSocket
-    this._connectionCounter++
 
     // reset the rpc tracking
     const callbacks = new Map()
