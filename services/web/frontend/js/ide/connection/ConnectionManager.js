@@ -42,7 +42,12 @@ export default class ConnectionManager {
       get reconnecting() {
         return ide.socket.reconnecting
       },
-      stillReconnecting: false,
+      lastConnectionAttempt: null,
+      get stillReconnecting() {
+        return (
+          this.reconnecting && new Date() - this.lastConnectionAttempt > 1000
+        )
+      },
       // If we need to force everyone to reload the editor
       forced_disconnect: false,
       inactive_disconnect: false,
@@ -187,7 +192,6 @@ The editor will refresh automatically in ${delay} seconds.\
     )
     this.$scope.connection.state = state
 
-    this.$scope.connection.stillReconnecting = false
     this.$scope.connection.inactive_disconnect = false
     this.$scope.connection.reconnection_countdown = null
 
@@ -198,16 +202,7 @@ The editor will refresh automatically in ${delay} seconds.\
       this.stopReconnectCountdownTimer()
       // if reconnecting takes more than 1s (it doesn't, usually) show the
       // 'reconnecting...' warning
-      setTimeout(() => {
-        this.$scope.$applyAsync(() => {
-          if (
-            this.ide.socket.reconnecting &&
-            this.$scope.connection.jobId === jobId
-          ) {
-            this.$scope.connection.stillReconnecting = true
-          }
-        })
-      }, 1000)
+      setTimeout(() => this.$scope.$applyAsync(() => {}), 1001)
       this.$scope.$applyAsync(() => {})
     } else if (state === 'reconnectFailed') {
       // reconnect attempt failed
@@ -296,7 +291,6 @@ Something went wrong connecting to your project. Please refresh if this continue
     }
 
     this.$scope.$apply(() => {
-      this.$scope.connection.stillReconnecting = false
       this.$scope.connection.reconnection_countdown = countdown
     })
 
@@ -377,7 +371,7 @@ Something went wrong connecting to your project. Please refresh if this continue
 
     this.ide.socket.connect()
     // record the time of the last attempt to connect
-    this.lastConnectionAttempt = new Date()
+    this.$scope.connection.lastConnectionAttempt = new Date()
     this.updateConnectionManagerState('reconnecting')
   }
 
@@ -399,8 +393,9 @@ Something went wrong connecting to your project. Please refresh if this continue
       ? MIN_RETRY_INTERVAL_MS
       : BACKGROUND_RETRY_INTERVAL_MS
     if (
-      this.lastConnectionAttempt != null &&
-      new Date() - this.lastConnectionAttempt < allowedInterval
+      this.$scope.connection.lastConnectionAttempt != null &&
+      new Date() - this.$scope.connection.lastConnectionAttempt <
+        allowedInterval
     ) {
       if (this.$scope.connection.state !== 'waitingCountdown') {
         this.startAutoReconnectCountdown()
