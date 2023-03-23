@@ -48,8 +48,9 @@ export default class ConnectionManager {
           this.reconnecting && new Date() - this.lastConnectionAttempt > 1000
         )
       },
-      // If we need to force everyone to reload the editor
-      forced_disconnect: false,
+      get forced_disconnect() {
+        return ide.socket.forcedDisconnect
+      },
       inactive_disconnect: false,
       jobId: 0,
     }
@@ -159,7 +160,6 @@ export default class ConnectionManager {
       this.updateConnectionManagerState('inactive')
       this.$scope.$apply(() => {
         this.$scope.permissions.write = false
-        this.$scope.connection.forced_disconnect = true
       })
       // flush changes before disconnecting
       this.ide.$scope.$broadcast('flush-changes')

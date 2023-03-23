@@ -62,6 +62,10 @@ export default class SocketIoShim {
     return this._ws.readyState === WebSocket.CONNECTING
   }
 
+  get forcedDisconnect() {
+    return this._forcedDisconnect
+  }
+
   get protocol() {
     return this._ws.protocol
   }
