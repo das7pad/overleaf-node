@@ -1,11 +1,3 @@
-// TODO: This file was created by bulk-decaffeinate.
-// Fix any style issues and re-enable lint.
-/*
- * decaffeinate suggestions:
- * DS207: Consider shorter variations of null checks
- * Full docs: https://github.com/decaffeinate/decaffeinate/blob/master/docs/suggestions.md
- */
-
 import SocketIoShim from './SocketIoShim'
 import getMeta from '../../utils/meta'
 
@@ -95,8 +87,7 @@ export default class ConnectionManager {
     this.ide.socket.on('error', connectionErrorHandler)
 
     // The next event we should get is an authentication response
-    // from the server, either "bootstrap" or
-    // "connectionRejected".
+    // from the server, either "bootstrap" or "connectionRejected".
 
     this.ide.socket.on(
       'bootstrap',
@@ -107,12 +98,12 @@ export default class ConnectionManager {
           this.updateConnectionManagerState('ready')
           this.$scope.project = project
           this.$scope.permissionsLevel = privilegeLevel
-          this.ide.loadingManager.socketLoaded()
           this.$scope.connectedUsers = connectedClients
           window.dispatchEvent(
             new CustomEvent('project:joined', { detail: project })
           )
           this.$scope.$broadcast('project:joined', project, privilegeLevel)
+          this.ide.loadingManager.socketLoaded()
         })
       }
     )
@@ -165,7 +156,6 @@ The editor will refresh automatically in ${delay} seconds.\
     })
 
     this.ide.socket.on('reconnectGracefully', () => {
-      sl_console.log('Reconnect gracefully')
       this.reconnectGracefully()
     })
 
@@ -305,17 +295,13 @@ The editor will refresh automatically in ${delay} seconds.\
       )
     }
     if (this.userIsInactiveSince(RECONNECT_GRACEFULLY_RETRY_INTERVAL_MS)) {
-      sl_console.log(
-        "[reconnectGracefully] User didn't do anything for last 5 seconds, reconnecting"
-      )
+      sl_console.log('[reconnectGracefully] inactive for last 5s, reconnecting')
       this.reconnectImmediately()
     } else if (this.reconnectGracefullyUntil < new Date()) {
       sl_console.log('[reconnectGracefully] graceful period expired, forcing')
       this.reconnectImmediately()
     } else {
-      sl_console.log(
-        '[reconnectGracefully] User is working, will try again in 5 seconds'
-      )
+      sl_console.log('[reconnectGracefully] user is active, try again in 5s')
       this.updateConnectionManagerState('waitingGracefully')
       setTimeout(() => {
         this.reconnectGracefully()
