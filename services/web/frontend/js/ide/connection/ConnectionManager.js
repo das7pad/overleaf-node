@@ -211,6 +211,7 @@ The editor will refresh automatically in ${delay} seconds.\
       // Update the UI every second
       this.$scope.$applyAsync(() => {})
     }, 1000)
+    this.$scope.$applyAsync(() => {})
     this.updateConnectionManagerState('waitingCountdown')
   }
 
