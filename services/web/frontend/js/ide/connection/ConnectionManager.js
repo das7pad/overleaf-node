@@ -33,11 +33,12 @@ export default class ConnectionManager {
       get reconnecting() {
         return ide.socket.reconnecting
       },
-      lastConnectionAttempt: new Date(),
+      lastConnectionAttempt: performance.now(),
+      get sinceLastConnectionAttempt() {
+        return performance.now() - this.lastConnectionAttempt
+      },
       get stillReconnecting() {
-        return (
-          this.reconnecting && new Date() - this.lastConnectionAttempt > 1000
-        )
+        return this.reconnecting && this.sinceLastConnectionAttempt > 1000
       },
       get forced_disconnect() {
         return ide.socket.forcedDisconnect
@@ -46,7 +47,7 @@ export default class ConnectionManager {
       get reconnection_countdown() {
         if (!this.reconnectAt) return 0
         if (!ide.socket.canReconnect) return 0
-        const seconds = Math.ceil((this.reconnectAt - new Date()) / 1000)
+        const seconds = Math.ceil((this.reconnectAt - performance.now()) / 1000)
         if (seconds > 0) return seconds
         return 0
       },
@@ -58,9 +59,9 @@ export default class ConnectionManager {
       this.tryReconnectInForeground()
     }
 
-    this.lastUserAction = new Date()
+    this.lastUserAction = performance.now()
     this.$scope.$on('cursor:editor:update', () => {
-      this.lastUserAction = new Date() // time of last edit
+      this.lastUserAction = performance.now() // time of last edit
       this.ensureIsConnected()
     })
 
@@ -201,7 +202,7 @@ The editor will refresh automatically in ${delay} seconds.\
     const ms = countdown * 1000
     if (this._isReconnectingSoon(ms)) return
 
-    this.$scope.connection.reconnectAt = new Date(Date.now() + ms)
+    this.$scope.connection.reconnectAt = performance.now() + ms
     clearTimeout(this.reconnectCountdownInterval)
     this.reconnectCountdownInterval = setInterval(() => {
       if (this.$scope.connection.reconnection_countdown === 0) {
@@ -240,7 +241,7 @@ The editor will refresh automatically in ${delay} seconds.\
     this.ide.socket.on('error', handleFailure)
     this.ide.socket.on('bootstrap', handleSuccess)
 
-    this.$scope.connection.lastConnectionAttempt = new Date()
+    this.$scope.connection.lastConnectionAttempt = performance.now()
     this.ide.socket.connect()
 
     // Show "reconnecting..." when reconnecting takes more than 1s.
@@ -263,7 +264,7 @@ The editor will refresh automatically in ${delay} seconds.\
   }
 
   tryReconnectWithRateLimit(backoff) {
-    if (new Date() - this.$scope.connection.lastConnectionAttempt < backoff) {
+    if (this.$scope.connection.sinceLastConnectionAttempt < backoff) {
       this.startAutoReconnectCountdown()
     } else {
       this.tryReconnect()
@@ -280,7 +281,7 @@ The editor will refresh automatically in ${delay} seconds.\
   }
 
   userIsInactiveSince(since) {
-    return new Date() - this.lastUserAction > since
+    return performance.now() - this.lastUserAction > since
   }
 
   _isReconnectingSoon(ms) {
@@ -290,14 +291,13 @@ The editor will refresh automatically in ${delay} seconds.\
 
   reconnectGracefully() {
     if (!this.reconnectGracefullyUntil) {
-      this.reconnectGracefullyUntil = new Date(
-        Date.now() + MAX_RECONNECT_GRACEFULLY_INTERVAL_MS
-      )
+      this.reconnectGracefullyUntil =
+        performance.now() + MAX_RECONNECT_GRACEFULLY_INTERVAL_MS
     }
     if (this.userIsInactiveSince(RECONNECT_GRACEFULLY_RETRY_INTERVAL_MS)) {
       sl_console.log('[reconnectGracefully] inactive for last 5s, reconnecting')
       this.reconnectImmediately()
-    } else if (this.reconnectGracefullyUntil < new Date()) {
+    } else if (this.reconnectGracefullyUntil < performance.now()) {
       sl_console.log('[reconnectGracefully] graceful period expired, forcing')
       this.reconnectImmediately()
     } else {
