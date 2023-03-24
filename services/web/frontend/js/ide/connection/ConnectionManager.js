@@ -118,16 +118,18 @@ export default class ConnectionManager {
     )
 
     this.ide.socket.on('connectionRejected', err => {
-      // state should be 'authenticating'...
-      sl_console.log(
-        '[socket.io connectionRejected] session not valid or other connection error'
-      )
-      // real time sends a 'retry' message if the process was shutting down
-      if (err && err.message === 'retry') {
-        return this.tryReconnectInBackground()
+      sl_console.log('[socket.io connectionRejected]', err)
+      if (err?.message === 'retry' || err?.code === 'BadWsBootstrapBlob') {
+        return this.tryReconnectInForeground()
       }
-      // we have failed authentication, usually due to an invalid session cookie
-      return this.reportConnectionError(err)
+      this.updateConnectionManagerState('error')
+      this.ide.socket.forceDisconnect()
+      this.ide.showGenericMessageModal(
+        'Something went wrong connecting',
+        `\
+Something went wrong connecting to your project. Please refresh if this continues to happen.\
+`
+      )
     })
 
     // We can get a "disconnect" event at any point after the
@@ -184,29 +186,6 @@ The editor will refresh automatically in ${delay} seconds.\
     sl_console.log(`[updateConnectionManagerState] from ${from} to ${state}`)
     this.$scope.connection.state = state
     if (this.$scope.connection.debug) this.$scope.$applyAsync(() => {})
-  }
-
-  // Error reporting, which can reload the page if appropriate
-
-  reportConnectionError(err) {
-    sl_console.log('[socket.io] reporting connection error')
-    this.updateConnectionManagerState('error')
-    if (
-      (err != null ? err.message : undefined) === 'not authorized' ||
-      (err != null ? err.message : undefined) === 'invalid session'
-    ) {
-      window.location.assign(
-        `/login?redir=${encodeURI(window.location.pathname)}`
-      )
-    } else {
-      this.ide.socket.disconnect()
-      this.ide.showGenericMessageModal(
-        'Something went wrong connecting',
-        `\
-Something went wrong connecting to your project. Please refresh if this continues to happen.\
-`
-      )
-    }
   }
 
   reconnectImmediately() {
@@ -281,7 +260,7 @@ Something went wrong connecting to your project. Please refresh if this continue
   }
 
   ensureIsConnected() {
-    if (!this.ide.socket.connected) this.tryReconnectInForeground()
+    if (!this.ide.socket.connected) this.tryReconnectInBackground()
   }
 
   tryReconnectInForeground() {
