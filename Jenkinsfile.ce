@@ -97,6 +97,9 @@ pipeline {
             always {
               junit 'services/web/output/jsdom.xml'
             }
+            failure {
+              archiveArtifacts(artifacts: 'services/web/output/jsdom.xml')
+            }
             cleanup {
               sh 'make -C services/web clean_ci_stage'
             }
