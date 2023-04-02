@@ -6,6 +6,7 @@ services:
     user: node
     environment:
       NODE_OPTIONS: "--trace-deprecation --enable-source-maps"
+      NODE_ENV: test
       # Disable ansi-color output, it breaks the xunit xml parser in Jenkins.
       # https://github.com/chalk/chalk/blob/v4.1.0/readme.md#chalksupportscolor
       FORCE_COLOR: '0'
