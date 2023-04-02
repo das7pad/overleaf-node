@@ -18,7 +18,12 @@ export default class ConnectionManager {
     this.$scope = $scope
 
     setInterval(() => {
-      this.disconnectIfInactive()
+      if (
+        this.userIsInactiveSince(DISCONNECT_AFTER_MS) &&
+        this.ide.socket.connected
+      ) {
+        this.disconnect()
+      }
     }, ONE_HOUR_IN_MS)
 
     // trigger a reconnect immediately if network comes back online
@@ -132,7 +137,11 @@ Something went wrong connecting to your project. Please refresh if this continue
       this.ide.pushEvent('disconnected')
 
       if (this.userIsInactiveSince(DISCONNECT_AFTER_MS)) {
-        this.enterInactiveMode()
+        this.updateConnectionManagerState('inactive')
+        this.$scope.$apply(() => {
+          this.$scope.permissions.write = false
+          this.$scope.connection.inactive_disconnect = true
+        })
       } else {
         this.startAutoReconnectCountdown()
       }
@@ -141,10 +150,13 @@ Something went wrong connecting to your project. Please refresh if this continue
     // Site administrators can send the forceDisconnect event to all users
 
     this.ide.socket.on('forceDisconnect', (message, delay = 10) => {
-      this.enterInactiveMode()
       // flush changes before disconnecting
       this.ide.$scope.$broadcast('flush-changes')
-      setTimeout(() => this.ide.socket.disconnect(), 1000)
+      this.updateConnectionManagerState('forceDisconnect')
+      this.ide.socket.forceDisconnectSoon(1000)
+      this.$scope.$apply(() => {
+        this.$scope.permissions.write = false
+      })
       this.ide.showLockEditorMessageModal(
         'Please wait',
         `\
@@ -153,7 +165,7 @@ Sorry for any inconvenience.
 The editor will refresh automatically in ${delay} seconds.\
 `
       )
-      return setTimeout(() => location.reload(), delay * 1000)
+      setTimeout(() => location.reload(), delay * 1000)
     })
 
     this.ide.socket.on('reconnectGracefully', () => {
@@ -162,14 +174,6 @@ The editor will refresh automatically in ${delay} seconds.\
 
     this.ide.socket.connect()
     this.updateConnectionManagerState('connecting')
-  }
-
-  enterInactiveMode() {
-    this.updateConnectionManagerState('inactive')
-    this.$scope.$apply(() => {
-      this.$scope.permissions.write = false
-      this.$scope.connection.inactive_disconnect = true
-    })
   }
 
   updateConnectionManagerState(state) {
@@ -227,20 +231,15 @@ The editor will refresh automatically in ${delay} seconds.\
 
     const removeHandler = () => {
       this.ide.socket.removeListener('error', handleFailure)
-      this.ide.socket.removeListener('bootstrap', handleSuccess)
+      this.ide.socket.removeListener('bootstrap', removeHandler)
     }
     const handleFailure = () => {
-      sl_console.log('[ConnectionManager] tryReconnect: failed')
       removeHandler()
       this.updateConnectionManagerState('reconnectFailed')
       this.tryReconnectInForeground()
     }
-    const handleSuccess = () => {
-      sl_console.log('[ConnectionManager] tryReconnect: success')
-      removeHandler()
-    }
     this.ide.socket.on('error', handleFailure)
-    this.ide.socket.on('bootstrap', handleSuccess)
+    this.ide.socket.on('bootstrap', removeHandler)
 
     this.$scope.connection.lastConnectionAttempt = performance.now()
     this.ide.socket.connect()
@@ -269,15 +268,6 @@ The editor will refresh automatically in ${delay} seconds.\
       this.startAutoReconnectCountdown()
     } else {
       this.tryReconnect()
-    }
-  }
-
-  disconnectIfInactive() {
-    if (
-      this.userIsInactiveSince(DISCONNECT_AFTER_MS) &&
-      this.ide.socket.connected
-    ) {
-      this.disconnect()
     }
   }
 

@@ -100,6 +100,11 @@ export default class SocketIoShim {
     }
   }
 
+  forceDisconnectSoon(ms) {
+    this._forcedDisconnect = true
+    setTimeout(() => this.disconnect(), ms)
+  }
+
   forceDisconnect() {
     this._forcedDisconnect = true
     this.disconnect()
