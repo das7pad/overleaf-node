@@ -673,12 +673,14 @@ __metadata:
     "@testing-library/react": ^12.1.5
     "@testing-library/react-hooks": ^8.0.0
     "@testing-library/user-event": ^14.2.0
+    "@types/angular": ^1.8.4
     "@types/chai": ^4.3.0
     "@types/events": ^3.0.0
     "@types/express": ^4.17.13
     "@types/lodash": ^4.14.191
     "@types/mocha": ^9.1.0
     "@types/node": ^18.15.3
+    "@types/prop-types": ^15.7.5
     "@types/react": ^17.0.40
     "@types/react-bootstrap": ^0.32.29
     "@types/react-dom": ^17.0.13
@@ -954,7 +956,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/angular@npm:^1.6.39":
+"@types/angular@npm:^1.6.39, @types/angular@npm:^1.8.4":
   version: 1.8.4
   resolution: "@types/angular@npm:1.8.4"
   checksum: aa8fcfb75152276669a06656721cece74569708cb41b75f8b6296feefa1df4d621ae15850dc73eb956f8475aae22409cf9056c4e354f242a548da8bf3fcd1bda
@@ -1092,7 +1094,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/prop-types@npm:*":
+"@types/prop-types@npm:*, @types/prop-types@npm:^15.7.5":
   version: 15.7.5
   resolution: "@types/prop-types@npm:15.7.5"
   checksum: 5b43b8b15415e1f298243165f1d44390403bb2bd42e662bca3b5b5633fdd39c938e91b7fce3a9483699db0f7a715d08cef220c121f723a634972fdf596aec980
