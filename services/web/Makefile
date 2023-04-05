@@ -94,7 +94,7 @@ NEED_FULL_LINT := $(shell \
 	| grep --max-count=1 \
 		-e .eslintignore \
 		-e .eslintrc \
-		-e package-lock.json \
+		-e yarn.lock \
 )
 
 ifeq (,$(NEED_FULL_LINT))
@@ -148,7 +148,7 @@ NEED_FULL_FORMAT ?= $(shell \
 	| grep --max-count=1 \
 		-e .prettierignore \
 		-e .prettierrc \
-		-e package-lock.json \
+		-e yarn.lock \
 )
 
 ifeq (,$(NEED_FULL_FORMAT))
