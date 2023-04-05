@@ -60,16 +60,13 @@ describe('<PdfLogsEntries/>', function () {
 
     cy.findByRole('button', {
       name: 'Navigate to log position in source code: main.tex, 9',
+    }).click()
+    expect(props.fileTreeManager.findEntityByPath).to.be.calledOnce
+    expect(props.editorManager.openDoc).to.be.calledOnce
+    expect(props.editorManager.openDoc).to.be.calledWith(fakeEntity, {
+      gotoLine: 9,
+      gotoColumn: 8,
     })
-      .click()
-      .then(() => {
-        expect(props.fileTreeManager.findEntityByPath).to.be.calledOnce
-        expect(props.editorManager.openDoc).to.be.calledOnce
-        expect(props.editorManager.openDoc).to.be.calledWith(fakeEntity, {
-          gotoLine: 9,
-          gotoColumn: 8,
-        })
-      })
   })
 
   it('opens doc via detached action', function () {
@@ -118,25 +115,22 @@ describe('<PdfLogsEntries/>', function () {
 
     cy.findByRole('button', {
       name: 'Navigate to log position in source code: main.tex, 9',
-    })
-      .click()
-      .then(() => {
-        expect(props.fileTreeManager.findEntityByPath).not.to.be.called
-        expect(props.editorManager.openDoc).not.to.be.called
+    }).click()
+    expect(props.fileTreeManager.findEntityByPath).not.to.be.called
+    expect(props.editorManager.openDoc).not.to.be.called
 
-        expect(sysendTestHelper.getLastBroacastMessage()).to.deep.equal({
-          role: 'detached',
-          event: 'action-sync-to-entry',
-          data: {
-            args: [
-              {
-                file: 'main.tex',
-                line: 9,
-                column: 8,
-              },
-            ],
+    expect(sysendTestHelper.getLastBroacastMessage()).to.deep.equal({
+      role: 'detached',
+      event: 'action-sync-to-entry',
+      data: {
+        args: [
+          {
+            file: 'main.tex',
+            line: 9,
+            column: 8,
           },
-        })
-      })
+        ],
+      },
+    })
   })
 })
