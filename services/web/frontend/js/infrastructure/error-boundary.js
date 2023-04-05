@@ -1,7 +1,7 @@
 import { captureException } from './error-reporter'
 import { ErrorBoundary } from 'react-error-boundary'
 
-function errorHandler(error, componentStack) {
+function errorHandler(error, { componentStack }) {
   captureException(error, {
     extra: {
       componentStack,

@@ -39,7 +39,7 @@
     "react-dnd": "^11.1.3",
     "react-dnd-html5-backend": "^11.1.3",
     "react-dom": "^17.0.2",
-    "react-error-boundary": "^2.3.1",
+    "react-error-boundary": "^3.1.4",
     "react-i18next": "file:./frontend/js/packages/react-i18next",
     "react-linkify": "^1.0.0-alpha",
     "react2angular": "^4.0.6",
