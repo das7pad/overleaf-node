@@ -15,8 +15,10 @@
   margin-left: 0;
 }
 
-.pdf .toolbar.toolbar-pdf when (@is-overleaf-light = false) {
-  border-bottom: 0;
+body[data-ol-theme-modifier=''] {
+  .pdf .toolbar.toolbar-pdf {
+    border-bottom: 0;
+  }
 }
 
 .toolbar-pdf-orphan,

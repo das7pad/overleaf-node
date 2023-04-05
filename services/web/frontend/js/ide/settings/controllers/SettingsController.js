@@ -101,6 +101,7 @@ export default App.controller(
           theme => theme.value === overallTheme
         )
         if (chosenTheme != null) {
+          document.body.dataset.olThemeModifier = overallTheme
           _updateCSSFile(chosenTheme)
           return settings.saveSettings({ overallTheme })
         }

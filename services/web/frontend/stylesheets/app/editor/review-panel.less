@@ -905,17 +905,19 @@
   }
 }
 
-button when (@is-overleaf-light = true) {
-  .review-icon {
-    background: url('../../../../public/img/ol-icons/review-icon-light-theme.svg')
-      top/30px no-repeat;
-  }
-
-  &.active,
-  &:active {
+body[data-ol-theme-modifier='light-'] {
+  button {
     .review-icon {
-      background: url('../../../../public/img/ol-icons/review-icon-dark-theme.svg')
+      background: url('../../../../public/img/ol-icons/review-icon-light-theme.svg')
         top/30px no-repeat;
+    }
+
+    &.active,
+    &:active {
+      .review-icon {
+        background: url('../../../../public/img/ol-icons/review-icon-dark-theme.svg')
+          top/30px no-repeat;
+      }
     }
   }
 }

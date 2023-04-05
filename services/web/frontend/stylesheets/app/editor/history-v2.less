@@ -25,8 +25,10 @@
   padding: 0 10px;
 }
 
-.history-toolbar when (@is-overleaf-light) {
-  border-bottom: @toolbar-border-bottom;
+body[data-ol-theme-modifier='light-'] {
+  .history-toolbar {
+    border-bottom: @toolbar-border-bottom;
+  }
 }
 
 .history-toolbar-selected-version {
