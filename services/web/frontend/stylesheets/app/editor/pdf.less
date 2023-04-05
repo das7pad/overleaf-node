@@ -13,22 +13,6 @@
   .toolbar-alt-mixin;
   padding-right: 5px;
   margin-left: 0;
-  &.changes-to-autocompile {
-    // prettier-ignore
-    #gradient > .striped(@color: rgba(255, 255, 255, 0.1), @angle: -45deg);
-    background-size: @stripe-width @stripe-width;
-    .animation(pdf-toolbar-stripes 2s linear infinite);
-  }
-  .auto-compile-status {
-    color: white;
-    margin-right: (@line-height-computed / 2);
-    i {
-      color: @brand-danger;
-    }
-  }
-  .auto-compile-status when (@is-overleaf-light = true) {
-    color: @ol-blue-gray-3;
-  }
 }
 
 .pdf .toolbar.toolbar-pdf when (@is-overleaf-light = false) {
