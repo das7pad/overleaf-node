@@ -42,7 +42,6 @@ export default class DocumentCompiler {
     this.abortPendingCompile = () => {}
     this.clsiServerId = null
     this.currentDoc = null
-    this.error = undefined
     this.projectTreeVersionRef = projectTreeVersionRef
     this.lastCompiledProjectTreeVersion = projectTreeVersionRef.current
     this.timer = 0
@@ -108,7 +107,6 @@ export default class DocumentCompiler {
         // use incremental compile for all users but revert to a full compile
         // if there was previously a server error or the three version changed.
         incrementalCompilesEnabled:
-          !this.error &&
           currentProjectTreeVersion === this.lastCompiledProjectTreeVersion,
         rootDocId,
         rootDocPath,
