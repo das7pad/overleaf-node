@@ -42,9 +42,9 @@ export default ColorManager = {
 
   isDarkTheme(element) {
     const rgb = element.find('.ace_editor').css('background-color')
-    let [m, r, g, b] = Array.from(
-      rgb.match(/rgb\(([0-9]+), ([0-9]+), ([0-9]+)\)/)
-    )
+    const m = rgb.match(/rgb\(([0-9]+), ([0-9]+), ([0-9]+)\)/)
+    if (!m) return false
+    let [, r, g, b] = m
     r = parseInt(r, 10)
     g = parseInt(g, 10)
     b = parseInt(b, 10)
