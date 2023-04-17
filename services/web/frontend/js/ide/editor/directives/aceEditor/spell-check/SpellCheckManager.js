@@ -240,44 +240,26 @@ class SpellCheckManager {
   }
 
   runSpellCheck() {
-    let j
-    let i, key, word
     const rowNumsToCheck = this.getRowNumsToCheck()
     const language = this.$scope.spellCheckLanguage
-    let { words, positions } = this.getWords(rowNumsToCheck)
+    const { words, positions } = this.getWords(rowNumsToCheck)
 
-    const highlights = []
-    const seen = {}
-    const newWords = []
-    const newPositions = []
+    const seen = new Map()
+    const newWords = new Set()
 
     // iterate through all words, building up a list of
     // newWords/newPositions not in the cache
-    for (j = 0, i = j; j < words.length; j++, i = j) {
-      word = words[i]
-      key = `${language}:${word}`
-      if (seen[key] == null) {
-        seen[key] = this.cache.get(key)
-      } // avoid hitting the cache unnecessarily
-      const cached = seen[key]
-      if (cached == null) {
-        newWords.push(words[i])
-        newPositions.push(positions[i])
-      } else if (cached === true) {
-        // word is correct
-      } else {
-        highlights.push({
-          column: positions[i].column,
-          row: positions[i].row,
-          word,
-          suggestions: cached,
-        })
+    for (const word of words) {
+      if (!seen.has(word)) {
+        // avoid hitting the cache unnecessarily
+        seen.set(word, this.cache.get(`${language}:${word}`))
+      }
+      if (!seen.get(word)) {
+        newWords.add(word)
       }
     }
-    words = newWords
-    positions = newPositions
 
-    const displayResult = highlights => {
+    const displayResult = () => {
       if (this.timeoutId != null) {
         return
       }
@@ -286,49 +268,44 @@ class SpellCheckManager {
         this.changedLines[row] = false
         this.adapter.highlightedWordManager.clearRow(row)
       })
-      highlights.map(highlight =>
-        this.adapter.highlightedWordManager.addHighlight(highlight)
-      )
+      for (const [i, word] of words.entries()) {
+        const suggestions = seen.get(word)
+        if (suggestions === true) {
+          // not misspelled
+        } else {
+          this.adapter.highlightedWordManager.addHighlight({
+            column: positions[i].column,
+            row: positions[i].row,
+            word,
+            suggestions,
+          })
+        }
+      }
     }
 
-    if (!words.length) {
-      displayResult(highlights)
+    if (newWords.size === 0) {
+      displayResult()
     } else {
+      const ordered = Array.from(newWords)
       this.inProgressRequest = this.checkRequest(
-        { language, words },
+        { language, words: ordered },
         (error, result) => {
           delete this.inProgressRequest
           if (error != null || result == null || result.misspellings == null) {
             return null
           }
-          const misspelled = []
-          for (const misspelling of result.misspellings) {
-            word = words[misspelling.index]
-            const position = positions[misspelling.index]
-            misspelled[misspelling.index] = true
-            highlights.push({
-              column: position.column,
-              row: position.row,
-              word,
-              suggestions: misspelling.suggestions,
-            })
-            key = `${language}:${word}`
-            if (!seen[key]) {
-              this.cache.put(key, misspelling.suggestions)
-              seen[key] = true
+          for (const { index, suggestions } of result.misspellings) {
+            const word = ordered[index]
+            seen.set(word, suggestions)
+            this.cache.put(`${language}:${word}`, suggestions)
+          }
+          for (const word of newWords) {
+            if (!seen.get(word)) {
+              seen.set(word, true)
+              this.cache.put(`${language}:${word}`, true)
             }
           }
-          for (i = 0; i < words.length; i++) {
-            word = words[i]
-            if (!misspelled[i]) {
-              key = `${language}:${word}`
-              if (!seen[key]) {
-                this.cache.put(key, true)
-                seen[key] = true
-              }
-            }
-          }
-          displayResult(highlights)
+          displayResult()
         }
       )
     }
