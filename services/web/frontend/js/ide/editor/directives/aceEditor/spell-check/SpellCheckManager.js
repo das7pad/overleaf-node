@@ -232,10 +232,6 @@ class SpellCheckManager {
     if (this.timeoutId != null) {
       clearTimeout(this.timeoutId)
     }
-    if (this.isFirstRequest && this.timeoutId == null) {
-      run()
-      return
-    }
     this.timeoutId = setTimeout(run, delay)
   }
 
