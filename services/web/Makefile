@@ -61,10 +61,17 @@ lint:
 test: format
 format:
 
-LINT_RUNNER = docker run --rm --network none $(IMAGE_CI)-dev yarn
+LINT_RUNNER = \
+	docker run --rm --network none -e CACHE_DIR=/tmp $(IMAGE_CI)-dev yarn
 LINT_RUNNER_LOCAL = \
-	docker run --rm -it --network none -v $(PWD):$(PWD) -w $(PWD) $(IMAGE_YARN) \
- 	yarn
+	docker run \
+	 --rm \
+	 --interactive --tty \
+	 --network none \
+	 --volume $(PWD):$(PWD) --workdir $(PWD) \
+	 --env CACHE_DIR=/tmp \
+	 $(IMAGE_YARN) \
+	 yarn
 
 ifneq (,$(wildcard .yarn/cache/))
 LINT_RUNNER = $(LINT_RUNNER_LOCAL)
