@@ -10,6 +10,7 @@ import { ExposedSettings } from '../../../../../../types/exposed-settings'
 
 import '@uppy/core/dist/style.css'
 import '@uppy/dashboard/dist/style.css'
+import { contentDisposition } from '../../../../utils/contentDisposition'
 
 type UploadResponse = {
   project_id: string
@@ -36,8 +37,11 @@ function UploadProjectModal({ onHide }: UploadProjectModalProps) {
     })
       .use(XHRUpload, {
         endpoint: '/api/project/new/upload',
+        headers: ({ name }) => ({
+          'Content-Disposition': contentDisposition(name),
+        }),
         limit: 1,
-        fieldName: 'qqfile', // "qqfile" is needed for our express multer middleware
+        formData: false,
       })
       .on('file-added', () => {
         // this function can be invoked multiple times depending on maxNumberOfFiles

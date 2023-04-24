@@ -17,6 +17,7 @@ import {
   jwtUrlWeb,
   refreshProjectJWT,
 } from '../../../../../infrastructure/jwt-fetch-json'
+import { contentDisposition } from '../../../../../utils/contentDisposition'
 
 export default function FileTreeUploadDoc() {
   const { parentFolderId, cancel, isDuplicate, droppedFiles, setDroppedFiles } =
@@ -77,13 +78,13 @@ export default function FileTreeUploadDoc() {
         // use the basic XHR uploader
         .use(XHRUpload, {
           endpoint,
-          headers: () => ({
+          headers: ({ name }) => ({
             Authorization: 'Bearer ' + getProjectJWT(),
+            'Content-Disposition': contentDisposition(name),
           }),
           withCredentials: true,
-          // limit: maxConnections || 1,
           limit: 1,
-          fieldName: 'qqfile', // "qqfile" field inherited from FineUploader
+          formData: false,
         })
         // close the modal when all the uploads completed successfully
         .on('complete', result => {
