@@ -13,6 +13,7 @@ import '@uppy/dashboard/dist/style.css'
 import ErrorMessage from '../error-message'
 import {
   clearProjectJWT,
+  ensureProjectJWTIsNotExpired,
   getProjectJWT,
   jwtUrlWeb,
   refreshProjectJWT,
@@ -124,6 +125,9 @@ export default function FileTreeUploadDoc() {
 
   useEffect(() => {
     if (uppy && droppedFiles) {
+      // prefetch the jwt when dropping files
+      ensureProjectJWTIsNotExpired().catch(() => {})
+
       uppy.setOptions({
         autoProceed: false,
       })
@@ -163,6 +167,11 @@ export default function FileTreeUploadDoc() {
 
   // whether to show a message about conflicting files
   const showConflicts = !overwrite && conflicts.length > 0
+
+  // prefetch the jwt when switching to the upload view
+  useEffect(() => {
+    ensureProjectJWTIsNotExpired().catch(() => {})
+  }, [])
 
   return (
     <>

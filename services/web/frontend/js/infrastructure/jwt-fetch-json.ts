@@ -48,6 +48,13 @@ export async function refreshProjectJWT() {
   )
 }
 
+export async function ensureProjectJWTIsNotExpired() {
+  if (isExpired(getProjectJWT())) {
+    await refreshProjectJWT()
+  }
+  return getProjectJWT()
+}
+
 async function getJWT(name: string, refreshEndpoint: string) {
   if (!JWTs.has(name)) {
     JWTs.set(name, getMeta(name))
