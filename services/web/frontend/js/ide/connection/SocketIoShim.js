@@ -132,7 +132,7 @@ export default class SocketIoShim {
     }
     const payload = { a: action, b: body, c: cbId, d: docId }
     const blob = JSON.stringify(payload)
-    if (blob.length > 7 * 1024 * 1024) {
+    if (new TextEncoder().encode(blob).byteLength > 7 * 1024 * 1024) {
       throw new Error('payload too large')
     }
     this._ws.send(blob)
