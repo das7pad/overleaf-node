@@ -38,6 +38,10 @@ export default OnlineUsersManager = (function () {
 
       this.storeConnectedUsers = connectedUsers => {
         this.$scope.onlineUsers = {}
+        this.addConnectedUsers(connectedUsers)
+      }
+
+      this.addConnectedUsers = connectedUsers => {
         for (const user of connectedUsers) {
           if (user.client_id === this.ide.socket.publicId) {
             // Don't store myself
@@ -86,6 +90,12 @@ export default OnlineUsersManager = (function () {
             this.getConnectedUsers()
           }
         })
+      })
+
+      this.ide.socket.on('clientTracking.clientConnected', client => {
+        if (!this.$scope.onlineUsers[client.client_id]) {
+          this.addConnectedUsers([client])
+        }
       })
 
       this.ide.socket.on('clientTracking.clientUpdated', client => {
