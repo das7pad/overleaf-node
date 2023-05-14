@@ -32,6 +32,7 @@ import {
   DuplicateFilenameError,
   DuplicateFilenameMoveError,
 } from '../errors'
+import { useIdeContext } from '../../../shared/context/ide-context'
 
 const FileTreeActionableContext = createContext()
 
@@ -122,6 +123,8 @@ function fileTreeActionableReducer(state, action) {
 export function FileTreeActionableProvider({ children }) {
   const { _id: projectId } = useProjectContext(projectContextPropTypes)
   const { permissionsLevel } = useEditorContext(editorContextPropTypes)
+  const ide = useIdeContext()
+  const socket = ide.socket
 
   const [state, dispatch] = useReducer(
     permissionsLevel === 'readOnly'
@@ -264,9 +267,10 @@ export function FileTreeActionableProvider({ children }) {
         return Promise.reject(error)
       }
 
+      entity.clientId = socket.publicId
       return syncCreateEntity(projectId, parentFolderId, entity)
     },
-    [fileTreeData, parentFolderId, projectId]
+    [fileTreeData, parentFolderId, projectId, socket]
   )
 
   const finishCreatingFolder = useCallback(

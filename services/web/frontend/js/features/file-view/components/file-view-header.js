@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react'
+import { useCallback, useState } from 'react'
 import PropTypes from 'prop-types'
 import { Trans, useTranslation } from 'react-i18next'
 
@@ -11,6 +11,8 @@ import { useProjectContext } from '../../../shared/context/project-context'
 
 import useAbortController from '../../../shared/hooks/use-abort-controller'
 import { LinkedFileIcon } from './file-view-icons'
+import { useIdeContext } from '../../../shared/context/ide-context'
+
 const tprLinkedFileInfo = []
 const tprLinkedFileRefreshError = []
 
@@ -44,6 +46,8 @@ export default function FileViewHeader({ file, storeReferencesKeys }) {
   const [refreshError, setRefreshError] = useState(null)
 
   const { signal } = useAbortController()
+  const ide = useIdeContext()
+  const socket = ide.socket
 
   let fileInfo
   if (file.linkedFileData) {
@@ -74,6 +78,7 @@ export default function FileViewHeader({ file, storeReferencesKeys }) {
     window.expectingLinkedFileRefreshedSocketFor = file.name
     projectJWTPOSTJSON(`/project/${projectId}/linked_file/${file.id}/refresh`, {
       signal,
+      body: { clientId: socket?.publicId },
     })
       .then(() => {
         setRefreshing(false)
@@ -106,7 +111,7 @@ export default function FileViewHeader({ file, storeReferencesKeys }) {
           console.log(error)
         })
     }
-  }, [file, projectId, signal, storeReferencesKeys])
+  }, [socket, file, projectId, signal, storeReferencesKeys])
 
   return (
     <div>

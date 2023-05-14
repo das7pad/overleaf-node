@@ -1,12 +1,12 @@
 import { expect } from 'chai'
 import sinon from 'sinon'
-import { screen, fireEvent } from '@testing-library/react'
+import { fireEvent, screen } from '@testing-library/react'
 import fetchMock from 'fetch-mock'
 import MockedSocket from 'socket.io-mock'
 
 import {
-  renderWithEditorContext,
   cleanUpContext,
+  renderWithEditorContext,
 } from '../../../helpers/render-with-context'
 import FileTreeRoot from '../../../../../frontend/js/features/file-tree/components/file-tree-root'
 
@@ -179,11 +179,10 @@ describe('FileTree Rename Entity Flow', function () {
     it('renames doc', function () {
       screen.getByRole('treeitem', { name: 'a.tex' })
 
-      window._ide.socket.socketClient.emit(
-        'reciveEntityRename',
-        '456def',
-        'socket.tex'
-      )
+      window._ide.socket.socketClient.emit('receiveEntityRename', {
+        entityId: '456def',
+        name: 'socket.tex',
+      })
 
       screen.getByRole('treeitem', { name: 'socket.tex' })
     })

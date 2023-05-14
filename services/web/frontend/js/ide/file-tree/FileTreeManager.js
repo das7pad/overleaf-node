@@ -23,6 +23,7 @@ import './controllers/FileTreeController'
 import './controllers/FileTreeEntityController'
 import './controllers/FileTreeFolderController'
 import '../../features/file-tree/controllers/file-tree-controller'
+
 let FileTreeManager
 
 export default FileTreeManager = class FileTreeManager {
@@ -59,9 +60,9 @@ export default FileTreeManager = class FileTreeManager {
   }
 
   _bindToSocketEvents() {
-    this.ide.socket.on('reciveNewDoc', (parent_folder_id, doc) => {
+    this.ide.socket.on('receiveNewDoc', ({ parentFolderId, doc }) => {
       const parent_folder =
-        this.findEntityById(parent_folder_id) || this.$scope.rootFolder
+        this.findEntityById(parentFolderId) || this.$scope.rootFolder
       return this.$scope.$apply(() => {
         parent_folder.children.push({
           name: doc.name,
@@ -72,27 +73,22 @@ export default FileTreeManager = class FileTreeManager {
       })
     })
 
-    this.ide.socket.on(
-      'reciveNewFile',
-      (parent_folder_id, file, source, linkedFileData) => {
-        const parent_folder =
-          this.findEntityById(parent_folder_id) || this.$scope.rootFolder
-        return this.$scope.$apply(() => {
-          parent_folder.children.push({
-            name: file.name,
-            id: file._id,
-            type: 'file',
-            linkedFileData,
-            created: file.created,
-          })
-          return this.recalculateDocList()
-        })
-      }
-    )
-
-    this.ide.socket.on('reciveNewFolder', (parent_folder_id, folder) => {
+    this.ide.socket.on('receiveNewFile', ({ parentFolderId, file }) => {
       const parent_folder =
-        this.findEntityById(parent_folder_id) || this.$scope.rootFolder
+        this.findEntityById(parentFolderId) || this.$scope.rootFolder
+      return this.$scope.$apply(() => {
+        parent_folder.children.push({
+          ...file,
+          id: file._id,
+          type: 'file',
+        })
+        return this.recalculateDocList()
+      })
+    })
+
+    this.ide.socket.on('receiveNewFolder', ({ parentFolderId, folder }) => {
+      const parent_folder =
+        this.findEntityById(parentFolderId) || this.$scope.rootFolder
       return this.$scope.$apply(() => {
         parent_folder.children.push({
           name: folder.name,
@@ -104,8 +100,8 @@ export default FileTreeManager = class FileTreeManager {
       })
     })
 
-    this.ide.socket.on('reciveEntityRename', (entity_id, name) => {
-      const entity = this.findEntityById(entity_id)
+    this.ide.socket.on('receiveEntityRename', ({ entityId, name }) => {
+      const entity = this.findEntityById(entityId)
       if (entity == null) {
         return
       }
@@ -115,8 +111,8 @@ export default FileTreeManager = class FileTreeManager {
       })
     })
 
-    this.ide.socket.on('removeEntity', entity_id => {
-      const entity = this.findEntityById(entity_id)
+    this.ide.socket.on('removeEntity', ({ entityId }) => {
+      const entity = this.findEntityById(entityId)
       if (entity == null) {
         return
       }
@@ -127,14 +123,17 @@ export default FileTreeManager = class FileTreeManager {
       return this.$scope.$broadcast('entity:deleted', entity)
     })
 
-    return this.ide.socket.on('reciveEntityMove', (entity_id, folder_id) => {
-      const entity = this.findEntityById(entity_id)
-      const folder = this.findEntityById(folder_id)
-      return this.$scope.$apply(() => {
-        this._moveEntityInScope(entity, folder)
-        return this.recalculateDocList()
-      })
-    })
+    return this.ide.socket.on(
+      'receiveEntityMove',
+      ({ entityId, targetFolderId }) => {
+        const entity = this.findEntityById(entityId)
+        const folder = this.findEntityById(targetFolderId)
+        return this.$scope.$apply(() => {
+          this._moveEntityInScope(entity, folder)
+          return this.recalculateDocList()
+        })
+      }
+    )
   }
 
   selectEntity(entity) {

@@ -28,11 +28,10 @@ function defaultSetupMocks(fetchMock) {
       (path, req) => {
         const body = JSON.parse(req.body)
         const entityId = path.match(/([^/]+)\/rename$/)[1]
-        window._ide.socket.socketClient.emit(
-          'reciveEntityRename',
+        window._ide.socket.socketClient.emit('receiveEntityRename', {
           entityId,
-          body.name
-        )
+          name: body.name,
+        })
         return 204
       },
 
@@ -51,11 +50,10 @@ function defaultSetupMocks(fetchMock) {
           _id: Math.random().toString(16).replace(/0\./, 'random-test-id-'),
           name: body.name,
         }
-        window._ide.socket.socketClient.emit(
-          'reciveNewFolder',
-          body.parent_folder_id,
-          newFolder
-        )
+        window._ide.socket.socketClient.emit('receiveNewFolder', {
+          parentFolderId: body.parent_folder_id,
+          folder: newFolder,
+        })
         return newFolder
       },
       {
@@ -66,7 +64,7 @@ function defaultSetupMocks(fetchMock) {
       /\/project\/\w+\/(file|doc|folder)\/\w+/,
       path => {
         const entityId = path.match(/[^/]+$/)[0]
-        window._ide.socket.socketClient.emit('removeEntity', entityId)
+        window._ide.socket.socketClient.emit('removeEntity', { entityId })
         return 204
       },
       {
@@ -76,11 +74,10 @@ function defaultSetupMocks(fetchMock) {
     .post(/\/project\/\w+\/(file|doc|folder)\/\w+\/move/, (path, req) => {
       const body = JSON.parse(req.body)
       const entityId = path.match(/([^/]+)\/move/)[1]
-      window._ide.socket.socketClient.emit(
-        'reciveEntityMove',
+      window._ide.socket.socketClient.emit('receiveEntityMove', {
         entityId,
-        body.folder_id
-      )
+        targetFolderId: body.folder_id,
+      })
       return 204
     })
 }

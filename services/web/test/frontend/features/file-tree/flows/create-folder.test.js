@@ -1,12 +1,12 @@
 import { expect } from 'chai'
 import sinon from 'sinon'
-import { screen, fireEvent, waitFor } from '@testing-library/react'
+import { fireEvent, screen, waitFor } from '@testing-library/react'
 import fetchMock from 'fetch-mock'
 import MockedSocket from 'socket.io-mock'
 
 import {
-  renderWithEditorContext,
   cleanUpContext,
+  renderWithEditorContext,
 } from '../../../helpers/render-with-context'
 import FileTreeRoot from '../../../../../frontend/js/features/file-tree/components/file-tree-root'
 
@@ -71,12 +71,15 @@ describe('FileTree Create Folder Flow', function () {
     expect(lastCallBody.name).to.equal(newFolderName)
     expect(lastCallBody.parent_folder_id).to.equal('root-folder-id')
 
-    window._ide.socket.socketClient.emit('reciveNewFolder', 'root-folder-id', {
-      _id: fakeId(),
-      name: newFolderName,
-      docs: [],
-      fileRefs: [],
-      folders: [],
+    window._ide.socket.socketClient.emit('receiveNewFolder', {
+      parentFolderId: 'root-folder-id',
+      folder: {
+        _id: fakeId(),
+        name: newFolderName,
+        docs: [],
+        fileRefs: [],
+        folders: [],
+      },
     })
     await screen.findByRole('treeitem', { name: newFolderName })
   })
@@ -137,12 +140,15 @@ describe('FileTree Create Folder Flow', function () {
     expect(lastCallBody.name).to.equal(newFolderName)
     expect(lastCallBody.parent_folder_id).to.equal('789ghi')
 
-    window._ide.socket.socketClient.emit('reciveNewFolder', '789ghi', {
-      _id: fakeId(),
-      name: newFolderName,
-      docs: [],
-      fileRefs: [],
-      folders: [],
+    window._ide.socket.socketClient.emit('receiveNewFolder', {
+      parentFolderId: '789ghi',
+      folder: {
+        _id: fakeId(),
+        name: newFolderName,
+        docs: [],
+        fileRefs: [],
+        folders: [],
+      },
     })
 
     // find the created folder
@@ -206,12 +212,15 @@ describe('FileTree Create Folder Flow', function () {
     expect(lastCallBody.name).to.equal(newFolderName)
     expect(lastCallBody.parent_folder_id).to.equal('789ghi')
 
-    window._ide.socket.socketClient.emit('reciveNewFolder', '789ghi', {
-      _id: fakeId(),
-      name: newFolderName,
-      docs: [],
-      fileRefs: [],
-      folders: [],
+    window._ide.socket.socketClient.emit('receiveNewFolder', {
+      parentFolderId: '789ghi',
+      folder: {
+        _id: fakeId(),
+        name: newFolderName,
+        docs: [],
+        fileRefs: [],
+        folders: [],
+      },
     })
 
     // find the created folder

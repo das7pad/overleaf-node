@@ -19,10 +19,12 @@ import {
   refreshProjectJWT,
 } from '../../../../../infrastructure/jwt-fetch-json'
 import { contentDisposition } from '../../../../../utils/contentDisposition'
+import { useIdeContext } from '../../../../../shared/context/ide-context'
 
 export default function FileTreeUploadDoc() {
   const { parentFolderId, cancel, isDuplicate, droppedFiles, setDroppedFiles } =
     useFileTreeActionable()
+  const ide = useIdeContext()
   const { _id: projectId } = useProjectContext(projectContextPropTypes)
 
   const [error, setError] = useState()
@@ -82,6 +84,7 @@ export default function FileTreeUploadDoc() {
           headers: ({ name }) => ({
             Authorization: 'Bearer ' + getProjectJWT(),
             'Content-Disposition': contentDisposition(name),
+            'X-OL-Client-Id': ide.socket.publicId,
           }),
           withCredentials: true,
           limit: 1,

@@ -1,15 +1,10 @@
 import { useCallback, useEffect } from 'react'
-import PropTypes from 'prop-types'
-
-import { useUserContext } from '../../../shared/context/user-context'
 import { useFileTreeData } from '../../../shared/context/file-tree-data-context'
 import { useFileTreeSelectable } from '../contexts/file-tree-selectable'
 import { findInTreeOrThrow } from '../util/find-in-tree'
+import { useIdeContext } from '../../../shared/context/ide-context'
 
 export function useFileTreeSocketListener() {
-  const user = useUserContext({
-    id: PropTypes.string.isRequired,
-  })
   const {
     dispatchRename,
     dispatchDelete,
@@ -22,42 +17,42 @@ export function useFileTreeSocketListener() {
   } = useFileTreeData()
   const { selectedEntityIds, selectedEntityParentIds, select, unselect } =
     useFileTreeSelectable()
-  const socket = window._ide && window._ide.socket
+  const ide = useIdeContext()
+  const socket = ide.socket
 
-  const selectEntityIfCreatedByUser = useCallback(
-    // hack to automatically re-open refreshed linked files
-    (entityId, entityName, userId) => {
-      // If the created entity's user exists and is the current user
-      if (userId && user?.id === userId) {
-        // And we're expecting a refreshed socket for this entity
-        if (window.expectingLinkedFileRefreshedSocketFor === entityName) {
-          // Then select it
-          select(entityId)
-          window.expectingLinkedFileRefreshedSocketFor = null
-        }
+  const handleReplacement = useCallback(
+    (existingId, clientId) => {
+      if (existingId !== '00000000-0000-0000-0000-000000000000') {
+        dispatchDelete(existingId)
+        unselect(existingId)
       }
+      return (
+        ide.$scope.openFile?.id === existingId ||
+        ide.$scope.editor?.open_doc_id === existingId ||
+        clientId === socket.publicId
+      )
     },
-    [user, select]
+    [ide, dispatchDelete, socket, unselect]
   )
 
   useEffect(() => {
-    function handleDispatchRename(entityId, name, v) {
-      updateProjectVersion(v)
+    function handleDispatchRename({ entityId, name, projectVersion }) {
+      updateProjectVersion(projectVersion)
       dispatchRename(entityId, name)
     }
-    if (socket) socket.on('reciveEntityRename', handleDispatchRename)
+    if (socket) socket.on('receiveEntityRename', handleDispatchRename)
     return () => {
       if (socket)
-        socket.removeListener('reciveEntityRename', handleDispatchRename)
+        socket.removeListener('receiveEntityRename', handleDispatchRename)
     }
   }, [socket, dispatchRename, updateProjectVersion])
 
   useEffect(() => {
-    function handleDispatchDelete(entityId, _source, v) {
-      updateProjectVersion(v)
+    function handleDispatchDelete({ entityId, projectVersion }) {
+      updateProjectVersion(projectVersion)
       unselect(entityId)
       if (selectedEntityParentIds.has(entityId)) {
-        // we're deleting a folder with a selected children so we need to
+        // we're deleting a folder with a selected children, so we need to
         // unselect its selected children first
         for (const selectedEntityId of selectedEntityIds) {
           if (
@@ -86,63 +81,81 @@ export function useFileTreeSocketListener() {
   ])
 
   useEffect(() => {
-    function handleDispatchMove(entityId, toFolderId, v) {
-      updateProjectVersion(v)
-      dispatchMove(entityId, toFolderId)
+    function handleDispatchMove({ entityId, targetFolderId, projectVersion }) {
+      updateProjectVersion(projectVersion)
+      dispatchMove(entityId, targetFolderId)
     }
-    if (socket) socket.on('reciveEntityMove', handleDispatchMove)
+    if (socket) socket.on('receiveEntityMove', handleDispatchMove)
     return () => {
-      if (socket) socket.removeListener('reciveEntityMove', handleDispatchMove)
+      if (socket) socket.removeListener('receiveEntityMove', handleDispatchMove)
     }
   }, [socket, dispatchMove, updateProjectVersion])
 
   useEffect(() => {
-    function handleDispatchCreateFolder(parentFolderId, folder, v) {
-      updateProjectVersion(v)
+    function handleDispatchCreateFolder({
+      parentFolderId,
+      folder,
+      projectVersion,
+    }) {
+      updateProjectVersion(projectVersion)
       dispatchCreateFolder(parentFolderId, folder)
     }
-    if (socket) socket.on('reciveNewFolder', handleDispatchCreateFolder)
+    if (socket) socket.on('receiveNewFolder', handleDispatchCreateFolder)
     return () => {
       if (socket)
-        socket.removeListener('reciveNewFolder', handleDispatchCreateFolder)
+        socket.removeListener('receiveNewFolder', handleDispatchCreateFolder)
     }
   }, [socket, dispatchCreateFolder, updateProjectVersion])
 
   useEffect(() => {
-    function handleDispatchCreateDoc(parentFolderId, doc, v) {
-      updateProjectVersion(v)
-      dispatchCreateDoc(parentFolderId, doc)
-    }
-    if (socket) socket.on('reciveNewDoc', handleDispatchCreateDoc)
-    return () => {
-      if (socket) socket.removeListener('reciveNewDoc', handleDispatchCreateDoc)
-    }
-  }, [socket, dispatchCreateDoc, updateProjectVersion])
-
-  useEffect(() => {
-    function handleDispatchCreateFile(
+    function handleDispatchCreateDoc({
       parentFolderId,
-      file,
-      _source,
-      linkedFileData,
-      userId,
-      v
-    ) {
-      updateProjectVersion(v)
-      dispatchCreateFile(parentFolderId, file)
-      if (linkedFileData) {
-        selectEntityIfCreatedByUser(file._id, file.name, userId)
-      }
+      doc,
+      projectVersion,
+      existingId,
+      clientId,
+    }) {
+      updateProjectVersion(projectVersion)
+      const shouldSelect = handleReplacement(existingId, clientId)
+      dispatchCreateDoc(parentFolderId, doc)
+      if (shouldSelect) select(doc._id)
     }
-    if (socket) socket.on('reciveNewFile', handleDispatchCreateFile)
+    if (socket) socket.on('receiveNewDoc', handleDispatchCreateDoc)
     return () => {
       if (socket)
-        socket.removeListener('reciveNewFile', handleDispatchCreateFile)
+        socket.removeListener('receiveNewDoc', handleDispatchCreateDoc)
+    }
+  }, [
+    socket,
+    dispatchCreateDoc,
+    updateProjectVersion,
+    handleReplacement,
+    select,
+  ])
+
+  useEffect(() => {
+    function handleDispatchCreateFile({
+      parentFolderId,
+      file,
+      projectVersion,
+      existingId,
+      clientId,
+    }) {
+      updateProjectVersion(projectVersion)
+      const shouldSelect = handleReplacement(existingId, clientId)
+      dispatchCreateFile(parentFolderId, file)
+      if (shouldSelect) select(file._id)
+    }
+    if (socket) socket.on('receiveNewFile', handleDispatchCreateFile)
+    return () => {
+      if (socket)
+        socket.removeListener('receiveNewFile', handleDispatchCreateFile)
     }
   }, [
     socket,
     dispatchCreateFile,
-    selectEntityIfCreatedByUser,
+    select,
+    handleReplacement,
     updateProjectVersion,
   ])
 }

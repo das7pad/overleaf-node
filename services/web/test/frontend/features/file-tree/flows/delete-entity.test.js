@@ -1,12 +1,12 @@
 import { expect } from 'chai'
 import sinon from 'sinon'
-import { screen, fireEvent, waitFor } from '@testing-library/react'
+import { fireEvent, screen, waitFor } from '@testing-library/react'
 import fetchMock from 'fetch-mock'
 import MockedSocket from 'socket.io-mock'
 
 import {
-  renderWithEditorContext,
   cleanUpContext,
+  renderWithEditorContext,
 } from '../../../helpers/render-with-context'
 import FileTreeRoot from '../../../../../frontend/js/features/file-tree/components/file-tree-root'
 
@@ -72,7 +72,9 @@ describe('FileTree Delete Entity Flow', function () {
       const modalDeleteButton = await getModalDeleteButton()
       fireEvent.click(modalDeleteButton)
 
-      window._ide.socket.socketClient.emit('removeEntity', '456def')
+      window._ide.socket.socketClient.emit('removeEntity', {
+        entityId: '456def',
+      })
 
       await waitFor(() => {
         expect(
@@ -102,7 +104,9 @@ describe('FileTree Delete Entity Flow', function () {
       const modalDeleteButton = await getModalDeleteButton()
       fireEvent.click(modalDeleteButton)
 
-      window._ide.socket.socketClient.emit('removeEntity', '456def')
+      window._ide.socket.socketClient.emit('removeEntity', {
+        entityId: '456def',
+      })
 
       // check that the confirmation modal is open
       screen.getByText(/Are you sure/)
@@ -182,7 +186,9 @@ describe('FileTree Delete Entity Flow', function () {
       const treeitemFile = screen.getByRole('treeitem', { name: 'my.bib' })
       fireEvent.click(treeitemFile, { ctrlKey: true })
 
-      window._ide.socket.socketClient.emit('removeEntity', '123abc')
+      window._ide.socket.socketClient.emit('removeEntity', {
+        entityId: '123abc',
+      })
     })
 
     it('removes the folder', function () {
@@ -261,8 +267,12 @@ describe('FileTree Delete Entity Flow', function () {
       const modalDeleteButton = await getModalDeleteButton()
       fireEvent.click(modalDeleteButton)
 
-      window._ide.socket.socketClient.emit('removeEntity', '456def')
-      window._ide.socket.socketClient.emit('removeEntity', '789ghi')
+      window._ide.socket.socketClient.emit('removeEntity', {
+        entityId: '456def',
+      })
+      window._ide.socket.socketClient.emit('removeEntity', {
+        entityId: '789ghi',
+      })
 
       await waitFor(() => {
         for (const name of ['main.tex', 'my.bib']) {

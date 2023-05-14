@@ -27,6 +27,7 @@ export function EditorProviders({
   socket = {
     on: sinon.stub(),
     removeListener: sinon.stub(),
+    publicId: 'random-public-client-id',
   },
   isRestrictedTokenMember = false,
   clsiServerId = '1234',

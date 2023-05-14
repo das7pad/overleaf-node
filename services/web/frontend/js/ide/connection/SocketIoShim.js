@@ -240,13 +240,7 @@ export default class SocketIoShim {
     if (cbId) {
       this._callCallback(callbacks, cbId, err, body)
     } else {
-      if (err) {
-        this._emit(event, err)
-      } else if (Array.isArray(body)) {
-        this._emit(event, ...body)
-      } else {
-        this._emit(event, body)
-      }
+      this._emit(event, body)
     }
   }
 

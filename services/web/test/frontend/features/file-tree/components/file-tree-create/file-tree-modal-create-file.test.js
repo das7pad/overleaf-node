@@ -1,7 +1,7 @@
 import { expect } from 'chai'
 import * as sinon from 'sinon'
 import { useEffect } from 'react'
-import { screen, fireEvent, cleanup, waitFor } from '@testing-library/react'
+import { cleanup, fireEvent, screen, waitFor } from '@testing-library/react'
 import fetchMock from 'fetch-mock'
 import PropTypes from 'prop-types'
 
@@ -173,6 +173,7 @@ describe('<FileTreeModalCreateFile/>', function () {
     expect(
       fetchMock.called('express:/jwt/web/project/:projectId/doc', {
         body: {
+          clientId: 'random-public-client-id',
           parent_folder_id: 'root-folder-id',
           name: 'test.tex',
         },
@@ -281,6 +282,7 @@ describe('<FileTreeModalCreateFile/>', function () {
     expect(
       fetchMock.called('express:/jwt/web/project/:projectId/linked_file', {
         body: {
+          clientId: 'random-public-client-id',
           name: 'ball.jpg',
           provider: 'project_output_file',
           parent_folder_id: 'root-folder-id',
@@ -361,6 +363,7 @@ describe('<FileTreeModalCreateFile/>', function () {
     expect(
       fetchMock.called('express:/jwt/web/project/:projectId/linked_file', {
         body: {
+          clientId: 'random-public-client-id',
           name: 'test.tex',
           provider: 'url',
           parent_folder_id: 'root-folder-id',
@@ -450,7 +453,7 @@ describe('<FileTreeModalCreateFile/>', function () {
     // the submit button should not be present
     expect(screen.queryByRole('button', { name: 'Create' })).to.be.null
 
-    const dropzone = screen.getByLabelText('File Uploader')
+    const dropzone = await screen.findByLabelText('File Uploader')
 
     expect(dropzone).not.to.be.null
 

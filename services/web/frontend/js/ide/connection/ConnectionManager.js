@@ -149,7 +149,7 @@ Something went wrong connecting to your project. Please refresh if this continue
 
     // Site administrators can send the forceDisconnect event to all users
 
-    this.ide.socket.on('forceDisconnect', (message, delay = 10) => {
+    this.ide.socket.on('forceDisconnect', (delay = 10) => {
       // flush changes before disconnecting
       this.ide.$scope.$broadcast('flush-changes')
       this.updateConnectionManagerState('forceDisconnect')
