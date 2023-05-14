@@ -32,10 +32,8 @@ export default class SocketIoShim {
     this.on('bootstrap', ({ publicId }) => {
       this._publicId = publicId
     })
-    this.on('connectionRejected', blob => {
-      if (blob && blob.code === 'BadWsBootstrapBlob') {
-        clearProjectJWT()
-      }
+    this.on('connectionRejected', err => {
+      if (err.code === 'BadWsBootstrapBlob') clearProjectJWT()
     })
     this.on('forceDisconnect', () => {
       this._forcedDisconnect = true
@@ -121,7 +119,7 @@ export default class SocketIoShim {
   async rpc({ action, docId, body, async = false }) {
     if (!this.connected) {
       // sending on a connecting/closing/closed ws throws INVALID_STATE_ERR
-      // discard the event as it is associated with an old session anyway.
+      // discard the rpc call as it is associated with an old session anyway.
       // -> a new connection can start from scratch
       sl_console.log('[SocketIoShim] ws not ready, discarding', action)
       throw new Error('rpc cancelled: ws is not ready')
@@ -142,9 +140,7 @@ export default class SocketIoShim {
   }
 
   on(event, listener) {
-    if (!this._events.has(event)) {
-      this._events.set(event, [])
-    }
+    if (!this._events.has(event)) this._events.set(event, [])
     this._events.get(event).push(listener)
   }
 
@@ -190,10 +186,10 @@ export default class SocketIoShim {
         }
         if (this._ws !== newSocket) {
           sl_console.log('[SocketIoShim] replaced: ignoring disconnect', event)
-          return
-        }
-        if (event.code !== CODE_CLIENT_REQUESTED_DISCONNECT) {
-          this._emit('disconnect', event.reason)
+        } else {
+          if (event.code !== CODE_CLIENT_REQUESTED_DISCONNECT) {
+            this._emit('disconnect', event.reason)
+          }
         }
       }
       this._startHealthCheck(newSocket)
@@ -201,10 +197,10 @@ export default class SocketIoShim {
     newSocket.onerror = event => {
       if (this._ws !== newSocket) {
         sl_console.log('[SocketIoShim] replaced: ignoring error', event)
-        return
+      } else {
+        clearTimeout(this._connectTimeoutHandler)
+        this._emit('error', event)
       }
-      clearTimeout(this._connectTimeoutHandler)
-      this._emit('error', event)
     }
     newSocket.onmessage = event => {
       this._onMessage(callbacks, JSON.parse(event.data))
@@ -213,13 +209,11 @@ export default class SocketIoShim {
 
   _emit(event, ...args) {
     const listeners = this._events.get(event)
-    if (!listeners) {
+    if (listeners) {
+      listeners.slice().forEach(listener => listener.apply(null, args))
+    } else {
       sl_console.log('[SocketIoShim] missing handler', event)
-      return
     }
-    listeners.slice().forEach(listener => {
-      listener.apply(null, args)
-    })
   }
 
   _callCallback(callbacks, cbId, err, body) {

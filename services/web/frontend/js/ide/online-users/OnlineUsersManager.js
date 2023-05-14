@@ -66,9 +66,7 @@ export default OnlineUsersManager = (function () {
 
       this.getConnectedUsers = () => {
         this.ide.socket
-          .rpc({
-            action: 'clientTracking.getConnectedUsers',
-          })
+          .rpc({ action: 'clientTracking.getConnectedUsers' })
           .then(
             ({ connectedClients }) => {
               this.storeConnectedUsers(connectedClients || [])
