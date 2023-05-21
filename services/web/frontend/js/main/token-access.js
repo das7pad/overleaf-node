@@ -55,17 +55,17 @@ App.controller(
         .then(data => {
           $scope.accessInFlight = false
           $scope.accessError = false
-          if (data.redir) {
-            window.location.replace(data.redir)
+          if (data.redir || data.redirectTo) {
+            window.location.replace(data.redir || data.redirectTo)
           } else {
             console.warn('invalid data from server in success response', data)
             $scope.accessError = 'error'
           }
         })
         .catch(function (err) {
-          const redir = err.data?.redir
-          if (redir) {
-            return window.location.replace(redir)
+          const data = err.data || {}
+          if (data.redir || data.redirectTo) {
+            return window.location.replace(data.redir || data.redirectTo)
           }
           console.warn('error response from server', err)
           $scope.accessInFlight = false

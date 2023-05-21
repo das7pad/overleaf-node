@@ -60,9 +60,9 @@ App.directive('asyncForm', $http => ({
             return
           }
 
-          if (data.redir) {
+          if (data.redir || data.redirectTo) {
             ga('send', 'event', formName, 'success')
-            window.location.assign(data.redir)
+            window.location.assign(data.redir || data.redirectTo)
           } else if (data.message) {
             response.message = data.message
 
