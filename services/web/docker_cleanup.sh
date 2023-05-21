@@ -15,4 +15,5 @@ rm \
     /root/.cache \
     /root/.node-gyp \
     /root/.npm \
+    /root/.yarn/ \
     -rf
