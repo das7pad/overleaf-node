@@ -277,7 +277,7 @@ If the project has been renamed please look in your project list for a new proje
 
     return ide.socket.on('project:publicAccessLevel:changed', data => {
       if (data.newAccessLevel != null) {
-        ide.$scope.project.publicAccesLevel = data.newAccessLevel
+        ide.$scope.project.publicAccessLevel = data.newAccessLevel
         return $scope.$digest()
       }
     })

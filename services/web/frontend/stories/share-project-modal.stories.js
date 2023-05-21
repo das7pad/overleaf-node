@@ -12,7 +12,7 @@ export const LinkSharingOff = args => {
   useScope({
     project: {
       ...args.project,
-      publicAccesLevel: 'private',
+      publicAccessLevel: 'private',
     },
   })
 
@@ -25,7 +25,7 @@ export const LinkSharingOn = args => {
   useScope({
     project: {
       ...args.project,
-      publicAccesLevel: 'tokenBased',
+      publicAccessLevel: 'tokenBased',
     },
   })
 
@@ -38,7 +38,7 @@ export const LinkSharingLoading = args => {
   useScope({
     project: {
       ...args.project,
-      publicAccesLevel: 'tokenBased',
+      publicAccessLevel: 'tokenBased',
       tokens: undefined,
     },
   })
@@ -50,7 +50,7 @@ export const NonProjectOwnerLinkSharingOff = args => {
   useScope({
     project: {
       ...args.project,
-      publicAccesLevel: 'private',
+      publicAccessLevel: 'private',
     },
   })
 
@@ -61,7 +61,7 @@ export const NonProjectOwnerLinkSharingOn = args => {
   useScope({
     project: {
       ...args.project,
-      publicAccesLevel: 'tokenBased',
+      publicAccessLevel: 'tokenBased',
     },
   })
 
@@ -84,7 +84,7 @@ export const RestrictedTokenMember = args => {
   useScope({
     project: {
       ...args.project,
-      publicAccesLevel: 'tokenBased',
+      publicAccessLevel: 'tokenBased',
     },
   })
 
@@ -97,7 +97,7 @@ export const LegacyLinkSharingReadAndWrite = args => {
   useScope({
     project: {
       ...args.project,
-      publicAccesLevel: 'readAndWrite',
+      publicAccessLevel: 'readAndWrite',
     },
   })
 
@@ -110,7 +110,7 @@ export const LegacyLinkSharingReadOnly = args => {
   useScope({
     project: {
       ...args.project,
-      publicAccesLevel: 'readOnly',
+      publicAccessLevel: 'readOnly',
     },
   })
 

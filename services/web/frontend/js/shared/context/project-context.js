@@ -82,7 +82,7 @@ export function ProjectProvider({ children }) {
     members,
     invites,
     features,
-    publicAccesLevel: publicAccessLevel,
+    publicAccessLevel,
     tokens,
     owner,
     imageName,

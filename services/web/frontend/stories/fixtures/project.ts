@@ -6,7 +6,7 @@ export const project: Project = {
   features: {
     collaborators: -1, // unlimited
   },
-  publicAccesLevel: 'private',
+  publicAccessLevel: 'private',
   tokens: {
     readOnly: 'ro-token',
     readAndWrite: 'rw-token',

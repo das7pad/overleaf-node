@@ -143,7 +143,7 @@ describe('<ShareProjectModal/>', function () {
 
   it('handles access level "private"', async function () {
     renderWithEditorContext(<ShareProjectModal {...modalProps} />, {
-      scope: { project: { ...project, publicAccesLevel: 'private' } },
+      scope: { project: { ...project, publicAccessLevel: 'private' } },
     })
 
     await screen.findByText(
@@ -159,7 +159,7 @@ describe('<ShareProjectModal/>', function () {
 
   it('handles access level "tokenBased"', async function () {
     renderWithEditorContext(<ShareProjectModal {...modalProps} />, {
-      scope: { project: { ...project, publicAccesLevel: 'tokenBased' } },
+      scope: { project: { ...project, publicAccessLevel: 'tokenBased' } },
     })
 
     await screen.findByText('Link sharing is on')
@@ -173,7 +173,7 @@ describe('<ShareProjectModal/>', function () {
 
   it('handles legacy access level "readAndWrite"', async function () {
     renderWithEditorContext(<ShareProjectModal {...modalProps} />, {
-      scope: { project: { ...project, publicAccesLevel: 'readAndWrite' } },
+      scope: { project: { ...project, publicAccessLevel: 'readAndWrite' } },
     })
 
     await screen.findByText(
@@ -184,7 +184,7 @@ describe('<ShareProjectModal/>', function () {
 
   it('handles legacy access level "readOnly"', async function () {
     renderWithEditorContext(<ShareProjectModal {...modalProps} />, {
-      scope: { project: { ...project, publicAccesLevel: 'readOnly' } },
+      scope: { project: { ...project, publicAccessLevel: 'readOnly' } },
     })
 
     await screen.findByText(
@@ -209,7 +209,7 @@ describe('<ShareProjectModal/>', function () {
           project: {
             ...project,
             invites,
-            publicAccesLevel: 'tokenBased',
+            publicAccessLevel: 'tokenBased',
           },
         }}
       >
@@ -227,7 +227,7 @@ describe('<ShareProjectModal/>', function () {
           project: {
             ...project,
             invites,
-            publicAccesLevel: 'tokenBased',
+            publicAccessLevel: 'tokenBased',
           },
         }}
         user={{
@@ -256,7 +256,7 @@ describe('<ShareProjectModal/>', function () {
           project: {
             ...project,
             invites,
-            publicAccesLevel: 'private',
+            publicAccessLevel: 'private',
           },
         }}
         user={{
@@ -282,7 +282,7 @@ describe('<ShareProjectModal/>', function () {
   it('only shows read-only token link to restricted token members', async function () {
     renderWithEditorContext(<ShareProjectModal {...modalProps} />, {
       isRestrictedTokenMember: true,
-      scope: { project: { ...project, publicAccesLevel: 'tokenBased' } },
+      scope: { project: { ...project, publicAccessLevel: 'tokenBased' } },
     })
 
     // no buttons
@@ -330,7 +330,7 @@ describe('<ShareProjectModal/>', function () {
           ...project,
           members,
           invites,
-          publicAccesLevel: 'tokenBased',
+          publicAccessLevel: 'tokenBased',
         },
       },
     })
@@ -374,7 +374,7 @@ describe('<ShareProjectModal/>', function () {
         project: {
           ...project,
           invites,
-          publicAccesLevel: 'tokenBased',
+          publicAccessLevel: 'tokenBased',
         },
       },
     })
@@ -411,7 +411,7 @@ describe('<ShareProjectModal/>', function () {
         project: {
           ...project,
           invites,
-          publicAccesLevel: 'tokenBased',
+          publicAccessLevel: 'tokenBased',
         },
       },
     })
@@ -444,7 +444,7 @@ describe('<ShareProjectModal/>', function () {
         project: {
           ...project,
           members,
-          publicAccesLevel: 'tokenBased',
+          publicAccessLevel: 'tokenBased',
         },
       },
     })
@@ -489,7 +489,7 @@ describe('<ShareProjectModal/>', function () {
         project: {
           ...project,
           members,
-          publicAccesLevel: 'tokenBased',
+          publicAccessLevel: 'tokenBased',
         },
       },
     })
@@ -533,7 +533,7 @@ describe('<ShareProjectModal/>', function () {
         project: {
           ...project,
           members,
-          publicAccesLevel: 'tokenBased',
+          publicAccessLevel: 'tokenBased',
         },
       },
     })
@@ -571,7 +571,7 @@ describe('<ShareProjectModal/>', function () {
       scope: {
         project: {
           ...project,
-          publicAccesLevel: 'tokenBased',
+          publicAccessLevel: 'tokenBased',
         },
       },
     })
@@ -658,7 +658,7 @@ describe('<ShareProjectModal/>', function () {
       scope: {
         project: {
           ...project,
-          publicAccesLevel: 'tokenBased',
+          publicAccessLevel: 'tokenBased',
           features: {
             collaborators: 0,
             compileGroup: 'standard',
@@ -683,7 +683,7 @@ describe('<ShareProjectModal/>', function () {
       scope: {
         project: {
           ...project,
-          publicAccesLevel: 'tokenBased',
+          publicAccessLevel: 'tokenBased',
         },
       },
     })
@@ -762,7 +762,7 @@ describe('<ShareProjectModal/>', function () {
     }
 
     renderWithEditorContext(<ShareProjectModal {...modalProps} />, {
-      scope: scopeWithProject({ ...project, publicAccesLevel: 'private' }),
+      scope: scopeWithProject({ ...project, publicAccessLevel: 'private' }),
     })
 
     await screen.findByText(
@@ -782,7 +782,7 @@ describe('<ShareProjectModal/>', function () {
 
     // NOTE: updating the scoped project data manually,
     // as the project data is usually updated via the websocket connection
-    watchCallbacks.project({ ...project, publicAccesLevel: 'tokenBased' })
+    watchCallbacks.project({ ...project, publicAccessLevel: 'tokenBased' })
 
     await screen.findByText('Link sharing is on')
     const disableButton = await screen.findByRole('button', {
@@ -798,7 +798,7 @@ describe('<ShareProjectModal/>', function () {
 
     // NOTE: updating the scoped project data manually,
     // as the project data is usually updated via the websocket connection
-    watchCallbacks.project({ ...project, publicAccesLevel: 'private' })
+    watchCallbacks.project({ ...project, publicAccessLevel: 'private' })
 
     await screen.findByText(
       'Link sharing is off, only invited users can view this project.'
@@ -872,7 +872,7 @@ describe('<ShareProjectModal/>', function () {
       scope: {
         project: {
           ...project,
-          publicAccesLevel: 'tokenBased',
+          publicAccessLevel: 'tokenBased',
           features: {
             collaborators: 1,
           },
@@ -900,7 +900,7 @@ describe('<ShareProjectModal/>', function () {
       scope: {
         project: {
           ...project,
-          publicAccesLevel: 'tokenBased',
+          publicAccessLevel: 'tokenBased',
           features: {
             collaborators: 0,
           },

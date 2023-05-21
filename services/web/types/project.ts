@@ -20,7 +20,7 @@ export type Project = {
   _id: string
   name: string
   features: Record<string, unknown>
-  publicAccesLevel?: string
+  publicAccessLevel?: string
   tokens: Record<string, unknown>
   owner: MongoUser
   members: ProjectMember[]
