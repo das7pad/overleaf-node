@@ -9,7 +9,7 @@ const fs = require('fs')
 const Path = require('path')
 const less = require('less')
 
-async function renderLess(entrypointPath, options) {
+async function renderLess(entrypointPath) {
   const dir = Path.dirname(entrypointPath)
   const blob = await fs.promises.readFile(entrypointPath, 'utf-8')
 
@@ -20,15 +20,13 @@ async function renderLess(entrypointPath, options) {
     // Resolve URL imports per file and emit relative paths from entrypoint.
     rewriteUrls: 'all',
 
-    // Add custom options from the config.
-    ...options,
+    // Resolve all the math expressions
+    math: 'always',
 
     // Search imports in here.
     paths: [dir],
 
-    // NOTE: Source map support for css is not there yet in esbuild.
-    // REF: https://github.com/evanw/esbuild/issues/519
-    // sourceMap: { sourceMapFileInline: true }
+    sourceMap: { sourceMapFileInline: true },
   }
 
   let result
@@ -77,9 +75,5 @@ function convertLessError(error) {
 }
 
 ;(async function main() {
-  const options = JSON.parse(process.argv.pop())
-  const entrypointPath = process.argv.pop()
-
-  const out = await renderLess(entrypointPath, options)
-  console.log(JSON.stringify(out))
+  console.log(JSON.stringify(await renderLess(process.argv.pop())))
 })()

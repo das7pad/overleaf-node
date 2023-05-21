@@ -101,12 +101,7 @@ const CONFIGS = [
     DESCRIPTION: 'stylesheets',
 
     metafile: true,
-    plugins: [
-      lessLoader({
-        // Resolve all the math expressions
-        math: 'always',
-      }),
-    ],
+    plugins: [lessLoader()],
     entryPoints: [
       Path.join(FRONTEND_PATH, 'stylesheets/style.less'),
       Path.join(FRONTEND_PATH, 'stylesheets/light-style.less'),
