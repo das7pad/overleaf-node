@@ -22,6 +22,7 @@ async function renderLessInSubprocess(path) {
     [RENDERER_PATH, path]
   )
   const result = JSON.parse(stdOut)
+  result.loader = 'css'
   if (stdErr) {
     const warnings = stdErr
       .split('\n')

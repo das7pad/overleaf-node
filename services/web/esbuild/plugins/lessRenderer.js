@@ -50,7 +50,6 @@ async function renderLess(entrypointPath) {
 
   return {
     contents: bundleContents,
-    loader: 'css',
     resolveDir: dir,
     warnings: [],
     watchFiles,
