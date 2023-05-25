@@ -3,13 +3,23 @@ function formatMessage(prefix, message) {
   const { location } = message
   console.log('> %s:%d:%d', location.file, location.line, location.column)
   console.log('   %s | %s', location.line, location.lineText)
-  const marker = location.length === 0 ? '^' : '~'.repeat(location.length)
+  const marker = location.length < 2 ? '^' : '~'.repeat(location.length)
+  const bar = location.suggestion ? '|' : '╵'
   console.log(
-    '   %s ╵ %s%s',
+    '   %s %s %s%s',
     ' '.repeat(location.line.toString().length),
+    bar,
     ' '.repeat(location.column),
     marker
   )
+  if (location.suggestion) {
+    console.log(
+      '   %s ╵ %s%s',
+      ' '.repeat(location.line.toString().length),
+      ' '.repeat(location.column),
+      location.suggestion
+    )
+  }
   console.groupEnd()
 }
 
