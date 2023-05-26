@@ -2,7 +2,6 @@ const Path = require('path')
 const esbuild = require('esbuild')
 const valLoader = require('./plugins/valLoader')
 const { MAIN_BUNDLES_CONFIG, inflateConfig } = require('./configs')
-const BROWSER_TARGETS = require('./getBrowserTargets')
 
 const ROOT = Path.dirname(__dirname)
 
@@ -31,10 +30,6 @@ async function buildTestBundle(entrypoint, platform, target) {
   return Path.join(OUTPUT_PATH, Path.basename(entrypoint))
 }
 
-async function buildTestBundleForBrowser(entrypoint) {
-  return buildTestBundle(entrypoint, 'browser', BROWSER_TARGETS)
-}
-
 async function buildTestBundleForNode(entrypoint) {
   // process.version is v prefixed -- e.g. v14.16.0
   const nodeVersion = process.version.slice(1)
@@ -42,6 +37,5 @@ async function buildTestBundleForNode(entrypoint) {
 }
 
 module.exports = {
-  buildTestBundleForBrowser,
   buildTestBundleForNode,
 }
