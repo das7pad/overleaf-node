@@ -28,11 +28,10 @@ const PATTERNS = []
       'fonts/HTML-CSS/TeX/woff/',
       'jax/output/HTML-CSS/autoload/',
       'jax/output/HTML-CSS/fonts/TeX/',
-    ].map(from => {
+    ].map(path => {
       return {
-        context: 'mathjax',
-        from,
-        to: `${VENDOR_PATH}/mathjax-2-7-9`,
+        from: `mathjax/${path}`,
+        to: `${VENDOR_PATH}/mathjax-2-7-9/${path}`,
       }
     })
   )
@@ -58,11 +57,7 @@ const PATTERNS = []
       }
     })
   )
-  .map(({ from, to, context }) => {
-    if (context) {
-      to = Path.join(to, from)
-      from = Path.join(context, from)
-    }
+  .map(({ from, to }) => {
     if (!from.startsWith('/')) {
       const pkg = Path.dirname(from)
       from = Path.join(
