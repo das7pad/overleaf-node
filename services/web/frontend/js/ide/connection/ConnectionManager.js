@@ -184,13 +184,13 @@ The editor will refresh automatically in ${delay} seconds.\
   }
 
   reconnectImmediately() {
-    this.reconnectGracefullyUntil = null
     this.disconnect()
     this.tryReconnect()
   }
 
   disconnect() {
     sl_console.log('[socket.io] disconnecting client')
+    this.reconnectGracefullyUntil = null
     this.ide.socket.disconnect()
   }
 
@@ -285,11 +285,16 @@ The editor will refresh automatically in ${delay} seconds.\
       this.reconnectGracefullyUntil =
         performance.now() + MAX_RECONNECT_GRACEFULLY_INTERVAL_MS
     }
-    if (this.userIsInactiveSince(RECONNECT_GRACEFULLY_RETRY_INTERVAL_MS)) {
-      sl_console.log('[reconnectGracefully] inactive for last 5s, reconnecting')
-      this.reconnectImmediately()
-    } else if (this.reconnectGracefullyUntil < performance.now()) {
+    if (this.reconnectGracefullyUntil < performance.now()) {
       sl_console.log('[reconnectGracefully] graceful period expired, forcing')
+      this.reconnectImmediately()
+    } else if (this.userIsInactiveSince(MAX_RECONNECT_GRACEFULLY_INTERVAL_MS)) {
+      sl_console.log('[reconnectGracefully] inactive, lazy reconnecting')
+      this.disconnect()
+    } else if (
+      this.userIsInactiveSince(RECONNECT_GRACEFULLY_RETRY_INTERVAL_MS)
+    ) {
+      sl_console.log('[reconnectGracefully] inactive for last 5s, reconnecting')
       this.reconnectImmediately()
     } else {
       sl_console.log('[reconnectGracefully] user is active, try again in 5s')
