@@ -575,19 +575,13 @@ export default Document = (function () {
       this.ide.pushEvent('leaveDoc', {
         doc_id: this.doc_id,
       })
-      sl_console.log('[_leaveDoc] Sending leaveDoc request')
-      this.ide.socket.rpc({ action: 'leaveDoc', docId: this.doc_id }).then(
-        () => {
-          this.joined = false
-          for (const callback of Array.from(this._leaveCallbacks || [])) {
-            sl_console.log('[_leaveDoc] Calling buffered callback', callback)
-            callback()
-          }
-          delete this._leaveCallbacks
-          callback()
-        },
-        error => callback(error)
-      )
+      this.joined = false
+      for (const callback of Array.from(this._leaveCallbacks || [])) {
+        sl_console.log('[_leaveDoc] Calling buffered callback', callback)
+        callback()
+      }
+      delete this._leaveCallbacks
+      callback()
     }
 
     _cleanUp() {
