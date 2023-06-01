@@ -43,7 +43,7 @@ export default class SocketIoShim {
     this.on('project:membership:changed', () => {
       clearProjectJWT()
     })
-    this.on('project:tokens:changed', () => {
+    this.on('project:publicAccessLevel:changed', () => {
       clearProjectJWT()
     })
   }

@@ -3,7 +3,11 @@ import { react2angular } from 'react2angular'
 
 import ShareProjectModal from '../components/share-project-modal'
 import { rootContext } from '../../../shared/context/root-context'
-import { listProjectInvites, listProjectMembers } from '../utils/api'
+import {
+  getAccessTokens,
+  listProjectInvites,
+  listProjectMembers,
+} from '../utils/api'
 import getMeta from '../../../utils/meta'
 import { captureException } from '../../../infrastructure/error-reporter'
 
@@ -24,6 +28,31 @@ export default App.controller(
       $scope.$applyAsync(() => {
         $scope.show = false
       })
+    }
+
+    let pendingGetAccessTokens
+    function updateTokensOnce() {
+      if ($scope.project.publicAccessLevel !== 'tokenBased') return
+      if ($scope.project.tokens.readOnly) return
+      if ($scope.project.owner._id !== getMeta('ol-user_id')) {
+        const readOnly = getMeta('ol-anonymousAccessToken')
+        $scope.$apply(() => {
+          $scope.project.tokens = { readOnly }
+        })
+        return
+      }
+      if (pendingGetAccessTokens) return pendingGetAccessTokens
+      pendingGetAccessTokens = getAccessTokens(getMeta('ol-project_id'))
+        .catch(err => {
+          captureException(err)
+          pendingGetAccessTokens = undefined
+          return { tokens: {} }
+        })
+        .then(({ tokens }) => {
+          $scope.$apply(() => {
+            $scope.project.tokens = tokens
+          })
+        })
     }
 
     let pendingListProjectMembers
@@ -70,6 +99,7 @@ export default App.controller(
     $scope.openShareProjectModal = () => {
       eventTracking.sendMBOnce('ide-open-share-modal-once')
       Promise.all([
+        updateTokensOnce(),
         updateProjectMembersOnce(),
         updateProjectInvitesOnce(),
       ]).finally(() => {
@@ -78,16 +108,6 @@ export default App.controller(
         })
       })
     }
-
-    /* tokens */
-
-    ide.socket.on('project:tokens:changed', data => {
-      if (data.tokens != null) {
-        $scope.$applyAsync(() => {
-          $scope.project.tokens = data.tokens
-        })
-      }
-    })
 
     ide.socket.on('project:membership:changed', data => {
       if (data.members) {

@@ -54,3 +54,7 @@ export function listProjectMembers(projectId) {
 export function listProjectInvites(projectId) {
   return projectJWTGetJSON(`/project/${projectId}/invites`)
 }
+
+export function getAccessTokens(projectId) {
+  return projectJWTGetJSON(`/project/${projectId}/accessTokens`)
+}

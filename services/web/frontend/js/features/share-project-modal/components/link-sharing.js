@@ -13,11 +13,13 @@ import { useUserContext } from '../../../shared/context/user-context'
 import StartFreeTrialButton from '../../../shared/components/start-free-trial-button'
 import { useSplitTestContext } from '../../../shared/context/split-test-context'
 import getMeta from '../../../utils/meta'
+import useScopeValue from '../../../shared/hooks/use-scope-value'
 
 export default function LinkSharing({ canAddCollaborators }) {
   const [inflight, setInflight] = useState(false)
 
   const { monitorRequest } = useShareProjectContext()
+  const [, updateTokens] = useScopeValue('project.tokens')
 
   const { _id: projectId, publicAccessLevel } = useProjectContext()
 
@@ -28,17 +30,14 @@ export default function LinkSharing({ canAddCollaborators }) {
       monitorRequest(() =>
         setProjectAccessLevel(projectId, newPublicAccessLevel)
       )
-        .then(() => {
-          // NOTE: not calling `updateProject` here as it receives data via
-          // project:publicAccessLevel:changed and project:tokens:changed
-          // over the websocket connection
-          // TODO: eventTracking.sendMB('project-make-token-based') when newPublicAccessLevel is 'tokenBased'
+        .then(({ tokens }) => {
+          updateTokens(tokens)
         })
         .finally(() => {
           setInflight(false)
         })
     },
-    [monitorRequest, projectId]
+    [monitorRequest, projectId, updateTokens]
   )
 
   switch (publicAccessLevel) {
