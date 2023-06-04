@@ -25,6 +25,7 @@ export default BinaryFilesManager = class BinaryFilesManager {
   }
 
   openFile(file) {
+    if (this.$scope.openFile?.id === file.id) return
     if (this.$scope.ui.view === 'editor') {
       // store position before switching to binary view
       this.$scope.$broadcast('store-doc-position')
