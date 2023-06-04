@@ -15,6 +15,7 @@
  */
 import ColorManager from '../colors/ColorManager'
 import 'crypto-js/md5'
+import t from 'react-i18next/t'
 
 let OnlineUsersManager
 
@@ -33,32 +34,22 @@ export default OnlineUsersManager = (function () {
       this.$scope.onlineUsersCount = 0
 
       this.$scope.$on('cursor:editor:update', (event, position) => {
-        return this.sendCursorPositionUpdate(position)
+        this.sendCursorPositionUpdate(position, $scope.editor.open_doc_id)
       })
 
       this.storeConnectedUsers = connectedUsers => {
         this.$scope.onlineUsers = {}
-        this.addConnectedUsers(connectedUsers)
+        this.updateConnectedUsers(connectedUsers)
       }
 
-      this.addConnectedUsers = connectedUsers => {
+      this.updateConnectedUsers = connectedUsers => {
         for (const user of connectedUsers) {
-          if (user.client_id === this.ide.socket.publicId) {
-            // Don't store myself
-            continue
-          }
-
-          // Store data in the same format returned by clientTracking.clientUpdated
-          this.$scope.onlineUsers[user.client_id] = {
-            id: user.client_id,
-            user_id: user.user_id,
-            email: user.email,
-            name: `${user.first_name} ${user.last_name}`,
-            doc_id:
-              user.cursorData != null ? user.cursorData.doc_id : undefined,
-            row: user.cursorData != null ? user.cursorData.row : undefined,
-            column:
-              user.cursorData != null ? user.cursorData.column : undefined,
+          $scope.onlineUsers[user.i] = {
+            id: user.i,
+            name: user.n || $scope.onlineUsers[user.i]?.name,
+            entityId: user.e,
+            row: user.r || 0,
+            column: user.c || 0,
           }
         }
         this.refreshOnlineUsers()
@@ -91,30 +82,25 @@ export default OnlineUsersManager = (function () {
       })
 
       this.ide.socket.on('clientTracking.clientConnected', client => {
-        if (!this.$scope.onlineUsers[client.client_id]) {
-          this.addConnectedUsers([client])
+        if (!this.$scope.onlineUsers[client.i]) {
+          this.updateConnectedUsers([client])
         }
       })
 
       this.ide.socket.on('clientTracking.clientUpdated', client => {
-        if (client.id !== this.ide.socket.publicId) {
-          // Check it's not me!
-          return this.$scope.$apply(() => {
-            if (!this.$scope.onlineUsers[client.id]) {
-              // cache miss, load full details
-              return this.getConnectedUsers()
-            }
-            // incremental update
-            Object.assign(this.$scope.onlineUsers[client.id], client)
-            return this.refreshOnlineUsers()
-          })
-        }
+        this.$scope.$apply(() => {
+          if (!this.$scope.onlineUsers[client.i]) {
+            // cache miss, load full details
+            return this.getConnectedUsers()
+          }
+          this.updateConnectedUsers([client])
+        })
       })
 
-      this.ide.socket.on('clientTracking.clientDisconnected', client_id => {
-        return this.$scope.$apply(() => {
-          delete this.$scope.onlineUsers[client_id]
-          return this.refreshOnlineUsers()
+      this.ide.socket.on('clientTracking.clientDisconnected', clientId => {
+        this.$scope.$apply(() => {
+          delete this.$scope.onlineUsers[clientId]
+          this.refreshOnlineUsers()
         })
       })
 
@@ -126,29 +112,26 @@ export default OnlineUsersManager = (function () {
     refreshOnlineUsers() {
       this.$scope.onlineUsersArray = []
 
-      for (const client_id in this.$scope.onlineUsers) {
-        const user = this.$scope.onlineUsers[client_id]
-        if (user.doc_id != null) {
-          user.doc = this.ide.fileTreeManager.findEntityById(user.doc_id)
-        }
-
-        // If the user's name is empty use their email as display name
-        // Otherwise they're probably an anonymous user
-        if (user.name === null || user.name.trim().length === 0) {
-          if (user.email) {
-            user.name = user.email.trim()
-          } else if (
-            user.user_id === 'anonymous-user' ||
-            user.user_id === '00000000-0000-0000-0000-000000000000'
-          ) {
-            user.name = 'Anonymous'
+      for (const clientId in this.$scope.onlineUsers) {
+        const user = this.$scope.onlineUsers[clientId]
+        if (user.entityId === '00000000-0000-0000-0000-000000000000') {
+          // no doc open
+          user.doc = undefined
+        } else if (user.doc?.id === user.entityId) {
+          // already up-to-date
+        } else {
+          try {
+            user.doc = this.ide.fileTreeManager.findEntityById(user.entityId)
+          } catch (e) {
+            // stale position referencing deleted doc
+            user.doc = undefined
           }
         }
 
-        user.initial = user.name != null ? user.name[0] : undefined
-        if (!user.initial || user.initial === ' ') {
-          user.initial = '?'
+        if (!user.name) {
+          user.name = t('anonymous')
         }
+        user.initial = user.name[0]
 
         this.$scope.onlineUsersArray.push(user)
       }
@@ -157,16 +140,16 @@ export default OnlineUsersManager = (function () {
       this.$scope.onlineUsersCount = this.$scope.onlineUsersArray.length
 
       this.$scope.onlineUserCursorHighlights = {}
-      for (const client_id in this.$scope.onlineUsers) {
-        const client = this.$scope.onlineUsers[client_id]
-        const { doc_id } = client
-        if (doc_id == null || client.row == null || client.column == null) {
+      for (const clientId in this.$scope.onlineUsers) {
+        const client = this.$scope.onlineUsers[clientId]
+        if (client.doc?.type !== 'doc') {
           continue
         }
-        if (!this.$scope.onlineUserCursorHighlights[doc_id]) {
-          this.$scope.onlineUserCursorHighlights[doc_id] = []
+        const { entityId } = client
+        if (!this.$scope.onlineUserCursorHighlights[entityId]) {
+          this.$scope.onlineUserCursorHighlights[entityId] = []
         }
-        this.$scope.onlineUserCursorHighlights[doc_id].push({
+        this.$scope.onlineUserCursorHighlights[entityId].push({
           label: client.name,
           cursor: {
             row: client.row,
@@ -178,27 +161,27 @@ export default OnlineUsersManager = (function () {
 
       if (this.$scope.onlineUsersArray.length > 0) {
         delete this.cursorUpdateTimeout
-        return (this.cursorUpdateInterval = 500)
+        this.cursorUpdateInterval = 500
       } else {
         delete this.cursorUpdateTimeout
-        return (this.cursorUpdateInterval = 60 * 1000 * 5)
+        this.cursorUpdateInterval = 60 * 1000 * 5
       }
     }
 
     isAlreadySubmittedCursorData(cursorData) {
       return (
         this.submittedCursorData &&
-        cursorData.row === this.submittedCursorData.row &&
-        cursorData.column === this.submittedCursorData.column &&
-        cursorData.doc_id === this.submittedCursorData.doc_id
+        cursorData.r === this.submittedCursorData.r &&
+        cursorData.c === this.submittedCursorData.c &&
+        cursorData.e === this.submittedCursorData.e
       )
     }
 
-    sendCursorPositionUpdate(position) {
+    sendCursorPositionUpdate(position, entityId) {
       let cursorData = {
-        row: position && position.row,
-        column: position && position.column,
-        doc_id: this.$scope.editor.open_doc_id,
+        r: position && position.row,
+        c: position && position.column,
+        e: entityId,
       }
       if (this.isAlreadySubmittedCursorData(cursorData)) {
         // No update to the position in the doc.
@@ -223,12 +206,9 @@ export default OnlineUsersManager = (function () {
           return
         }
         this.submittedCursorData = cursorData
-        const docId = cursorData.doc_id
-        delete cursorData.doc_id
         this.ide.socket
           .rpc({
             action: 'clientTracking.updatePosition',
-            docId,
             body: cursorData,
             async: true,
           })
