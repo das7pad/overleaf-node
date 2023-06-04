@@ -6,7 +6,7 @@ export const UpToThreeConnectedUsers = args => {
 }
 UpToThreeConnectedUsers.args = {
   onlineUsers: ['a', 'c', 'd'].map(c => ({
-    user_id: c,
+    id: c,
     name: `${c}_user name`,
   })),
 }
@@ -16,7 +16,7 @@ export const ManyConnectedUsers = args => {
 }
 ManyConnectedUsers.args = {
   onlineUsers: ['a', 'c', 'd', 'e', 'f'].map(c => ({
-    user_id: c,
+    id: c,
     name: `${c}_user name`,
   })),
 }
@@ -35,7 +35,7 @@ export default {
   },
   args: {
     projectName: 'Overleaf Project',
-    onlineUsers: [{ user_id: 'abc', name: 'overleaf' }],
+    onlineUsers: [{ id: 'abc', name: 'overleaf' }],
     unreadMessageCount: 0,
   },
   decorators: [ScopeDecorator],

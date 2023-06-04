@@ -24,7 +24,7 @@ function OnlineUsersWidget({ onlineUsers, goToUser }) {
           {onlineUsers.map((user, index) => (
             <MenuItem
               as="button"
-              key={`${user.user_id}_${index}`}
+              key={`${user.id}_${index}`}
               eventKey={user}
               onSelect={goToUser}
             >
@@ -39,7 +39,7 @@ function OnlineUsersWidget({ onlineUsers, goToUser }) {
       <div className="online-users">
         {onlineUsers.map((user, index) => (
           <Tooltip
-            key={`${user.user_id}_${index}`}
+            key={`${user.id}_${index}`}
             id="online-user"
             description={user.name}
             overlayProps={{ placement: 'bottom', trigger: ['hover', 'focus'] }}
