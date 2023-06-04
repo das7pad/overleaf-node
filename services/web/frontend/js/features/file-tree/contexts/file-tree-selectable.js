@@ -154,6 +154,18 @@ export function FileTreeSelectableProvider({ onSelect, children }) {
     return () => window.removeEventListener('editor.openDoc', handleOpenDoc)
   }, [fileTreeData])
 
+  useEffect(() => {
+    // listen for `file-view:file-opened` and select that file
+    function handleFileOpened(ev) {
+      const found = findInTree(fileTreeData, ev.detail.id)
+      if (!found) return
+      dispatch({ type: ACTION_TYPES.SELECT, id: found.entity._id })
+    }
+    window.addEventListener('file-view:file-opened', handleFileOpened)
+    return () =>
+      window.removeEventListener('file-view:file-opened', handleFileOpened)
+  }, [fileTreeData])
+
   const select = useCallback(id => {
     dispatch({ type: ACTION_TYPES.SELECT, id })
   }, [])

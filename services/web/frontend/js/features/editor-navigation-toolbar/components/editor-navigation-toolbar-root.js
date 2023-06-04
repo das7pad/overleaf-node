@@ -5,6 +5,7 @@ import { useEditorContext } from '../../../shared/context/editor-context'
 import { useChatContext } from '../../chat/context/chat-context'
 import { useLayoutContext } from '../../../shared/context/layout-context'
 import { useProjectContext } from '../../../shared/context/project-context'
+import { useIdeContext } from '../../../shared/context/ide-context'
 
 const projectContextPropTypes = {
   name: PropTypes.string.isRequired,
@@ -44,6 +45,7 @@ const EditorNavigationToolbarRoot = React.memo(
     openDoc,
     openShareProjectModal,
   }) {
+    const ide = useIdeContext()
     const {
       name: projectName,
       features: { trackChangesVisible },
@@ -97,11 +99,16 @@ const EditorNavigationToolbarRoot = React.memo(
 
     const goToUser = useCallback(
       user => {
-        if (user.doc && typeof user.row === 'number') {
-          openDoc(user.doc, { gotoLine: user.row + 1 })
+        switch (user.doc?.type) {
+          case 'doc':
+            openDoc(user.doc, { gotoLine: user.row + 1 })
+            break
+          case 'file':
+            ide.binaryFilesManager.openFile(user.doc)
+            break
         }
       },
-      [openDoc]
+      [openDoc, ide]
     )
 
     // using {display: 'none'} as 1:1 migration from Angular's ng-hide. Using

@@ -36,6 +36,9 @@ export default OnlineUsersManager = (function () {
       this.$scope.$on('cursor:editor:update', (event, position) => {
         this.sendCursorPositionUpdate(position, $scope.editor.open_doc_id)
       })
+      this.$scope.$watch('openFile', newFile => {
+        if (newFile) this.sendCursorPositionUpdate({}, newFile.id)
+      })
 
       this.storeConnectedUsers = connectedUsers => {
         this.$scope.onlineUsers = {}
@@ -123,7 +126,7 @@ export default OnlineUsersManager = (function () {
           try {
             user.doc = this.ide.fileTreeManager.findEntityById(user.entityId)
           } catch (e) {
-            // stale position referencing deleted doc
+            // stale position referencing deleted doc/file
             user.doc = undefined
           }
         }

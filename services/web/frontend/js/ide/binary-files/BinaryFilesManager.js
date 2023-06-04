@@ -43,8 +43,12 @@ export default BinaryFilesManager = class BinaryFilesManager {
 
         this.$scope.$apply()
 
-        this.$scope.$broadcast('file-view:file-opened')
-        window.dispatchEvent(new Event('file-view:file-opened'))
+        this.$scope.$broadcast('file-view:file-opened', file)
+        window.dispatchEvent(
+          new CustomEvent('file-view:file-opened', {
+            detail: file,
+          })
+        )
       },
       0,
       this

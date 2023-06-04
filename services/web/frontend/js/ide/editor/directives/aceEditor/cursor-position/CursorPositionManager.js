@@ -30,6 +30,10 @@ export default CursorPositionManager = class CursorPositionManager {
 
     this.$scope.$on('changeEditor', this.storePositionAndLine)
 
+    this.$scope.$on('file-tree.reselectDoc', () => {
+      this.emitCursorUpdateEvent()
+    })
+
     this.$scope.$on(
       `${this.$scope.name}:gotoLine`,
       (e, line, column, syncToPdf) => {
