@@ -17,15 +17,16 @@ import ColorManager from '../colors/ColorManager'
 import 'crypto-js/md5'
 import t from 'react-i18next/t'
 
+const SINGLE_USER_INTERVAL = 5 * 60 * 1000
+const MULTI_USER_INTERVAL = 500
+
 let OnlineUsersManager
 
 export default OnlineUsersManager = (function () {
   OnlineUsersManager = class OnlineUsersManager {
-    static initClass() {
-      this.prototype.cursorUpdateInterval = 500
-    }
-
     constructor(ide, $scope) {
+      this.cursorUpdateInterval = MULTI_USER_INTERVAL
+
       this.ide = ide
       this.$scope = $scope
       this.$scope.onlineUsers = {}
@@ -162,12 +163,15 @@ export default OnlineUsersManager = (function () {
         })
       }
 
-      if (this.$scope.onlineUsersArray.length > 0) {
+      const newInterval =
+        this.$scope.onlineUsersArray.length > 0
+          ? MULTI_USER_INTERVAL
+          : SINGLE_USER_INTERVAL
+      if (this.cursorUpdateInterval !== newInterval) {
+        this.cursorUpdateInterval = newInterval
+        clearTimeout(this.cursorUpdateTimeout)
         delete this.cursorUpdateTimeout
-        this.cursorUpdateInterval = 500
-      } else {
-        delete this.cursorUpdateTimeout
-        this.cursorUpdateInterval = 60 * 1000 * 5
+        this.scheduleSubmission()
       }
     }
 
@@ -181,7 +185,7 @@ export default OnlineUsersManager = (function () {
     }
 
     sendCursorPositionUpdate(position, entityId) {
-      let cursorData = {
+      const cursorData = {
         r: position && position.row,
         c: position && position.column,
         e: entityId,
@@ -194,6 +198,10 @@ export default OnlineUsersManager = (function () {
       // Keep track of the latest position.
       this.currentCursorData = cursorData
 
+      this.scheduleSubmission()
+    }
+
+    scheduleSubmission() {
       if (this.cursorUpdateTimeout) {
         // Sending is in progress, it will pick up ^.
         return
@@ -202,7 +210,7 @@ export default OnlineUsersManager = (function () {
         delete this.cursorUpdateTimeout
 
         // Always send the latest position to other clients.
-        cursorData = this.currentCursorData
+        const cursorData = this.currentCursorData
 
         if (this.isAlreadySubmittedCursorData(cursorData)) {
           // They changed back to the old position.
@@ -221,6 +229,5 @@ export default OnlineUsersManager = (function () {
       }, this.cursorUpdateInterval)
     }
   }
-  OnlineUsersManager.initClass()
   return OnlineUsersManager
 })()
