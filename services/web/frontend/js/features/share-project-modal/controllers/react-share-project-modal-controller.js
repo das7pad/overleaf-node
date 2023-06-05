@@ -36,10 +36,12 @@ export default App.controller(
       if ($scope.project.tokens.readOnly) return
       if ($scope.project.owner._id !== getMeta('ol-user_id')) {
         const readOnly = getMeta('ol-anonymousAccessToken')
-        $scope.$apply(() => {
-          $scope.project.tokens = { readOnly }
-        })
-        return
+        if (readOnly || !getMeta('ol-isRestrictedTokenMember')) {
+          $scope.$apply(() => {
+            $scope.project.tokens = { readOnly }
+          })
+          return
+        }
       }
       if (pendingGetAccessTokens) return pendingGetAccessTokens
       pendingGetAccessTokens = getAccessTokens(getMeta('ol-project_id'))
