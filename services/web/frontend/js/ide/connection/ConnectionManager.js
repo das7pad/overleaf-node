@@ -102,7 +102,11 @@ export default class ConnectionManager {
         this.ide.pushEvent('connected')
         this.$scope.$applyAsync(() => {
           this.updateConnectionManagerState('ready')
-          this.$scope.project = project
+          this.$scope.project = Object.assign(project, {
+            // populate fake fields
+            invites: [],
+            members: [],
+          })
           this.$scope.permissionsLevel = privilegeLevel
           this.$scope.connectedUsers = connectedClients
           window.dispatchEvent(

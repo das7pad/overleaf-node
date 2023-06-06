@@ -30,6 +30,21 @@ export default App.controller(
       })
     }
 
+    $scope.$watch('project', () => {
+      pendingGetAccessTokens = undefined
+      pendingListProjectInvites = undefined
+      pendingListProjectMembers = undefined
+      if ($scope.show) {
+        Promise.all([
+          updateTokensOnce(),
+          updateProjectMembersOnce(),
+          updateProjectInvitesOnce(),
+        ]).finally(() => {
+          $scope.$applyAsync(() => {})
+        })
+      }
+    })
+
     let pendingGetAccessTokens
     function updateTokensOnce() {
       if ($scope.project.publicAccessLevel !== 'tokenBased') return
