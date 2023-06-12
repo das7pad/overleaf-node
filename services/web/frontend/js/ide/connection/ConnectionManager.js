@@ -172,9 +172,7 @@ The editor will refresh automatically in ${delay} seconds.\
       setTimeout(() => location.reload(), delay * 1000)
     })
 
-    this.ide.socket.on('reconnectGracefully', () => {
-      this.reconnectGracefully()
-    })
+    this.ide.socket.on('reconnectGracefully', () => this.reconnectGracefully())
 
     this.ide.socket.connect()
     this.updateConnectionManagerState('connecting')
@@ -226,6 +224,7 @@ The editor will refresh automatically in ${delay} seconds.\
   tryReconnect() {
     sl_console.log('[ConnectionManager] tryReconnect')
     clearTimeout(this.reconnectCountdownInterval)
+    this.reconnectGracefullyUntil = null
     this.$scope.connection.reconnectAt = null
     this.$scope.$applyAsync(() => {})
 
@@ -285,10 +284,14 @@ The editor will refresh automatically in ${delay} seconds.\
   }
 
   reconnectGracefully() {
-    if (!this.reconnectGracefullyUntil) {
-      this.reconnectGracefullyUntil =
-        performance.now() + MAX_RECONNECT_GRACEFULLY_INTERVAL_MS
-    }
+    if (this.reconnectGracefullyUntil) return
+    this.reconnectGracefullyUntil =
+      performance.now() + MAX_RECONNECT_GRACEFULLY_INTERVAL_MS
+    this.tryReconnectGracefully()
+  }
+
+  tryReconnectGracefully() {
+    if (!this.ide.socket.connected || !this.reconnectGracefullyUntil) return
     if (this.reconnectGracefullyUntil < performance.now()) {
       sl_console.log('[reconnectGracefully] graceful period expired, forcing')
       this.reconnectImmediately()
@@ -304,7 +307,7 @@ The editor will refresh automatically in ${delay} seconds.\
       sl_console.log('[reconnectGracefully] user is active, try again in 5s')
       this.updateConnectionManagerState('waitingGracefully')
       setTimeout(() => {
-        this.reconnectGracefully()
+        this.tryReconnectGracefully()
       }, RECONNECT_GRACEFULLY_RETRY_INTERVAL_MS)
     }
   }
