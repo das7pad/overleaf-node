@@ -28,6 +28,7 @@ function goTo(path) {
 }
 
 function submit(body) {
+  document.querySelector('[data-ol-loading-container]').hidden = false
   showFakeProgress()
   postJSON('/api/open', { body })
     .then(data => {
