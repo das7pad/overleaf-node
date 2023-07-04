@@ -14,5 +14,5 @@ export function fetchWordCount({
       fileName,
     },
     signal,
-  }).then(texcount => ({ texcount }))
+  }).then(data => ({ texcount: data.texcount || data }))
 }

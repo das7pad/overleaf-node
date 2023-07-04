@@ -17,7 +17,7 @@ describe('<WordCountModal />', function () {
 
   it('renders the translated modal title', async function () {
     fetchMock.post('express:/jwt/web/project/:projectId/wordcount', () => {
-      return { status: 200, body: { messages: 'This is a test' } }
+      return { status: 200, body: { texcount: { messages: 'This is a test' } } }
     })
 
     const handleHide = sinon.stub()
@@ -32,7 +32,7 @@ describe('<WordCountModal />', function () {
 
   it('renders a loading message when loading', async function () {
     fetchMock.post('express:/jwt/web/project/:projectId/wordcount', () => {
-      return { status: 200, body: { messages: 'This is a test' } }
+      return { status: 200, body: { texcount: { messages: 'This is a test' } } }
     })
 
     const handleHide = sinon.stub()
@@ -67,7 +67,9 @@ describe('<WordCountModal />', function () {
       return {
         status: 200,
         body: {
-          messages: 'This is a test',
+          texcount: {
+            messages: 'This is a test',
+          },
         },
       }
     })
@@ -87,10 +89,12 @@ describe('<WordCountModal />', function () {
       return {
         status: 200,
         body: {
-          textWords: 100,
-          mathDisplay: 200,
-          mathInline: 300,
-          headers: 400,
+          texcount: {
+            textWords: 100,
+            mathDisplay: 200,
+            mathInline: 300,
+            headers: 400,
+          },
         },
       }
     })

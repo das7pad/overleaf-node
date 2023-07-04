@@ -194,7 +194,7 @@ function PdfSynctexControls() {
       projectJWTPOSTJSON(`/project/${projectId}/sync/code`, { body, signal })
         .then(data => {
           setShowLogs(false)
-          setHighlights(data)
+          setHighlights(data.pdf || data)
         })
         .catch(error => {
           console.error(error)
@@ -278,7 +278,7 @@ function PdfSynctexControls() {
 
       projectJWTPOSTJSON(`/project/${projectId}/sync/pdf`, { body, signal })
         .then(data => {
-          const [{ file, line }] = data
+          const [{ file, line }] = data.code || data
           goToCodeLine(file, line)
         })
         .catch(error => {
