@@ -127,6 +127,7 @@ FILES_FOR_FORMAT := $(wildcard $(shell \
 	| grep \
 		-e '\.js$$' \
 		-e '\.json$$' \
+		-e '\.css$$' \
 		-e '\.less$$' \
 		-e '\.ts$$' \
 		-e '\.tsx$$' \
@@ -137,6 +138,7 @@ FILES_FOR_LINT := $(shell \
 	| xargs -n1 \
 	| grep -v \
 		-e '\.json$$' \
+		-e '\.css$$' \
 		-e '\.less$$' \
 )
 
@@ -169,9 +171,9 @@ endif
 RUN_FORMAT := $(LINT_RUNNER) prettier
 RUN_FORMAT_FIX := $(LINT_RUNNER_LOCAL) prettier
 format_full:
-	$(RUN_FORMAT) './**/*.{js,json,less,mjs,ts,tsx}' --list-different
+	$(RUN_FORMAT) './**/*.{js,json,css,less,mjs,ts,tsx}' --list-different
 format_fix_full:
-	$(RUN_FORMAT_FIX) './**/*.{js,json,less,mjs,ts,tsx}' --write
+	$(RUN_FORMAT_FIX) './**/*.{js,json,css,less,mjs,ts,tsx}' --write
 
 format_partial:
 ifneq (,$(FILES_FOR_FORMAT))
