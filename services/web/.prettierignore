@@ -2,5 +2,6 @@ frontend/js/vendor
 frontend/stylesheets/components/nvd3.less
 generated/
 .yarn/
+.pnp.data.json
 public/js
 public/vendor
