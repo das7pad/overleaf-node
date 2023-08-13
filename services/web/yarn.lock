@@ -679,7 +679,7 @@ __metadata:
     "@types/express": ^4.17.13
     "@types/lodash": ^4.14.191
     "@types/mocha": ^9.1.0
-    "@types/node": ^18.17.3
+    "@types/node": ^18.17.5
     "@types/prop-types": ^15.7.5
     "@types/react": ^17.0.40
     "@types/react-bootstrap": ^0.32.29
@@ -1093,10 +1093,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/node@npm:^18.17.3":
-  version: 18.17.3
-  resolution: "@types/node@npm:18.17.3"
-  checksum: 884fb68936b2b0ff90863fcf80610dd2f3d9fe1947897248b0138df05fe41ee6ce62941b37b565e3b3fd77601cd3977a64de858654c6ab9064413b171740d6ba
+"@types/node@npm:^18.17.5":
+  version: 18.17.5
+  resolution: "@types/node@npm:18.17.5"
+  checksum: b8c658a99234b99425243c324b641ed7b9ceb6bee6b06421fdc9bb7c58f9a5552e353225cc549e6982462ac384abe1985022ed76e2e4728797f59b21f659ca2b
   languageName: node
   linkType: hard
 
