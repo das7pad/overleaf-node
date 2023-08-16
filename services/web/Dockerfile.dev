@@ -2,3 +2,4 @@ ARG IMAGE_CACHE_CONTENT_SHA
 FROM $IMAGE_CACHE_CONTENT_SHA
 
 COPY . .
+RUN apt-get update && apt-get install -y time

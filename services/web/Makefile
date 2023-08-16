@@ -297,9 +297,10 @@ output/public.tar.gz: output/
 		--rm \
 		--user root \
 		--volume $(PWD)/output:/overleaf/services/web/output \
-		--entrypoint make \
+		--entrypoint /usr/bin/time \
 		$(IMAGE_CI)-dev \
-		dist
+		--verbose \
+		make dist
 
 clean/public.tar.gz:
 	rm -f output/public.tar.gz output/public.tar.gz.checksum.txt
