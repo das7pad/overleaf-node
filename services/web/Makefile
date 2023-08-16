@@ -29,11 +29,12 @@ DOCKER_COMPOSE := docker-compose $(DOCKER_COMPOSE_FLAGS)
 
 export DOCKER_REGISTRY ?= docker.io
 export IMAGE_NODE ?= $(DOCKER_REGISTRY)/node:18.17.1
-export IMAGE_PROJECT ?= $(DOCKER_REGISTRY)/overleaf/web
+export IMAGE_PROJECT ?= $(DOCKER_REGISTRY)/overleaf/content
+export IMAGE_CMD ?= $(DOCKER_REGISTRY)/overleaf/cmd:assets-linear-write-40
 
 CACHE_CONTENT_SHA := $(shell \
 	( \
-		echo $(IMAGE_NODE) && \
+		echo $(IMAGE_NODE) $(IMAGE_CMD) && \
 		$(TAR_CREATE_REPRODUCIBLE) \
 			docker_cleanup.sh Dockerfile.cache Dockerfile.yarn \
 			package.json yarn.lock .yarnrc.yml \
@@ -190,7 +191,6 @@ test: test_frontend
 test_frontend:
 	$(FRONTEND_DOCKER_COMPOSE) run --rm test_frontend
 
-dist: esbuild_build
 esbuild_build:
 	node esbuild.js build
 
@@ -200,19 +200,16 @@ esbuild_watch:
 esbuild_serve:
 	node esbuild.js serve
 
-dist: populatePublicVendor
 populatePublicVendor:
 	node populatePublicVendor.js
 
 dist: output/
-	cp LICENSE public/LICENSE
-	bash compress.sh
-	$(TAR_CREATE_REPRODUCIBLE) -C public . \
-	| gzip -6 \
-	> output/public.tar.gz
-	sha256sum output/public.tar.gz \
-	| cut -d' ' -f1 \
-	> output/public.tar.gz.checksum.txt
+	frontend-build \
+		--dst=$(PWD)/output/public.tar.gz \
+		--pre-compress=2 \
+		--src=$(PWD) \
+		--watch=false \
+
 	$(TOUCH_REPRODUCIBLE) output/public.tar.gz*
 
 clean_ci_stage: clean_output
@@ -248,6 +245,7 @@ build_yarn:
 build_and_publish_cache: build_yarn
 	docker build \
 		--force-rm=true \
+		--build-arg IMAGE_CMD=$(IMAGE_CMD) \
 		--build-arg IMAGE_YARN=$(IMAGE_YARN) \
 		--tag $(IMAGE_CACHE_CONTENT_SHA) \
 		--file Dockerfile.cache \
