@@ -23,6 +23,25 @@ function formatMessage(prefix, message) {
   console.groupEnd()
 }
 
+function basename(p = '') {
+  return p.split('/').pop()
+}
+
+function replaceStylesheet(manifest) {
+  const oldLink = document.getElementById('main-stylesheet')
+  const oldHref = oldLink.getAttribute('href')
+  const src = basename(oldHref).startsWith('light-style-')
+    ? 'frontend/stylesheets/light-style.less'
+    : 'frontend/stylesheets/style.less'
+  const newHref =
+    oldHref.slice(0, -basename(oldHref).length) + basename(manifest.assets[src])
+  const newLink = oldLink.cloneNode()
+  newLink.setAttribute('href', newHref)
+  newLink.addEventListener('load', () => document.head.removeChild(oldLink))
+  newLink.addEventListener('error', () => document.head.removeChild(newLink))
+  document.head.appendChild(newLink)
+}
+
 const clientEpoch = Date.now()
 
 function onEpoch({ data }) {
@@ -33,7 +52,8 @@ function onEpoch({ data }) {
 }
 
 function onRebuild({ data }) {
-  const { name, errors, warnings } = JSON.parse(data)
+  const { name, errors, warnings, manifest } = JSON.parse(data)
+  if (!name) return // initial manifest
 
   if (errors.length > 0) {
     console.group('esbuild rebuild failed:', name)
@@ -52,7 +72,11 @@ function onRebuild({ data }) {
       }
       console.groupEnd()
     }
-    window.location.reload()
+    if (name === 'stylesheet bundles' && manifest) {
+      replaceStylesheet(manifest)
+    } else {
+      window.location.reload()
+    }
   }
 }
 
