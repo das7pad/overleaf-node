@@ -5,7 +5,6 @@ const lessLoader = require('./plugins/lessLoader')
 
 const ROOT = Path.dirname(__dirname)
 const FRONTEND_PATH = Path.join(ROOT, 'frontend')
-const GENERATED_PATH = Path.join(ROOT, 'generated')
 const MODULES_PATH = Path.join(ROOT, 'modules')
 const PUBLIC_PATH = Path.join(ROOT, 'public')
 
@@ -86,15 +85,6 @@ const CONFIGS = [
     outbase: Path.join(FRONTEND_PATH, 'js'),
     outdir: Path.join(PUBLIC_PATH, 'js'),
     tsconfig: Path.join(ROOT, 'esbuild', 'tsconfig-no-strict.json'),
-  },
-
-  {
-    DESCRIPTION: 'translations bundles',
-
-    metafile: true,
-    entryPoints: require('glob').sync(Path.join(GENERATED_PATH, 'lng/*.js')),
-    outbase: Path.join(GENERATED_PATH, 'lng'),
-    outdir: Path.join(PUBLIC_PATH, 'js/t'),
   },
 
   {

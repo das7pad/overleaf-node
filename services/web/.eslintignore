@@ -1,5 +1,4 @@
 frontend/js/vendor
-generated/
 .yarn/
 package-lock.json
 public/js

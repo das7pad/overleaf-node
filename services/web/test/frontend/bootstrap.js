@@ -4,8 +4,6 @@ const chai = require('chai')
 chai.use(require('sinon-chai'))
 chai.use(require('chai-as-promised'))
 
-require('../../build/translations/generator').generateModuleInMemory('en')
-
 // Mock global settings
 function insertMeta(name, content) {
   const meta = document.createElement('meta')

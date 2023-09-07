@@ -190,17 +190,6 @@ test: test_frontend
 test_frontend:
 	$(FRONTEND_DOCKER_COMPOSE) run --rm test_frontend
 
-dist: build_lngs_full
-build_lngs_full:
-	node build/translations
-
-LNGS := $(patsubst locales/%.json,generated/lng/%.js,$(wildcard locales/*.json))
-build_lng: $(LNGS)
-$(LNGS): $(wildcard build/translations/*.js)
-$(LNGS): locales/en.json
-$(LNGS): generated/lng/%.js: locales/%.json
-	node build/translations $*
-
 dist: esbuild_build
 esbuild_build:
 	node esbuild.js build

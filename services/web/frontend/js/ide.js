@@ -53,6 +53,7 @@ import './features/pdf-preview/controllers/pdf-preview-controller'
 import './features/share-project-modal/controllers/react-share-project-modal-controller'
 import { localStorage } from './modules/storage'
 import getMeta from './utils/meta'
+import { waitForI18n } from 'react-i18next'
 
 App.controller(
   'IdeController',
@@ -297,7 +298,9 @@ angular.module('SharelatexApp').config(function ($provide) {
   ])
 })
 
-export default angular.bootstrap(document.body, ['SharelatexApp'])
+await waitForI18n
+
+angular.bootstrap(document.body, ['SharelatexApp'])
 
 function __guard__(value, transform) {
   return typeof value !== 'undefined' && value !== null

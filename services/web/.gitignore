@@ -42,7 +42,6 @@ TpdsWorker.js
 BackgroundJobsWorker.js
 UserAndProjectPopulator.coffee
 
-generated/
 output/
 
 public/manifest.json

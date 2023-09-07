@@ -1,4 +1,3 @@
-services/web/generated
 services/web/.pnp.*
 services/web/.yarn
 services/web/public/LICENSE

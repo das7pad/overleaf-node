@@ -744,7 +744,7 @@ __metadata:
     react-dnd-html5-backend: ^11.1.3
     react-dom: ^17.0.2
     react-error-boundary: ^3.1.4
-    react-i18next: "file:./frontend/js/packages/react-i18next"
+    react-i18next: "link:./frontend/js/packages/react-i18next"
     react-linkify: ^1.0.0-alpha
     react2angular: ^4.0.6
     react2angular-shared-context: ^1.1.0
@@ -6169,14 +6169,11 @@ __metadata:
   languageName: node
   linkType: hard
 
-"react-i18next@file:./frontend/js/packages/react-i18next::locator=%40overleaf%2Fweb%40workspace%3A.":
-  version: 1.0.0
-  resolution: "react-i18next@file:./frontend/js/packages/react-i18next#./frontend/js/packages/react-i18next::hash=f799a9&locator=%40overleaf%2Fweb%40workspace%3A."
-  peerDependencies:
-    react: "*"
-  checksum: 3ce806e5410f94d6df66ad09f9491cffbe9332431d60f8859e3d25d8aa1299dbbe19f2cd0074718c44d5245c0ea44e934c439a2a9ed3b47fc09014e7b83daafa
+"react-i18next@link:./frontend/js/packages/react-i18next::locator=%40overleaf%2Fweb%40workspace%3A.":
+  version: 0.0.0-use.local
+  resolution: "react-i18next@link:./frontend/js/packages/react-i18next::locator=%40overleaf%2Fweb%40workspace%3A."
   languageName: node
-  linkType: hard
+  linkType: soft
 
 "react-is@npm:^16.13.1, react-is@npm:^16.3.2, react-is@npm:^16.7.0":
   version: 16.13.1
