@@ -30,7 +30,7 @@ DOCKER_COMPOSE := docker-compose $(DOCKER_COMPOSE_FLAGS)
 export DOCKER_REGISTRY ?= docker.io
 export IMAGE_NODE ?= $(DOCKER_REGISTRY)/node:18.17.1
 export IMAGE_PROJECT ?= $(DOCKER_REGISTRY)/overleaf/content
-export IMAGE_CMD ?= $(DOCKER_REGISTRY)/overleaf/cmd:assets-linear-write-46
+export IMAGE_CMD ?= $(DOCKER_REGISTRY)/overleaf/cmd:assets-linear-write-48
 
 CACHE_CONTENT_SHA := $(shell \
 	( \
