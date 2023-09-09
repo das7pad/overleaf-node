@@ -5,6 +5,8 @@ FROM $IMAGE_YARN
 
 WORKDIR /overleaf/services/web
 
+RUN apt-get update && apt-get install -y time && rm -rf /var/lib/apt/lists/*
+
 COPY docker_cleanup.sh /
 COPY package.json yarn.lock .yarnrc.yml ./
 COPY frontend/js/packages/react-i18next ./frontend/js/packages/react-i18next
