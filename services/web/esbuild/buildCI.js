@@ -15,7 +15,13 @@ async function buildTestBundle(entrypoint, platform, target) {
     outdir: OUTPUT_PATH,
     platform,
     target,
-    define,
+    define: Object.assign(
+      {},
+      define,
+      process.env.FORCE_COLOR !== undefined
+        ? { 'process.env.FORCE_COLOR': process.env.FORCE_COLOR }
+        : {}
+    ),
     jsx,
     tsconfig,
   }
