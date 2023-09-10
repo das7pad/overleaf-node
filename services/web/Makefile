@@ -34,7 +34,7 @@ export IMAGE_CMD ?= $(DOCKER_REGISTRY)/overleaf/cmd:main-709
 
 CACHE_CONTENT_SHA := $(shell \
 	( \
-		echo $(IMAGE_NODE) $(IMAGE_CMD) && \
+		echo $(IMAGE_NODE) && \
 		$(TAR_CREATE_REPRODUCIBLE) \
 			docker_cleanup.sh Dockerfile.cache Dockerfile.yarn \
 			package.json yarn.lock .yarnrc.yml \
@@ -245,7 +245,6 @@ build_yarn:
 build_and_publish_cache: build_yarn
 	docker build \
 		--force-rm=true \
-		--build-arg IMAGE_CMD=$(IMAGE_CMD) \
 		--build-arg IMAGE_YARN=$(IMAGE_YARN) \
 		--tag $(IMAGE_CACHE_CONTENT_SHA) \
 		--file Dockerfile.cache \
@@ -256,6 +255,7 @@ prepare_ci_stage: build_dev
 build_dev:
 	docker build \
 		--force-rm=true \
+		--build-arg IMAGE_CMD=$(IMAGE_CMD) \
 		--build-arg IMAGE_CACHE_CONTENT_SHA=$(IMAGE_CACHE_CONTENT_SHA) \
 		--tag $(IMAGE_CI)-dev \
 		--file Dockerfile.dev \

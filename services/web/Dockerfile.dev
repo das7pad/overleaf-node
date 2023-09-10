@@ -1,4 +1,7 @@
+ARG IMAGE_CMD
 ARG IMAGE_CACHE_CONTENT_SHA
+FROM $IMAGE_CMD as cmd
 FROM $IMAGE_CACHE_CONTENT_SHA
 
+COPY --from=cmd /usr/local/bin/frontend-build /usr/local/bin/
 COPY . .
