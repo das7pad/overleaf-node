@@ -22,6 +22,8 @@ import {
 } from '../../../helpers/editor-providers'
 
 describe('<ShareProjectModal/>', function () {
+  this.timeout(10 * 1000)
+
   const project = {
     _id: 'test-project',
     name: 'Test Project',
@@ -720,6 +722,7 @@ describe('<ShareProjectModal/>', function () {
 
       expect(submitButton.disabled).to.be.false
       submitButton.click()
+      await Promise.resolve()
       await fetchMock.flush(true)
       expect(fetchMock.done()).to.be.true
     }

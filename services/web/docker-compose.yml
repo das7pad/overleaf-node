@@ -15,7 +15,8 @@ services:
       - mocha
       - --exit
       - --delay
-      - --timeout 10000
+      - --timeout
+      - '10000'
       - --grep=${MOCHA_GREP:-}
       - test/frontend/buildAndRun.js
     network_mode: none

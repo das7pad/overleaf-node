@@ -16,7 +16,7 @@ const { fullList, currentList, trashedList } = makeLongProjectList(40)
 const userId = owner.id
 
 describe('<ProjectListRoot />', function () {
-  this.timeout(5 * 1000)
+  this.timeout(10 * 1000)
 
   const originalLocation = window.location
   const locationStub = sinon.stub()

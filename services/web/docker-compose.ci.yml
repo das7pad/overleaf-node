@@ -17,7 +17,8 @@ services:
       - mocha
       - --exit
       - --delay
-      - --timeout 10000
+      - --timeout
+      - '10000'
       - --reporter
       - xunit
       - --reporter-options

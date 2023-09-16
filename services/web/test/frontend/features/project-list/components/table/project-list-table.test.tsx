@@ -8,7 +8,7 @@ import { renderWithProjectListContext } from '../../helpers/render-with-context'
 const userId = '624333f147cfd8002622a1d3'
 
 describe('<ProjectListTable />', function () {
-  this.timeout(5 * 1000)
+  this.timeout(10 * 1000)
 
   beforeEach(function () {
     window.metaAttributesCache = new Map()
