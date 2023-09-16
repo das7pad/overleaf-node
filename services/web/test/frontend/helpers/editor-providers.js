@@ -76,6 +76,8 @@ export function EditorProviders({
   window.project_id = projectId != null ? projectId : window.project_id
   window.isRestrictedTokenMember = isRestrictedTokenMember
 
+  const projectOverride = scope.project || {}
+  delete scope.project
   const $scope = {
     user: window.user,
     project: {
@@ -88,6 +90,10 @@ export function EditorProviders({
       features,
       rootDoc_id: rootDocId,
       rootFolder,
+      compiler: 'pdflatex',
+      imageName: 'texlive-full:2023.1',
+      version: 42,
+      ...projectOverride,
     },
     ui,
     $watch: (path, callback) => {

@@ -35,6 +35,9 @@ describe('<ShareProjectModal/>', function () {
     },
     members: [],
     invites: [],
+    version: 1,
+    compiler: 'pdflatex',
+    imageName: 'texlive-full:2023.1',
   }
 
   const contacts = [
