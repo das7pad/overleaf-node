@@ -12,7 +12,7 @@ async function buildTestBundleForNode(entrypoint) {
     bundle: true,
     define: Object.assign(
       {
-        'process.env.NODE_ENV': '"production"',
+        'process.env.NODE_ENV': '"test"',
         // silence ad
         __REACT_DEVTOOLS_GLOBAL_HOOK__: '{ "isDisabled": true }',
       },
