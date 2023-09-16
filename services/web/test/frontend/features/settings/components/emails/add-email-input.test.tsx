@@ -116,11 +116,12 @@ describe('<AddEmailInput/>', function () {
     })
 
     describe('when there is a domain match', function () {
-      beforeEach(function () {
+      beforeEach(async function () {
         fetchMock.get('express:/institutions/domains', testInstitutionData)
         fireEvent.change(screen.getByRole('textbox'), {
           target: { value: 'user@d' },
         })
+        await fetchMock.flush(true)
       })
 
       it('should render the text being typed along with the suggestion', async function () {
@@ -197,8 +198,7 @@ describe('<AddEmailInput/>', function () {
       })
 
       it('should cache the result and skip subsequent requests', async function () {
-        fetchMock.reset()
-
+        const callsBefore = fetchMock.calls().length
         // clear input
         fireEvent.change(screen.getByRole('textbox'), {
           target: { value: '' },
@@ -208,7 +208,7 @@ describe('<AddEmailInput/>', function () {
           target: { value: 'user@d' },
         })
 
-        expect(fetchMock.called()).to.be.false
+        expect(fetchMock.calls().length).to.equal(callsBefore)
         expect(onChangeStub.calledWith('user@d')).to.equal(true)
         await screen.findByText('user@domain.edu')
       })

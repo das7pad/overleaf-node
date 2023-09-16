@@ -72,7 +72,7 @@ function Input({ onChange, handleAddNewEmail }: InputProps) {
       const hint = event.target.value
       setInputValue(hint)
       const { local, domain } = matchLocalAndDomain(hint)
-      if (domain && !matchedDomain?.hostname.startsWith(domain)) {
+      if (!domain || !matchedDomain?.hostname.startsWith(domain)) {
         setSuggestion(null)
       }
       if (!domain) {
