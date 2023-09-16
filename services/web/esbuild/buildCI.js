@@ -26,11 +26,14 @@ async function buildTestBundle(entrypoint, platform, target) {
     tsconfig,
   }
 
+  const instance = await esbuild.context(inflateConfig(cfg))
   try {
-    await (await esbuild.context(inflateConfig(cfg))).rebuild()
+    await instance.rebuild()
   } catch (error) {
     console.error('esbuild error:', error)
     throw new Error(`esbuild failed: ${error.message}`)
+  } finally {
+    await instance.dispose()
   }
   return Path.join(OUTPUT_PATH, Path.basename(entrypoint))
 }
