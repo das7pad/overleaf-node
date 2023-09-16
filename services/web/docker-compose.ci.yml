@@ -10,6 +10,8 @@ services:
       # Disable ansi-color output, it breaks the xunit xml parser in Jenkins.
       # https://github.com/chalk/chalk/blob/v4.1.0/readme.md#chalksupportscolor
       FORCE_COLOR: '0'
+      # https://github.com/testing-library/dom-testing-library/blob/336152be6670d40509f35043e661cde14e4b30ba/src/pretty-dom.js#L10
+      COLORS: 'false'
     entrypoint:
       - yarn
       - mocha

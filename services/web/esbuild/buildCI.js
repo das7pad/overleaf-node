@@ -17,6 +17,9 @@ async function buildTestBundle(entrypoint, platform, target) {
       // disable colors for xunit reporting in CI
       process.env.FORCE_COLOR !== undefined
         ? { 'process.env.FORCE_COLOR': process.env.FORCE_COLOR }
+        : {},
+      process.env.COLORS !== undefined
+        ? { 'process.env.COLORS': process.env.COLORS }
         : {}
     ),
     entryNames: '[dir]/[name]',
