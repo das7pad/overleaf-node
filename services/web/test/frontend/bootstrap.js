@@ -108,13 +108,31 @@ globalThis.ResizeObserver =
   window.ResizeObserver =
     require('@juggle/resize-observer').ResizeObserver
 
+// detect missed fetch mock calls
+const server = require('http').createServer(req => {
+  const err = new Error(`Missing fetch mock for: ${req.url}`)
+  console.error(err)
+  throw err
+})
+let BASE_URL
+before(function (done) {
+  server.listen(0, err => {
+    if (err) return done(err)
+    BASE_URL = `http://localhost:${server.address().port}`
+    done()
+  })
+})
+after(function (done) {
+  server.close(done)
+})
+
 // node-fetch doesn't accept relative URL's: https://github.com/node-fetch/node-fetch/blob/master/docs/v2-LIMITS.md#known-differences
 const fetch = require('node-fetch')
 globalThis.Headers = fetch.Headers
 globalThis.fetch =
   global.fetch =
   window.fetch =
-    (url, ...options) => fetch(new URL(url, 'http://localhost'), ...options)
+    (url, init) => fetch(new URL(url, BASE_URL), init)
 
 // Work around bundler hack in react-dom
 // esbuild does not populate the obfuscated require call when bundling.
