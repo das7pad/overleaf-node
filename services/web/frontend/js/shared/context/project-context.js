@@ -87,6 +87,7 @@ export function ProjectProvider({ children }) {
     owner,
     imageName,
     compiler,
+    version,
   } = project || projectFallback
 
   const value = useMemo(() => {
@@ -102,6 +103,7 @@ export function ProjectProvider({ children }) {
       owner,
       imageName,
       compiler,
+      version,
     }
   }, [
     _id,
@@ -115,6 +117,7 @@ export function ProjectProvider({ children }) {
     owner,
     imageName,
     compiler,
+    version,
   ])
 
   return (
