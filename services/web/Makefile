@@ -191,18 +191,6 @@ test: test_frontend
 test_frontend:
 	$(FRONTEND_DOCKER_COMPOSE) run --rm test_frontend
 
-esbuild_build:
-	node esbuild.js build
-
-esbuild_watch:
-	node esbuild.js watch
-
-esbuild_serve:
-	node esbuild.js serve
-
-populatePublicVendor:
-	node populatePublicVendor.js
-
 dist: output/
 	frontend-build \
 		--dst=$(PWD)/output/public.tar.gz \
