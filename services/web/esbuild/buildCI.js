@@ -4,8 +4,10 @@ const valLoader = require('./plugins/valLoader')
 
 const ROOT = Path.dirname(__dirname)
 
-async function buildTestBundle(entrypoint, platform, target) {
-  const OUTPUT_PATH = Path.join('/tmp', 'web', 'testBundle', platform)
+async function buildTestBundleForNode(entrypoint) {
+  // process.version is v prefixed -- e.g. v14.16.0
+  const nodeVersion = process.version.slice(1)
+  const OUTPUT_PATH = Path.join('/tmp', 'web', 'testBundle', 'node')
   const cfg = {
     bundle: true,
     define: Object.assign(
@@ -29,10 +31,10 @@ async function buildTestBundle(entrypoint, platform, target) {
     minifySyntax: true,
     minifyWhitespace: true,
     outdir: OUTPUT_PATH,
-    platform,
+    platform: 'node',
     plugins: [valLoader(Path.join(ROOT, 'test/frontend/allTests.js'))],
     sourcemap: true,
-    target,
+    target: `node${nodeVersion}`,
     tsconfig: Path.join(ROOT, 'tsconfig.json'),
   }
 
@@ -46,12 +48,6 @@ async function buildTestBundle(entrypoint, platform, target) {
     await instance.dispose()
   }
   return Path.join(OUTPUT_PATH, Path.basename(entrypoint))
-}
-
-async function buildTestBundleForNode(entrypoint) {
-  // process.version is v prefixed -- e.g. v14.16.0
-  const nodeVersion = process.version.slice(1)
-  return buildTestBundle(entrypoint, 'node', `node${nodeVersion}`)
 }
 
 module.exports = {
