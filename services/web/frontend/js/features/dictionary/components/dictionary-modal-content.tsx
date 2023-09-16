@@ -30,7 +30,9 @@ export default function DictionaryModalContent({
             word,
           },
         })
-      ).catch(console.error)
+      ).catch(() => {
+        ignoredWords.add(word)
+      })
     },
     [runAsync]
   )
