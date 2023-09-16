@@ -18,13 +18,13 @@ describe('<MessageList />', function () {
         id: '1',
         contents: ['a message'],
         user: currentUser,
-        timestamp: new Date().getTime(),
+        timestamp: new Date(),
       },
       {
         id: '2',
         contents: ['another message'],
         user: currentUser,
-        timestamp: new Date().getTime(),
+        timestamp: new Date(),
       },
     ]
   }
@@ -52,8 +52,8 @@ describe('<MessageList />', function () {
 
   it('renders a single timestamp for all messages within 5 minutes', function () {
     const msgs = createMessages()
-    msgs[0].timestamp = new Date(2019, 6, 3, 4, 23).getTime()
-    msgs[1].timestamp = new Date(2019, 6, 3, 4, 27).getTime()
+    msgs[0].timestamp = new Date(2019, 6, 3, 4, 23)
+    msgs[1].timestamp = new Date(2019, 6, 3, 4, 27)
 
     render(
       <MessageList
@@ -69,8 +69,8 @@ describe('<MessageList />', function () {
 
   it('renders a timestamp for each messages separated for more than 5 minutes', function () {
     const msgs = createMessages()
-    msgs[0].timestamp = new Date(2019, 6, 3, 4, 23).getTime()
-    msgs[1].timestamp = new Date(2019, 6, 3, 4, 31).getTime()
+    msgs[0].timestamp = new Date(2019, 6, 3, 4, 23)
+    msgs[1].timestamp = new Date(2019, 6, 3, 4, 31)
 
     render(
       <MessageList

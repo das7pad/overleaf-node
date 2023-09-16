@@ -57,7 +57,9 @@ MessageList.propTypes = {
   messages: PropTypes.arrayOf(
     PropTypes.shape({
       id: PropTypes.string.isRequired,
-      timestamp: PropTypes.number,
+      timestamp: PropTypes.instanceOf(Date).isRequired,
+      content: PropTypes.string,
+      user: PropTypes.object,
     })
   ).isRequired,
   resetUnreadMessages: PropTypes.func.isRequired,

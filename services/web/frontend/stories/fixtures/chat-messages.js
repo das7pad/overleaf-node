@@ -27,7 +27,7 @@ export function generateMessages(count) {
       id: uuid(),
       content: `message #${i}`,
       user: author,
-      timestamp,
+      timestamp: new Date(timestamp),
     })
   }
   return messages

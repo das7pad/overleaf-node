@@ -17,13 +17,13 @@ function createTestMessageList() {
     {
       id: 'msg_1',
       contents: ['hello', 'world'],
-      timestamp: new Date().getTime(),
+      timestamp: new Date(),
       user: otherUser,
     },
     {
       id: 'msg_2',
       contents: ['foo'],
-      timestamp: new Date().getTime(),
+      timestamp: new Date(),
       user: testUser,
     },
   ]
@@ -34,7 +34,7 @@ describe('prependMessages()', function () {
     const message1 = {
       id: 'prepended_message',
       content: 'hello',
-      timestamp: new Date().getTime(),
+      timestamp: new Date(),
       user: testUser,
     }
     const message2 = { ...message1, id: 'prepended_message_2' }
@@ -74,7 +74,9 @@ describe('prependMessages()', function () {
     })
 
     it('when the prepended messages are separated in time, each message is prepended', function () {
-      messages[0].timestamp = messages[1].timestamp - 6 * 60 * 1000 // 6 minutes before the next message
+      messages[0].timestamp = new Date(
+        messages[1].timestamp.getTime() - 6 * 60 * 1000
+      ) // 6 minutes before the next message
       const result = prependMessages(createTestMessageList(), messages)
       expect(result.length).to.equal(list.length + 2)
       expect(result[0]).to.deep.equal({
@@ -140,7 +142,7 @@ describe('appendMessage()', function () {
     return {
       id: 'appended_message',
       content: 'hi!',
-      timestamp: new Date().getTime(),
+      timestamp: new Date(),
       user: testUser,
     }
   }
@@ -163,7 +165,7 @@ describe('appendMessage()', function () {
     beforeEach(function () {
       list = createTestMessageList()
       message = createTestMessage()
-      message.timestamp = list[1].timestamp + 6 * 1000 // 6 seconds after the last message in the list
+      message.timestamp = new Date(list[1].timestamp.getTime() + 6 * 1000) // 6 seconds after the last message in the list
     })
 
     describe('when the author is the same as the last message', function () {
@@ -205,7 +207,7 @@ describe('appendMessage()', function () {
     beforeEach(function () {
       list = createTestMessageList()
       message = createTestMessage()
-      message.timestamp = list[1].timestamp + 6 * 60 * 1000 // 6 minutes after the last message in the list
+      message.timestamp = new Date(list[1].timestamp.getTime() + 6 * 60 * 1000) // 6 minutes after the last message in the list
     })
 
     it('when the author is the same as the last message, should be appended as new message', function () {
