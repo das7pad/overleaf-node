@@ -52,7 +52,6 @@ describe('<ChatPane />', function () {
   ]
 
   beforeEach(function () {
-    fetchMock.reset()
     cleanUpContext()
 
     stubMathJax()

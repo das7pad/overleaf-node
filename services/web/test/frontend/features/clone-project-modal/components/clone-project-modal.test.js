@@ -6,11 +6,7 @@ import EditorCloneProjectModalWrapper from '../../../../../frontend/js/features/
 import { renderWithEditorContext } from '../../../helpers/render-with-context'
 
 describe('<EditorCloneProjectModalWrapper />', function () {
-  beforeEach(function () {
-    fetchMock.reset()
-  })
-
-  after(function () {
+  afterEach(function () {
     fetchMock.reset()
   })
 
@@ -20,6 +16,7 @@ describe('<EditorCloneProjectModalWrapper />', function () {
   }
 
   it('renders the translated modal title', async function () {
+    fetchMock.post('express:/api/project/:projectId/clone', 503)
     const handleHide = sinon.stub()
     const openProject = sinon.stub()
 

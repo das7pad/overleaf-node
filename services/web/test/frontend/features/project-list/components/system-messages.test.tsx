@@ -5,7 +5,6 @@ import SystemMessages from '../../../../../frontend/js/features/project-list/com
 
 describe('<SystemMessages />', function () {
   beforeEach(function () {
-    fetchMock.reset()
     localStorage.clear()
     window.metaAttributesCache = new Map()
   })

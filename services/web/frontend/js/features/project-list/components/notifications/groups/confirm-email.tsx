@@ -56,7 +56,7 @@ function ConfirmEmailNotification({ userEmail }: { userEmail: UserEmailData }) {
       postJSON('/api/user/emails/resend_confirmation', {
         body: { email },
       })
-    ).catch(console.error)
+    )
   }
 
   if (isSuccess) {

@@ -20,7 +20,6 @@ describe('ChatContext', function () {
   }
 
   beforeEach(function () {
-    fetchMock.reset()
     cleanUpContext()
 
     stubMathJax()
@@ -30,6 +29,7 @@ describe('ChatContext', function () {
   })
 
   afterEach(function () {
+    fetchMock.reset()
     tearDownMathJaxStubs()
 
     window.metaAttributesCache = new Map()

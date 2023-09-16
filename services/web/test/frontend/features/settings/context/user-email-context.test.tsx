@@ -23,12 +23,13 @@ const renderUserEmailsContext = () =>
   })
 
 describe('UserEmailContext', function () {
-  beforeEach(function () {
+  afterEach(function () {
     fetchMock.reset()
   })
 
   describe('context bootstrap', function () {
     it('should start with an "in progress" initialisation state', function () {
+      fetchMock.get(/\/user\/emails/, [], { delay: 100 })
       const { result } = renderUserEmailsContext()
 
       expect(result.current.isInitializing).to.equal(true)
@@ -37,6 +38,7 @@ describe('UserEmailContext', function () {
     })
 
     it('should start with an empty state', function () {
+      fetchMock.get(/\/user\/emails/, [], { delay: 100 })
       const { result } = renderUserEmailsContext()
 
       expect(result.current.state.data.byId).to.deep.equal({})
@@ -71,11 +73,13 @@ describe('UserEmailContext', function () {
 
     describe('state.isLoading', function () {
       it('should be `true` on bootstrap', function () {
+        fetchMock.get(/\/user\/emails/, [], { delay: 100 })
         const { result } = renderUserEmailsContext()
         expect(result.current.state.isLoading).to.equal(true)
       })
 
       it('should be updated with `setLoading`', function () {
+        fetchMock.get(/\/user\/emails/, [], { delay: 100 })
         const { result } = renderUserEmailsContext()
         result.current.setLoading(true)
         expect(result.current.state.isLoading).to.equal(true)
@@ -95,17 +99,17 @@ describe('UserEmailContext', function () {
     })
 
     describe('getEmails()', function () {
-      beforeEach(async function () {
-        fetchMock.reset()
-      })
-
       it('should set `isLoading === true`', function () {
-        fetchMock.get(/\/user\/emails/, [
-          {
-            email: 'new@email.com',
-            default: true,
-          },
-        ])
+        fetchMock.get(
+          /\/user\/emails/,
+          [
+            {
+              email: 'new@email.com',
+              default: true,
+            },
+          ],
+          { overwriteRoutes: true }
+        )
         result.current.getEmails()
         expect(result.current.state.isLoading).to.be.true
       })
@@ -115,7 +119,7 @@ describe('UserEmailContext', function () {
           email: 'new@email.com',
           default: true,
         }
-        fetchMock.get(/\/user\/emails/, [emailData])
+        fetchMock.get(/\/user\/emails/, [emailData], { overwriteRoutes: true })
         result.current.getEmails()
         await fetchMock.flush(true)
         expect(result.current.state.data.byId).to.deep.equal({
@@ -124,11 +128,15 @@ describe('UserEmailContext', function () {
       })
 
       it('should populate `linkedInstitutionIds`', async function () {
-        fetchMock.get(/\/user\/emails/, [
-          confirmedUserData,
-          { ...unconfirmedUserData, samlProviderId: 'saml_provider_1' },
-          { ...professionalUserData, samlProviderId: 'saml_provider_2' },
-        ])
+        fetchMock.get(
+          /\/user\/emails/,
+          [
+            confirmedUserData,
+            { ...unconfirmedUserData, samlProviderId: 'saml_provider_1' },
+            { ...professionalUserData, samlProviderId: 'saml_provider_2' },
+          ],
+          { overwriteRoutes: true }
+        )
         const { result } = renderUserEmailsContext()
         await fetchMock.flush(true)
         expect(result.current.state.data.linkedInstitutionIds).to.deep.equal([

@@ -6,10 +6,6 @@ import eventTracking from '../../../../../frontend/js/infrastructure/event-track
 import fetchMock from 'fetch-mock'
 
 describe('Project list search form', function () {
-  beforeEach(function () {
-    fetchMock.reset()
-  })
-
   afterEach(function () {
     fetchMock.reset()
   })

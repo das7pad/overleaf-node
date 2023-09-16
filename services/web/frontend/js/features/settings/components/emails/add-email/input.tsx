@@ -105,10 +105,9 @@ function Input({ onChange, handleAddNewEmail }: InputProps) {
             setMatchedDomain(null)
           }
         })
-        .catch(error => {
+        .catch(() => {
           setSuggestion(null)
           setMatchedDomain(null)
-          console.error(error)
         })
     },
     [signal, matchedDomain]

@@ -64,12 +64,13 @@ describe('<EmailsSection />', function () {
       hasSamlFeature: true,
       samlInitPath: 'saml/init',
     })
-    fetchMock.reset()
+    fetchMock.get('express:/institutions/domains', [])
+    resetFetchMock()
   })
 
   afterEach(function () {
     window.metaAttributesCache = new Map()
-    resetFetchMock()
+    fetchMock.reset()
   })
 
   it('renders "add another email" button', async function () {

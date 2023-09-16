@@ -26,9 +26,7 @@ function Common() {
   const accepted = isSuccess || error?.response?.status === 404
 
   const handleAcceptInvite = (projectId: number | string, token: string) => {
-    runAsync(
-      postJSON(`/api/project/${projectId}/invite/token/${token}/accept`)
-    ).catch(console.error)
+    runAsync(postJSON(`/api/project/${projectId}/invite/token/${token}/accept`))
   }
 
   if (!notifications.length) {

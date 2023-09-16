@@ -16,7 +16,7 @@ describe('<FileViewText/>', function () {
     created: new Date(2021, 1, 17, 3, 24).toISOString(),
   }
 
-  beforeEach(function () {
+  afterEach(function () {
     fetchMock.reset()
   })
 

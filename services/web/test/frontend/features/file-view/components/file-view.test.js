@@ -30,7 +30,7 @@ describe('<FileView/>', function () {
     },
   }
 
-  beforeEach(function () {
+  afterEach(function () {
     fetchMock.reset()
   })
 
