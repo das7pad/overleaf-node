@@ -1,32 +1,39 @@
 const Path = require('path')
 const esbuild = require('esbuild')
 const valLoader = require('./plugins/valLoader')
-const { MAIN_BUNDLES_CONFIG, inflateConfig } = require('./configs')
 
 const ROOT = Path.dirname(__dirname)
 
 async function buildTestBundle(entrypoint, platform, target) {
   const OUTPUT_PATH = Path.join('/tmp', 'web', 'testBundle', platform)
-  const { define, jsx, tsconfig } = MAIN_BUNDLES_CONFIG
   const cfg = {
-    entryNames: '[dir]/[name]',
-    entryPoints: [entrypoint],
-    plugins: [valLoader(Path.join(ROOT, 'test/frontend/allTests.js'))],
-    outdir: OUTPUT_PATH,
-    platform,
-    target,
+    bundle: true,
     define: Object.assign(
-      {},
-      define,
+      {
+        'process.env.NODE_ENV': '"production"',
+        // silence ad
+        __REACT_DEVTOOLS_GLOBAL_HOOK__: '{ "isDisabled": true }',
+      },
+      // disable colors for xunit reporting in CI
       process.env.FORCE_COLOR !== undefined
         ? { 'process.env.FORCE_COLOR': process.env.FORCE_COLOR }
         : {}
     ),
-    jsx,
-    tsconfig,
+    entryNames: '[dir]/[name]',
+    entryPoints: [entrypoint],
+    jsx: 'automatic',
+    loader: { '.js': 'jsx' },
+    minifySyntax: true,
+    minifyWhitespace: true,
+    outdir: OUTPUT_PATH,
+    platform,
+    plugins: [valLoader(Path.join(ROOT, 'test/frontend/allTests.js'))],
+    sourcemap: true,
+    target,
+    tsconfig: Path.join(ROOT, 'tsconfig.json'),
   }
 
-  const instance = await esbuild.context(inflateConfig(cfg))
+  const instance = await esbuild.context(cfg)
   try {
     await instance.rebuild()
   } catch (error) {
