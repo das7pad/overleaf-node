@@ -306,7 +306,7 @@ describe('<FileTreeModalCreateFile/>', function () {
     })
 
     it('should not show the import from output file mode', async function () {
-      fetchMock.get('path:/user/projects', {
+      fetchMock.get('path:/api/user/projects', {
         projects: [
           {
             _id: 'test-project',
