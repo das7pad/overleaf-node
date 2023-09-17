@@ -12,7 +12,6 @@ import {
   cleanUpContext,
 } from '../../../helpers/render-with-context'
 import { stubMathJax, tearDownMathJaxStubs } from './stubs'
-import sinon from 'sinon'
 
 describe('<ChatPane />', function () {
   const user = {
@@ -22,16 +21,11 @@ describe('<ChatPane />', function () {
   }
 
   beforeEach(function () {
-    this.clock = sinon.useFakeTimers({
-      toFake: ['setTimeout', 'clearTimeout', 'setInterval', 'clearInterval'],
-    })
     window.metaAttributesCache = new Map()
     window.metaAttributesCache.set('ol-user', user)
   })
 
   afterEach(function () {
-    this.clock.runAll()
-    this.clock.restore()
     fetchMock.reset()
     window.metaAttributesCache = new Map()
   })
@@ -93,16 +87,14 @@ describe('<ChatPane />', function () {
   })
 
   it('a loading spinner is rendered while the messages are loading, then disappears', async function () {
-    fetchMock.get(/messages/, [], { delay: 1000 })
+    fetchMock.get(/messages/, [], { delay: 300 })
 
-    renderWithChatContext(<ChatPane />, { user })
+    renderWithChatContext(<ChatPane delay={100} />, { user })
 
-    this.clock.tick(600) // wait for spinner to be displayed
-
+    // loading banner is displayed after 100ms
     await screen.findByText('Loading…')
 
-    this.clock.tick(1000) // wait for response to be received
-
+    // loading banner is removed as the fetch call returns, after another 200ms
     await waitForElementToBeRemoved(() => screen.getByText('Loading…'))
   })
 

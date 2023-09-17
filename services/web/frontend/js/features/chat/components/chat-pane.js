@@ -17,7 +17,7 @@ import LoadingSpinner, {
 
 const MessageList = lazy(() => import('./message-list'))
 
-const ChatPane = React.memo(function ChatPane() {
+const ChatPane = React.memo(function ChatPane({ delay = 500 }) {
   const { t } = useTranslation()
 
   const { chatIsOpen } = useLayoutContext({ chatIsOpen: PropTypes.bool })
@@ -74,9 +74,9 @@ const ChatPane = React.memo(function ChatPane() {
       >
         <div>
           <h2 className="sr-only">{t('chat')}</h2>
-          {status === 'pending' && <LoadingSpinner delay={500} />}
+          {status === 'pending' && <LoadingSpinner delay={delay} />}
           {shouldDisplayPlaceholder && <Placeholder />}
-          <Suspense fallback={<FullSizeLoadingSpinner delay={500} />}>
+          <Suspense fallback={<FullSizeLoadingSpinner delay={delay} />}>
             <MessageList
               messages={messages}
               userId={user.id}
@@ -92,6 +92,10 @@ const ChatPane = React.memo(function ChatPane() {
     </aside>
   )
 })
+
+ChatPane.propTypes = {
+  delay: PropTypes.number,
+}
 
 function Placeholder() {
   const { t } = useTranslation()
