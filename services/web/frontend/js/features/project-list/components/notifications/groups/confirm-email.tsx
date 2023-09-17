@@ -11,6 +11,7 @@ import {
 } from '../../../../../infrastructure/fetch-json'
 import { ExposedSettings } from '../../../../../../../types/exposed-settings'
 import { UserEmailData } from '../../../../../../../types/user-email'
+import { olConsole } from '../../../../../infrastructure/ol-console'
 
 const ssoAvailable = ({ samlProviderId, affiliation }: UserEmailData) => {
   const { hasSamlFeature, hasSamlBeta } = getMeta(
@@ -56,7 +57,7 @@ function ConfirmEmailNotification({ userEmail }: { userEmail: UserEmailData }) {
       postJSON('/api/user/emails/resend_confirmation', {
         body: { email },
       })
-    )
+    ).catch(olConsole.error)
   }
 
   if (isSuccess) {

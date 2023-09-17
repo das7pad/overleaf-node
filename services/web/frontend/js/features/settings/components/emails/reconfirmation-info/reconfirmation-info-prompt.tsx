@@ -9,6 +9,7 @@ import getMeta from '../../../../../utils/meta'
 import { ExposedSettings } from '../../../../../../../types/exposed-settings'
 import { ssoAvailableForInstitution } from '../../../utils/sso'
 import Icon from '../../../../../shared/components/icon'
+import { olConsole } from '../../../../../infrastructure/ol-console'
 
 type ReconfirmationInfoPromptProps = {
   email: string
@@ -53,7 +54,7 @@ function ReconfirmationInfoPrompt({
             email,
           },
         })
-      ).catch(console.error)
+      ).catch(olConsole.error)
     }
   }
 

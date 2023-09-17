@@ -6,6 +6,7 @@ import useAsync from '../../../../shared/hooks/use-async'
 import { useRefWithAutoFocus } from '../../../../shared/hooks/use-ref-with-auto-focus'
 import { deleteTag, renameTag } from '../../util/api'
 import { Tag } from '../../../../../../app/src/Features/Tags/types'
+import { olConsole } from '../../../../infrastructure/ol-console'
 
 type EditTagModalProps = {
   id: string
@@ -42,7 +43,7 @@ export default function EditTagModal({
         .then(() => {
           onDelete(tagId)
         })
-        .catch(console.error)
+        .catch(olConsole.error)
     },
     [runDeleteAsync, onDelete]
   )
@@ -52,7 +53,7 @@ export default function EditTagModal({
       if (newTagName) {
         runRenameAsync(renameTag(tagId, newTagName))
           .then(() => onRename(tagId, newTagName))
-          .catch(console.error)
+          .catch(olConsole.error)
       }
     },
     [runRenameAsync, newTagName, onRename]

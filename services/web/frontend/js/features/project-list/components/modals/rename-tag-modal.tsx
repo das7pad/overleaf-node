@@ -8,6 +8,7 @@ import { useProjectListContext } from '../../context/project-list-context'
 import { useRefWithAutoFocus } from '../../../../shared/hooks/use-ref-with-auto-focus'
 import { renameTag } from '../../util/api'
 import { MAX_TAG_LENGTH } from '../../util/tag'
+import { olConsole } from '../../../../infrastructure/ol-console'
 
 type RenameTagModalProps = {
   id: string
@@ -35,7 +36,7 @@ export default function RenameTagModal({
       if (newTagName) {
         runAsync(renameTag(tagId, newTagName))
           .then(() => onRename(tagId, newTagName))
-          .catch(console.error)
+          .catch(olConsole.error)
       }
     },
     [runAsync, newTagName, onRename]

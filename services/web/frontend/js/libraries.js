@@ -1,3 +1,4 @@
+import './infrastructure/ol-console'
 import './infrastructure/error-reporter'
 import 'jquery'
 import 'angular'

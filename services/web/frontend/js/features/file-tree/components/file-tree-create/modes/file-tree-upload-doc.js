@@ -20,6 +20,7 @@ import {
 } from '../../../../../infrastructure/jwt-fetch-json'
 import { contentDisposition } from '../../../../../utils/contentDisposition'
 import { useIdeContext } from '../../../../../shared/context/ide-context'
+import { olConsole } from '../../../../../infrastructure/ol-console'
 
 export default function FileTreeUploadDoc() {
   const { parentFolderId, cancel, isDuplicate, droppedFiles, setDroppedFiles } =
@@ -118,7 +119,7 @@ export default function FileTreeUploadDoc() {
               break
 
             default:
-              console.error(error)
+              olConsole.error(error)
               setError(response?.body?.error || 'generic_something_went_wrong')
               break
           }

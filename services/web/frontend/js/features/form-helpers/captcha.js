@@ -1,4 +1,5 @@
 import { postJSON } from '../../infrastructure/fetch-json'
+import { olConsole } from '../../infrastructure/ol-console'
 
 const grecaptcha = window.grecaptcha
 
@@ -49,7 +50,7 @@ function emitError(err, src) {
     `captcha check failed: ${getMessage(err)}, please retry again`
   )
   // Keep a record of this error. 2nd line might request a screenshot of it.
-  console.error(err, src)
+  olConsole.error(err, src)
 
   recaptchaCallbacks.splice(0).forEach(({ reject, resetTimeout }) => {
     resetTimeout()

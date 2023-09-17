@@ -4,6 +4,7 @@ import { projectJWTPOSTJSON } from '../../../infrastructure/jwt-fetch-json'
 import { debounce } from 'lodash'
 import { trackPdfDownload } from './metrics'
 import { FetchError } from '../../../infrastructure/fetch-json'
+import { olConsole } from '../../../infrastructure/ol-console'
 
 const AUTO_COMPILE_MAX_WAIT = 5000
 // We add a 2 second debounce to sending user changes to server if they aren't
@@ -138,7 +139,7 @@ export default class DocumentCompiler {
       this.setData(data)
       return data
     } catch (error) {
-      console.error(error)
+      olConsole.error(error)
       this.cleanupCompileResult()
       this.setError(error.info?.statusCode === 429 ? 'rate-limited' : 'error')
     } finally {
@@ -220,7 +221,7 @@ export default class DocumentCompiler {
       body: { clsiServerId: this.clsiServerId },
       signal: this.signal,
     }).catch(error => {
-      console.error(error)
+      olConsole.error(error)
       this.setError('clear-cache')
     })
   }

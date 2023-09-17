@@ -10,6 +10,7 @@ import {
 } from '../utils/api'
 import getMeta from '../../../utils/meta'
 import { captureException } from '../../../infrastructure/error-reporter'
+import { olConsole } from '../../../infrastructure/ol-console'
 
 App.component(
   'shareProjectModal',
@@ -81,7 +82,7 @@ export default App.controller(
       if (pendingListProjectMembers) return pendingListProjectMembers
       pendingListProjectMembers = listProjectMembers(getMeta('ol-project_id'))
         .catch(err => {
-          console.error('Error fetching members for project')
+          olConsole.error('Error fetching members for project')
           captureException(err)
           pendingListProjectMembers = undefined
           return { members: [] }
@@ -101,7 +102,7 @@ export default App.controller(
 
       pendingListProjectInvites = listProjectInvites(getMeta('ol-project_id'))
         .catch(err => {
-          console.error('Error fetching invites for project')
+          olConsole.error('Error fetching invites for project')
           captureException(err)
           pendingListProjectInvites = undefined
           return { invites: [] }

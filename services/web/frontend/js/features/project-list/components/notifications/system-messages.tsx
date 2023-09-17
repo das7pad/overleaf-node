@@ -8,6 +8,7 @@ import {
   SuggestedLanguage,
 } from '../../../../../../types/project/dashboard/system-message'
 import { jwtGetJSON } from '../../../../infrastructure/jwt-fetch-json'
+import { olConsole } from '../../../../infrastructure/ol-console'
 
 const MESSAGE_POLL_INTERVAL = 15 * 60 * 1000
 
@@ -33,7 +34,7 @@ function SystemMessages() {
           url: '/system/messages',
           refreshEndpoint: '/api/user/jwt',
         })
-      ).catch(console.error)
+      ).catch(olConsole.error)
     }
 
     const cached = getMeta('ol-systemMessages')

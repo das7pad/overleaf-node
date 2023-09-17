@@ -29,6 +29,7 @@ import getMeta from '../../../utils/meta'
 import useAsync from '../../../shared/hooks/use-async'
 import { getProjects } from '../util/api'
 import sortProjects from '../util/sort-projects'
+import { olConsole } from '../../../infrastructure/ol-console'
 
 const MAX_PROJECT_PER_PAGE = 20
 
@@ -152,7 +153,7 @@ export function ProjectListProvider({ children }: ProjectListProviderProps) {
         setLoadedProjects(data.projects)
         setTotalProjectsCount(data.totalSize)
       })
-      .catch(error => console.error(error))
+      .catch(error => olConsole.error(error))
       .finally(() => {
         setLoadProgress(100)
       })

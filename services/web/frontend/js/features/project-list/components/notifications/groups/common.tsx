@@ -10,6 +10,7 @@ import { FetchError, postJSON } from '../../../../../infrastructure/fetch-json'
 import { ExposedSettings } from '../../../../../../../types/exposed-settings'
 import { Notification as NotificationType } from '../../../../../../../types/project/dashboard/notification'
 import { User } from '../../../../../../../types/user'
+import { olConsole } from 'frontend/js/infrastructure/ol-console'
 
 function Common() {
   const { t } = useTranslation()
@@ -26,7 +27,9 @@ function Common() {
   const accepted = isSuccess || error?.response?.status === 404
 
   const handleAcceptInvite = (projectId: number | string, token: string) => {
-    runAsync(postJSON(`/api/project/${projectId}/invite/token/${token}/accept`))
+    runAsync(
+      postJSON(`/api/project/${projectId}/invite/token/${token}/accept`)
+    ).catch(olConsole.error)
   }
 
   if (!notifications.length) {

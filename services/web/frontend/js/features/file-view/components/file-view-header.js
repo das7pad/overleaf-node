@@ -12,6 +12,7 @@ import { useProjectContext } from '../../../shared/context/project-context'
 import useAbortController from '../../../shared/hooks/use-abort-controller'
 import { LinkedFileIcon } from './file-view-icons'
 import { useIdeContext } from '../../../shared/context/ide-context'
+import { olConsole } from '../../../infrastructure/ol-console'
 
 const tprLinkedFileInfo = []
 const tprLinkedFileRefreshError = []
@@ -108,7 +109,7 @@ export default function FileViewHeader({ file, storeReferencesKeys }) {
           storeReferencesKeys(response.keys)
         })
         .catch(error => {
-          console.log(error)
+          olConsole.log(error)
         })
     }
   }, [socket, file, projectId, signal, storeReferencesKeys])

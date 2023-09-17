@@ -10,6 +10,7 @@ import { Nullable } from '../../../../../../../types/utils'
 import { getJSON } from '../../../../../infrastructure/fetch-json'
 import useAbortController from '../../../../../shared/hooks/use-abort-controller'
 import domainBlocklist from '../../../domain-blocklist'
+import { olConsole } from '../../../../../infrastructure/ol-console'
 
 const LOCAL_AND_DOMAIN_REGEX = /([^@]+)@(.+)/
 
@@ -105,9 +106,10 @@ function Input({ onChange, handleAddNewEmail }: InputProps) {
             setMatchedDomain(null)
           }
         })
-        .catch(() => {
+        .catch(error => {
           setSuggestion(null)
           setMatchedDomain(null)
+          olConsole.error(error)
         })
     },
     [signal, matchedDomain]

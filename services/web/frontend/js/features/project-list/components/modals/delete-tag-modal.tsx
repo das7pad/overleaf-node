@@ -5,6 +5,7 @@ import { Tag } from '../../../../../../app/src/Features/Tags/types'
 import AccessibleModal from '../../../../shared/components/accessible-modal'
 import useAsync from '../../../../shared/hooks/use-async'
 import { deleteTag } from '../../util/api'
+import { olConsole } from '../../../../infrastructure/ol-console'
 
 type DeleteTagModalProps = {
   id: string
@@ -28,7 +29,7 @@ export default function DeleteTagModal({
         .then(() => {
           onDelete(tagId)
         })
-        .catch(console.error)
+        .catch(olConsole.error)
     },
     [runAsync, onDelete]
   )

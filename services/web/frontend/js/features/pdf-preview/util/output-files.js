@@ -3,6 +3,7 @@ import HumanReadableLogs from '../../../ide/human-readable-logs/HumanReadableLog
 import BibLogParser from '../../../ide/log-parser/bib-log-parser'
 import { v4 as uuid } from 'uuid'
 import { enablePdfCaching } from './pdf-caching-flags'
+import { olConsole } from '../../../infrastructure/ol-console'
 
 // Warnings that may disappear after a second LaTeX pass
 const TRANSIENT_WARNING_REGEX = /^(Reference|Citation).+undefined on input line/
@@ -89,7 +90,7 @@ export const handleLogFiles = async (outputFiles, data, signal) => {
 
       accumulateResults({ errors, warnings, typesetting })
     } catch (e) {
-      console.warn(e) // ignore failure to fetch/parse the log file, but log a warning
+      olConsole.warn(e) // ignore failure to fetch/parse the log file, but log a warning
     }
   }
 
@@ -112,7 +113,7 @@ export const handleLogFiles = async (outputFiles, data, signal) => {
         // BibLog parsing errors are ignored
       }
     } catch (e) {
-      console.warn(e) // ignore failure to fetch/parse the log file, but log a warning
+      olConsole.warn(e) // ignore failure to fetch/parse the log file, but log a warning
     }
   }
 

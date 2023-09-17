@@ -5,6 +5,7 @@ import { captureException } from '../../../infrastructure/error-reporter'
 import { generatePdfCachingTransportFactory } from './pdf-caching-transport'
 import staticPath from '../../../utils/staticPath'
 import 'pdfjs-dist/web/pdf_viewer.css'
+import { olConsole } from '../../../infrastructure/ol-console'
 
 const params = new URLSearchParams(window.location.search)
 const disableFontFace = params.get('disable-font-face') === 'true'
@@ -113,7 +114,7 @@ export default class PDFJSWrapper {
           resolve(doc)
 
           if (previousDoc) {
-            previousDoc.cleanup().catch(console.error)
+            previousDoc.cleanup().catch(olConsole.error)
             previousDoc.destroy()
           }
         })

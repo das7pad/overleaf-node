@@ -11,6 +11,7 @@ import PdfPreviewErrorBoundaryFallback from './pdf-preview-error-boundary-fallba
 import { useDetachCompileContext as useCompileContext } from '../../../shared/context/detach-compile-context'
 import { captureException } from '../../../infrastructure/error-reporter'
 import { getPdfCachingMetrics } from '../util/metrics'
+import { olConsole } from '../../../infrastructure/ol-console'
 
 function PdfJsViewer({ url, pdfFile }) {
   const { _id: projectId } = useProjectContext()
@@ -141,7 +142,7 @@ function PdfJsViewer({ url, pdfFile }) {
         .loadDocument({ url, pdfFile, abortController, handleFetchError })
         .catch(error => {
           if (abortController.signal.aborted) return
-          console.error(error)
+          olConsole.error(error)
           setError('rendering-error')
         })
       return () => {
@@ -166,7 +167,7 @@ function PdfJsViewer({ url, pdfFile }) {
         try {
           setPosition(pdfViewer.currentPosition)
         } catch (error) {
-          // console.error(error)
+          // olConsole.error(error)
         }
       }, 500)
 

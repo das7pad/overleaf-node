@@ -18,6 +18,7 @@ import useDetachAction from '../../../shared/hooks/use-detach-action'
 import localStorage from '../../../infrastructure/local-storage'
 import { useFileTreeData } from '../../../shared/context/file-tree-data-context'
 import useScopeEventListener from '../../../shared/hooks/use-scope-event-listener'
+import { olConsole } from '../../../infrastructure/ol-console'
 
 function GoToCodeButton({
   position,
@@ -197,7 +198,7 @@ function PdfSynctexControls() {
           setHighlights(data.pdf || data)
         })
         .catch(error => {
-          console.error(error)
+          olConsole.error(error)
         })
         .finally(() => {
           if (isMounted.current) {
@@ -282,7 +283,7 @@ function PdfSynctexControls() {
           goToCodeLine(file, line)
         })
         .catch(error => {
-          console.error(error)
+          olConsole.error(error)
         })
         .finally(() => {
           if (isMounted.current) {

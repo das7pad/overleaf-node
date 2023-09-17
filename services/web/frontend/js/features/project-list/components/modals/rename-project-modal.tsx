@@ -15,6 +15,7 @@ import { renameProject } from '../../util/api'
 import useAsync from '../../../../shared/hooks/use-async'
 import { useProjectListContext } from '../../context/project-list-context'
 import { getUserFacingMessage } from '../../../../infrastructure/fetch-json'
+import { olConsole } from '../../../../infrastructure/ol-console'
 
 type RenameProjectModalProps = {
   handleCloseModal: () => void
@@ -62,7 +63,7 @@ function RenameProjectModal({
           })
           handleCloseModal()
         })
-        .catch(console.error)
+        .catch(olConsole.error)
     },
     [
       handleCloseModal,

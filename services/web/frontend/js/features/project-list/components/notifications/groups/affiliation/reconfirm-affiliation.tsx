@@ -8,6 +8,7 @@ import { postJSON } from '../../../../../../infrastructure/fetch-json'
 import { UserEmailData } from '../../../../../../../../types/user-email'
 import { ExposedSettings } from '../../../../../../../../types/exposed-settings'
 import { Institution } from '../../../../../../../../types/institution'
+import { olConsole } from '../../../../../../infrastructure/ol-console'
 
 type ReconfirmAffiliationProps = {
   email: UserEmailData['email']
@@ -42,7 +43,7 @@ function ReconfirmAffiliation({
         postJSON('/user/emails/send-reconfirmation', {
           body: { email },
         })
-      ).catch(console.error)
+      ).catch(olConsole.error)
     }
   }
 

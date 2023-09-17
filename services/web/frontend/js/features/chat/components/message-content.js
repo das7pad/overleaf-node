@@ -2,6 +2,7 @@ import { useRef, useEffect, useState } from 'react'
 import PropTypes from 'prop-types'
 import Linkify from 'react-linkify'
 import { loadMathJax } from '../../../MathJaxLoader'
+import { olConsole } from '../../../infrastructure/ol-console'
 
 function MessageContent({ content }) {
   const root = useRef(null)
@@ -12,7 +13,7 @@ function MessageContent({ content }) {
       .then(MathJax => {
         setMJHub(MathJax.Hub)
       })
-      .catch(error => console.error('Cannot load MathJaxBundle', error))
+      .catch(error => olConsole.error('Cannot load MathJaxBundle', error))
   }, [])
 
   useEffect(() => {

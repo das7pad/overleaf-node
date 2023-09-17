@@ -8,6 +8,7 @@ import { useProjectListContext } from '../../context/project-list-context'
 import { useRefWithAutoFocus } from '../../../../shared/hooks/use-ref-with-auto-focus'
 import { createTag } from '../../util/api'
 import { MAX_TAG_LENGTH } from '../../util/tag'
+import { olConsole } from '../../../../infrastructure/ol-console'
 
 type CreateTagModalProps = {
   id: string
@@ -34,7 +35,7 @@ export default function CreateTagModal({
     if (tagName) {
       runAsync(createTag(tagName))
         .then(tag => onCreate(tag))
-        .catch(console.error)
+        .catch(olConsole.error)
     }
   }, [runAsync, tagName, onCreate])
 
