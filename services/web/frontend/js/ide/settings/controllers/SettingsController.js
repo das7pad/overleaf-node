@@ -22,8 +22,8 @@ export default App.controller(
       return { value: t, name: t.replace(/_/g, ' ') }
     })
     $scope.overallThemesList = [
-      { value: '', name: 'Default', path: getMeta('ol-theme-default') },
-      { value: 'light-', name: 'Light', path: getMeta('ol-theme-light') },
+      { value: '', name: 'Default' },
+      { value: 'light-', name: 'Light' },
     ]
     $scope.allowedImageNames = getMeta('ol-allowedImageNames')
     $scope.ui = { loadingStyleSheet: false }
@@ -41,7 +41,12 @@ export default App.controller(
       })
       newStyleSheetEl.setAttribute('rel', 'stylesheet')
       newStyleSheetEl.setAttribute('id', 'main-stylesheet')
-      newStyleSheetEl.setAttribute('href', theme.path)
+      newStyleSheetEl.setAttribute(
+        'href',
+        theme.value === 'light-'
+          ? getMeta('ol-theme-light', '', true)
+          : getMeta('ol-theme-default', '', true)
+      )
       return docHeadEl.appendChild(newStyleSheetEl)
     }
 

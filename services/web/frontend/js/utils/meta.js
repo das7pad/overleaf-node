@@ -9,8 +9,8 @@
 // cache for parsed values
 window.metaAttributesCache = window.metaAttributesCache || new Map()
 
-export default function getMeta(name, fallback) {
-  if (window.metaAttributesCache.has(name)) {
+export default function getMeta(name, fallback, skipCache) {
+  if (!skipCache && window.metaAttributesCache.has(name)) {
     return window.metaAttributesCache.get(name)
   }
   const element = document.head.querySelector(`meta[name="${name}"]`)
@@ -89,8 +89,8 @@ function convertBulkDataToMeta() {
   _setMeta('ol-maxEntitiesPerProject', settings.maxEntitiesPerProject)
   _setMeta('ol-maxUploadSize', settings.maxUploadSize)
   _setMeta('ol-overallThemes', [
-    { val: '', name: 'Default', path: getMeta('ol-theme-default') },
-    { val: 'light-', name: 'Light', path: getMeta('ol-theme-light') },
+    { val: '', name: 'Default' },
+    { val: 'light-', name: 'Light' },
   ])
   _setMeta('ol-projectCompiler', project.compiler)
   _setMeta('ol-projectImageName', project.imageName)

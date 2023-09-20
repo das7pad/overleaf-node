@@ -23,18 +23,31 @@ function formatMessage(prefix, message) {
   console.groupEnd()
 }
 
-function basename(p = '') {
-  return p.split('/').pop()
+function getMetaElement(name) {
+  return document.querySelector(`meta[name="${name}"]`)
+}
+
+function staticPath(p = '') {
+  return getMetaElement('ol-staticPath').getAttribute('content') + p
 }
 
 function replaceStylesheet(manifest) {
   const oldLink = document.getElementById('main-stylesheet')
   const oldHref = oldLink.getAttribute('href')
-  const src = basename(oldHref).startsWith('light-style-')
-    ? 'frontend/stylesheets/light-style.less'
-    : 'frontend/stylesheets/style.less'
-  const newHref =
-    oldHref.slice(0, -basename(oldHref).length) + basename(manifest.assets[src])
+  const isLightTheme = document.body.dataset.olThemeModifier === 'light-'
+  const styleHref = staticPath(
+    manifest.assets['frontend/stylesheets/style.less']
+  )
+  const lightStyleHref = staticPath(
+    manifest.assets['frontend/stylesheets/light-style.less']
+  )
+
+  // update references for editor menu
+  getMetaElement('ol-theme-default')?.setAttribute('content', styleHref)
+  getMetaElement('ol-theme-light')?.setAttribute('content', lightStyleHref)
+
+  const newHref = isLightTheme ? lightStyleHref : styleHref
+  if (oldHref === newHref) return
   const newLink = oldLink.cloneNode()
   newLink.setAttribute('href', newHref)
   newLink.addEventListener('load', () => document.head.removeChild(oldLink))
