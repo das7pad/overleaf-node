@@ -64,9 +64,42 @@ function onEpoch({ data }) {
   }
 }
 
+function reloadOnChangeOfLoadedFiles(manifest) {
+  const basePrefix = staticPath().length - 1
+  const wanted = []
+    .concat(
+      // javascript entrypoints
+      Array.from(document.querySelectorAll('script[type="module"]')).map(el =>
+        el.getAttribute('src')
+      )
+    )
+    .concat(
+      // secondary stylesheets
+      Array.from(document.querySelectorAll('link[rel="stylesheet"]'))
+        .filter(el => el.getAttribute('id') !== 'main-stylesheet')
+        .map(el => el.getAttribute('href'))
+    )
+    .map(p => p.slice(basePrefix))
+  const filesInManifest = []
+    .concat(Object.values(manifest.assets))
+    .concat(Object.values(manifest.entrypointChunks).flat())
+  for (const src of wanted) {
+    // Vendored assets are not part of the manifest
+    if (src.startsWith('/vendor/')) continue
+
+    if (filesInManifest.includes(src)) continue
+
+    console.debug(
+      'Output file is not present in manifest anymore aka its input changed, reloading:',
+      src
+    )
+    window.location.reload()
+    break
+  }
+}
+
 function onRebuild({ data }) {
   const { name, errors, warnings, manifest } = JSON.parse(data)
-  if (!name) return // initial manifest
 
   if (errors.length > 0) {
     console.group('esbuild rebuild failed:', name)
@@ -77,24 +110,21 @@ function onRebuild({ data }) {
       formatMessage('warning', message)
     }
     console.groupEnd()
-  } else {
-    if (warnings.length > 0) {
-      console.group('esbuild rebuild produced warnings:', name)
-      for (const message of warnings) {
-        formatMessage('warning', message)
-      }
-      console.groupEnd()
-    }
-    if (name === 'stylesheet bundles' && manifest) {
-      replaceStylesheet(manifest)
-    } else {
-      window.location.reload()
-    }
   }
+  if (warnings.length > 0) {
+    console.group('esbuild rebuild produced warnings:', name)
+    for (const message of warnings) {
+      formatMessage('warning', message)
+    }
+    console.groupEnd()
+  }
+
+  replaceStylesheet(manifest)
+  reloadOnChangeOfLoadedFiles(manifest)
 }
 
 function openNewBus() {
-  const bus = new EventSource(import.meta.url + '/event-source')
+  const bus = new EventSource(staticPath('/event-source'))
   bus.addEventListener('epoch', onEpoch)
   bus.addEventListener('rebuild', onRebuild)
   bus.addEventListener('error', () => {
