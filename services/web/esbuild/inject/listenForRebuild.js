@@ -55,15 +55,6 @@ function replaceStylesheet(manifest) {
   document.head.appendChild(newLink)
 }
 
-const clientEpoch = Date.now()
-
-function onEpoch({ data }) {
-  const serverEpoch = parseInt(data, 10)
-  if (clientEpoch < serverEpoch) {
-    window.location.reload()
-  }
-}
-
 function reloadOnChangeOfLoadedFiles(manifest) {
   const basePrefix = staticPath().length - 1
   const wanted = []
@@ -125,7 +116,6 @@ function onRebuild({ data }) {
 
 function openNewBus() {
   const bus = new EventSource(staticPath('/event-source'))
-  bus.addEventListener('epoch', onEpoch)
   bus.addEventListener('rebuild', onRebuild)
   bus.addEventListener('error', () => {
     bus.close()
