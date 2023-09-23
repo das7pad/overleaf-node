@@ -1,3 +1,4 @@
+import 'angular'
 const module = angular.module('storage', [])
 export const localStorage = factory(window.localStorage)
 module.value('localStorage', localStorage)

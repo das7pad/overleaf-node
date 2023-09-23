@@ -9,6 +9,7 @@
  * DS207: Consider shorter variations of null checks
  * Full docs: https://github.com/decaffeinate/decaffeinate/blob/master/docs/suggestions.md
  */
+import 'angular'
 import { captureException } from '../infrastructure/error-reporter'
 
 const app = angular.module('ErrorCatcher', [])

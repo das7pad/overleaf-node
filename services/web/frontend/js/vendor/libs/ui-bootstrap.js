@@ -1,3 +1,4 @@
+import 'angular'
 /*
  * angular-ui-bootstrap
  * http://angular-ui.github.io/bootstrap/

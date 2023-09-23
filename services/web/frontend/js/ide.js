@@ -15,6 +15,7 @@
  * DS207: Consider shorter variations of null checks
  * Full docs: https://github.com/decaffeinate/decaffeinate/blob/master/docs/suggestions.md
  */
+import 'angular'
 import App from './base'
 import FileTreeManager from './ide/file-tree/FileTreeManager'
 import LoadingManager from './ide/LoadingManager'

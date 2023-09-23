@@ -1,3 +1,4 @@
+import 'angular'
 /**
  * ng-context-menu - v0.1.4 - An AngularJS directive to display a context menu when a right-click event is triggered
  *

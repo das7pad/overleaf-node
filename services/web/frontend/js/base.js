@@ -14,6 +14,7 @@
  * Full docs: https://github.com/decaffeinate/decaffeinate/blob/master/docs/suggestions.md
  */
 
+import 'angular'
 import './libraries'
 import './modules/recursionHelper'
 import './modules/errorCatcher'

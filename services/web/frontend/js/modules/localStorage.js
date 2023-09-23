@@ -1,3 +1,4 @@
+import 'angular'
 angular.module('localStorage', []).value('localStorage', localStorage)
 
 /*

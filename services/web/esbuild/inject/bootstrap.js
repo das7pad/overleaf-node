@@ -1,5 +1,5 @@
 /**
- * Provide $/angular as globals and use full jQuery in angular.
+ * Provide $ as global and use full jQuery in angular.
  */
 /* global require */
 const $ = require('jquery')
@@ -9,7 +9,3 @@ export { $ }
 
 // angular will read jQuery from window.
 window.jQuery = $
-require('angular')
-
-// Provide `angular` globally w/o explicit import.
-export const angular = window.angular

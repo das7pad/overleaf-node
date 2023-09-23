@@ -1,3 +1,4 @@
+import 'angular'
 angular.module('sessionStorage', []).value('sessionStorage', sessionStorage)
 
 /*
