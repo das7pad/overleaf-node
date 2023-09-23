@@ -11,6 +11,10 @@ import {
 import getMeta from '../../../utils/meta'
 import { captureException } from '../../../infrastructure/error-reporter'
 import { olConsole } from '../../../infrastructure/ol-console'
+import {
+  addDeepNavigation,
+  removeDeepNavigation,
+} from '../../../utils/deepLink'
 
 App.component(
   'shareProjectModal',
@@ -26,6 +30,7 @@ export default App.controller(
     $scope.show = false
 
     $scope.handleHide = () => {
+      removeDeepNavigation('!open-share-modal')
       $scope.$applyAsync(() => {
         $scope.show = false
       })
@@ -115,6 +120,7 @@ export default App.controller(
     }
 
     $scope.openShareProjectModal = () => {
+      addDeepNavigation('!open-share-modal')
       eventTracking.sendMBOnce('ide-open-share-modal-once')
       Promise.all([
         updateTokensOnce(),
@@ -150,5 +156,9 @@ export default App.controller(
         ide.connectionManager.reconnectGracefully()
       }
     })
+
+    if (window.location.hash.includes('!open-share-modal')) {
+      $scope.openShareProjectModal()
+    }
   }
 )

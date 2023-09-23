@@ -55,6 +55,11 @@ import './features/share-project-modal/controllers/react-share-project-modal-con
 import { localStorage } from './modules/storage'
 import getMeta from './utils/meta'
 import { waitForI18n } from 'react-i18next'
+import {
+  addDeepNavigation,
+  hasDeepNavigation,
+  removeDeepNavigation,
+} from './utils/deepLink'
 
 App.controller(
   'IdeController',
@@ -80,7 +85,7 @@ App.controller(
       error: null,
     }
     $scope.ui = {
-      leftMenuShown: false,
+      leftMenuShown: hasDeepNavigation('!open-left-menu'),
       view: 'editor',
       chatOpen: false,
       pdfLayout: 'sideBySide',
@@ -129,6 +134,9 @@ App.controller(
     $scope.$watch('ui.leftMenuShown', function (isOpen) {
       if (isOpen) {
         eventTracking.sendMBOnce('ide-open-left-menu-once')
+        addDeepNavigation('!open-left-menu')
+      } else {
+        removeDeepNavigation('!open-left-menu')
       }
     })
 
