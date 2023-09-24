@@ -111,17 +111,6 @@ export default function BetaProgramParticipate() {
     <>
       <FormGroup>
         <Button
-          href="#"
-          target="_blank"
-          rel="noopener noreferrer"
-          bsStyle="primary"
-          bsSize="lg"
-        >
-          {t('give_feedback')}
-        </Button>
-      </FormGroup>
-      <FormGroup>
-        <Button
           type="submit"
           disabled={requestStatus === REQUEST_PENDING}
           bsStyle="info"

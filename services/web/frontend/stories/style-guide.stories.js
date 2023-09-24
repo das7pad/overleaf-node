@@ -217,7 +217,7 @@ export const Buttons = (args, { globals: { theme } }) => {
 
             <h2>Hyperlinks</h2>
             <p>
-              Hyperlinks are highlighted <a href="#">as shown</a>.
+              Hyperlinks are highlighted <a href="">as shown</a>.
             </p>
           </Col>
         </Row>
