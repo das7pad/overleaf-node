@@ -11,10 +11,7 @@ import {
 import getMeta from '../../../utils/meta'
 import { captureException } from '../../../infrastructure/error-reporter'
 import { olConsole } from '../../../infrastructure/ol-console'
-import {
-  addDeepNavigation,
-  removeDeepNavigation,
-} from '../../../utils/deepLink'
+import { useDeepLink } from '../../../utils/deepLink'
 
 App.component(
   'shareProjectModal',
@@ -28,9 +25,10 @@ export default App.controller(
   'ReactShareProjectModalController',
   function ($scope, eventTracking, ide) {
     $scope.show = false
+    const [showOnLoad, setShow] = useDeepLink('!open-share-modal')
 
     $scope.handleHide = () => {
-      removeDeepNavigation('!open-share-modal')
+      setShow(false)
       $scope.$applyAsync(() => {
         $scope.show = false
       })
@@ -120,7 +118,7 @@ export default App.controller(
     }
 
     $scope.openShareProjectModal = () => {
-      addDeepNavigation('!open-share-modal')
+      setShow(true)
       eventTracking.sendMBOnce('ide-open-share-modal-once')
       Promise.all([
         updateTokensOnce(),
@@ -157,8 +155,6 @@ export default App.controller(
       }
     })
 
-    if (window.location.hash.includes('!open-share-modal')) {
-      $scope.openShareProjectModal()
-    }
+    if (showOnLoad) $scope.openShareProjectModal()
   }
 )
