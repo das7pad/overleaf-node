@@ -28,7 +28,8 @@ function getMetaElement(name) {
 }
 
 function staticPath(p = '') {
-  return getMetaElement('ol-staticPath').getAttribute('content') + p
+  const s = getMetaElement('ol-staticPath').getAttribute('content')
+  return s.slice(0, -1) + p
 }
 
 function replaceStylesheet(manifest) {
@@ -56,7 +57,7 @@ function replaceStylesheet(manifest) {
 }
 
 function reloadOnChangeOfLoadedFiles(manifest) {
-  const basePrefix = staticPath().length - 1
+  const basePrefix = staticPath().length
   const wanted = []
     .concat(
       // javascript entrypoints
