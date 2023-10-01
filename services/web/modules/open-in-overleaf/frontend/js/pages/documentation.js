@@ -1,4 +1,9 @@
-/* global hljs */
+import hljs from 'highlight.js/lib/core'
+import javascript from 'highlight.js/lib/languages/javascript'
+import latex from 'highlight.js/lib/languages/latex'
+import php from 'highlight.js/lib/languages/php'
+import xml from 'highlight.js/lib/languages/xml'
+import 'highlight.js/styles/github.css'
 
 function openInOverleaf(a) {
   /*
@@ -34,13 +39,15 @@ function openInOverleaf(a) {
   document.getElementById('ol_form').submit()
 }
 
-if (typeof hljs !== 'undefined') {
-  hljs.initHighlightingOnLoad()
-}
-
 document.querySelectorAll('a[data-ol-open-in-overleaf]').forEach(el => {
   el.onclick = e => {
     e.preventDefault()
     openInOverleaf(el)
   }
 })
+
+hljs.registerLanguage('html', xml)
+hljs.registerLanguage('javascript', javascript)
+hljs.registerLanguage('php', php)
+hljs.registerLanguage('tex', latex)
+hljs.highlightAll()
