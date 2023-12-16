@@ -124,6 +124,9 @@ export default class SocketIoShim {
       sl_console.log('[SocketIoShim] ws not ready, discarding', action)
       throw new Error('rpc cancelled: ws is not ready')
     }
+    if (this._callbacks.size === 0) {
+      this._nextCallbackId = 1 // Save bandwidth: reset counter when idle.
+    }
     let cbId = this._nextCallbackId++
     if (async) {
       cbId = -cbId // A negative cbId indicates a lazy success callback.
