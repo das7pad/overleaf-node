@@ -3,7 +3,8 @@ import getMeta from '../../utils/meta'
 
 const ONE_HOUR_IN_MS = 1000 * 60 * 60
 const TWO_MINUTES_IN_MS = 2 * 60 * 1000
-const DISCONNECT_AFTER_MS = ONE_HOUR_IN_MS * 24
+const FIVE_MINUTES_IN_MS = 5 * 60 * 1000
+const DISCONNECT_AFTER_MS = ONE_HOUR_IN_MS
 
 // rate limit on reconnects for user clicking "try now"
 const MIN_RETRY_INTERVAL_MS = 1000
@@ -19,12 +20,12 @@ export default class ConnectionManager {
 
     setInterval(() => {
       if (
-        this.userIsInactiveSince(DISCONNECT_AFTER_MS) &&
-        this.ide.socket.connected
+        this.ide.socket.connected &&
+        this.userIsInactiveSince(DISCONNECT_AFTER_MS)
       ) {
         this.disconnect()
       }
-    }, ONE_HOUR_IN_MS)
+    }, DISCONNECT_AFTER_MS / 4 + FIVE_MINUTES_IN_MS * Math.random())
 
     // trigger a reconnect immediately if network comes back online
     window.addEventListener('online', () => {
