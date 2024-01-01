@@ -59,8 +59,10 @@ export default OnlineUsersManager = (function () {
         this.refreshOnlineUsers()
       }
 
+      let pendingGetConnectedUsers
       this.getConnectedUsers = () => {
-        this.ide.socket
+        if (pendingGetConnectedUsers) return pendingGetConnectedUsers
+        pendingGetConnectedUsers = this.ide.socket
           .rpc({ action: 'clientTracking.getConnectedUsers' })
           .then(
             ({ connectedClients }) => {
@@ -70,6 +72,10 @@ export default OnlineUsersManager = (function () {
               // ignore errors
             }
           )
+          .finally(() => {
+            pendingGetConnectedUsers = undefined
+          })
+        return pendingGetConnectedUsers
       }
       this.$scope.$on('project:joined', () => {
         const connectedUsers = this.$scope.connectedUsers
