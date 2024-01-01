@@ -48,6 +48,7 @@ export default OnlineUsersManager = (function () {
 
       this.updateConnectedUsers = connectedUsers => {
         for (const user of connectedUsers) {
+          if (user.i === this.ide.socket.publicId) continue
           $scope.onlineUsers[user.i] = {
             id: user.i,
             name: user.n || $scope.onlineUsers[user.i]?.name,
