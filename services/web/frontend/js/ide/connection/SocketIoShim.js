@@ -159,6 +159,8 @@ export default class SocketIoShim {
     const newSocket = this._createWebsocket(jwt)
     this._ws = newSocket
 
+    this._earlyMessageQueue = []
+
     // reset the rpc tracking
     const callbacks = new Map()
     this._callbacks = callbacks
@@ -243,6 +245,26 @@ export default class SocketIoShim {
     if (cbId) {
       this._callCallback(callbacks, cbId, err, body)
     } else {
+      if (this._earlyMessageQueue) {
+        switch (event) {
+          case 'bootstrap': {
+            const queue = this._earlyMessageQueue
+            delete this._earlyMessageQueue
+            setTimeout(() => {
+              queue.forEach(({ event, body }) => {
+                console.log(event, body)
+                this._emit(event, body)
+              })
+            }, 1)
+            break
+          }
+          case 'connectionRejected':
+            break
+          default:
+            this._earlyMessageQueue.push({ event, body })
+            return
+        }
+      }
       this._emit(event, body)
     }
   }
