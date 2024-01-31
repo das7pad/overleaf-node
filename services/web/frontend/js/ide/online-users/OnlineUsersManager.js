@@ -92,6 +92,20 @@ export default OnlineUsersManager = (function () {
         })
       })
 
+      this.ide.socket.on('clientTracking.batch', clients => {
+        const added = []
+        for (const client of clients) {
+          if (client.j) {
+            if (!this.$scope.onlineUsers[client.i]) {
+              added.push(client)
+            }
+          } else {
+            delete $scope.onlineUsers[client.i]
+          }
+        }
+        this.updateConnectedUsers(added)
+      })
+
       this.ide.socket.on('clientTracking.clientConnected', client => {
         if (!this.$scope.onlineUsers[client.i]) {
           this.updateConnectedUsers([client])
