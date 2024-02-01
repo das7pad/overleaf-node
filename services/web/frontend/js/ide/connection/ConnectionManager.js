@@ -32,6 +32,10 @@ export default class ConnectionManager {
       sl_console.log('[online] browser notified online')
       if (!this.$scope.connection.inactive_disconnect) this.ensureIsConnected()
     })
+    this.userIsLeavingPage = 0
+    window.addEventListener('beforeunload', () => {
+      this.userIsLeavingPage = performance.now()
+    })
 
     ide.socket = new SocketIoShim()
     this.$scope.connection = {
@@ -67,6 +71,7 @@ export default class ConnectionManager {
 
     this.lastUserAction = performance.now()
     this.$scope.$on('cursor:editor:update', () => {
+      this.userIsLeavingPage = 0 // reset on edit
       this.lastUserAction = performance.now() // time of last edit
       this.ensureIsConnected()
     })
@@ -137,9 +142,16 @@ Something went wrong connecting to your project. Please refresh if this continue
     // We can get a "disconnect" event at any point after the
     // "connect" event.
 
-    this.ide.socket.on('disconnect', () => {
+    this.ide.socket.on('disconnect', async () => {
       sl_console.log('[socket.io disconnect] Disconnected')
       this.ide.pushEvent('disconnected')
+
+      if (
+        this.userIsLeavingPage &&
+        performance.now() - this.userIsLeavingPage < 100
+      ) {
+        await new Promise(resolve => setTimeout(resolve, 100))
+      }
 
       if (this.userIsInactiveSince(DISCONNECT_AFTER_MS)) {
         this.updateConnectionManagerState('inactive')
