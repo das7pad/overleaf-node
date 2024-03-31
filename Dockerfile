@@ -1,4 +1,4 @@
-FROM node:18.19.0
+FROM node:20.12.0
 
 ENV NODE_ENV=production
 WORKDIR /overleaf/services/web
