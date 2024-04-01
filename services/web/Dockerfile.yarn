@@ -4,3 +4,4 @@ FROM $IMAGE_NODE
 ENV COREPACK_HOME=/corepack
 RUN corepack enable
 RUN corepack yarn@3.8.1 --version
+RUN chmod 666 /corepack/lastKnownGood.json
