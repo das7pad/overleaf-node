@@ -2,7 +2,6 @@ import getMeta from '../../../utils/meta'
 import HumanReadableLogs from '../../../ide/human-readable-logs/HumanReadableLogs'
 import BibLogParser from '../../../ide/log-parser/bib-log-parser'
 import { v4 as uuid } from 'uuid'
-import { enablePdfCaching } from './pdf-caching-flags'
 import { olConsole } from '../../../infrastructure/ol-console'
 
 // Warnings that may disappear after a second LaTeX pass
@@ -22,15 +21,10 @@ export function handleOutputFiles(outputFiles, projectId, data) {
     params.set('clsiserverid', data.clsiServerId)
   }
 
-  if (enablePdfCaching) {
-    // Tag traffic that uses the pdf caching logic.
-    params.set('enable_pdf_caching', 'true')
+  outputFile.pdfUrl = buildURL(outputFile, data.pdfDownloadDomain)
+  if (params.size > 0) {
+    outputFile.pdfUrl += `?${params}`
   }
-
-  outputFile.pdfUrl = `${buildURL(
-    outputFile,
-    data.pdfDownloadDomain
-  )}?${params}`
 
   outputFile.pdfDownloadUrl = outputFile.pdfUrl
 

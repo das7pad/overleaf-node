@@ -843,19 +843,15 @@ export async function fetchRange({
   }
 
   const params = new URL(url).searchParams
-  // drop no needed params
-  params.delete('enable_pdf_caching')
-  params.delete('verify_chunks')
-  const query = params.toString()
-  // The schema of `url` is https://domain/project/:id/user/:id/build/... for
-  //  authenticated and https://domain/project/:id/build/... for
-  //  unauthenticated users. Cut it before /build/.
+  const query = params.size > 0 ? `?${params.toString()}` : ''
+  // The schema of `url` is https://domain/project/:project-id-:user-id/compile-output/...
+  // Cut it before /compile-output/.
   // The path may have an optional /zone/b prefix too.
-  const perUserPrefix = url.slice(0, url.indexOf('/build/'))
+  const perUserPrefix = url.slice(0, url.indexOf('/compile-output/'))
   const requests = chunks
     .map(chunk => ({
       chunk,
-      url: `${perUserPrefix}/content/${file.contentId}/${chunk.hash}?${query}`,
+      url: `${perUserPrefix}/content/${file.contentId}/${chunk.hash}${query}`,
       init: {},
     }))
     .concat(coalescedDynamicChunks)
