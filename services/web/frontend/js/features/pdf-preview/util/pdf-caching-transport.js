@@ -50,6 +50,7 @@ export function generatePdfCachingTransportFactory(PDFJS) {
       super(pdfFile.size, new Uint8Array())
       this.url = url
       this.pdfFile = pdfFile
+      pdfFile.ranges = pdfFile.ranges || []
       // Clone the chunks as the objectId field is encoded to a Uint8Array.
       this.pdfRanges = pdfFile.ranges.map(r => Object.assign({}, r))
       this.handleFetchError = handleFetchError
