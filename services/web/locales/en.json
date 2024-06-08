@@ -1,4 +1,11 @@
 {
+  "project_content_is_locked": "Project content is locked.",
+  "project_content_is_editable": "Project content is editable.",
+  "locking_content": "Locking content",
+  "unlocking_content": "Unlocking content",
+  "lock_content": "Lock content",
+  "unlock_content": "Unlock content",
+  "content_lock": "Content Lock",
   "reconfirm_account": "Reconfirm Account",
   "retry": "Retry",
   "overleaf": "Overleaf",

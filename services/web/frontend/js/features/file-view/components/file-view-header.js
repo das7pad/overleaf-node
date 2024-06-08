@@ -35,8 +35,9 @@ function shortenedUrl(url) {
 }
 
 export default function FileViewHeader({ file, storeReferencesKeys }) {
-  const { _id: projectId } = useProjectContext({
+  const { _id: projectId, editable } = useProjectContext({
     _id: PropTypes.string.isRequired,
+    editable: PropTypes.boolean,
   })
   const { permissionsLevel } = useEditorContext({
     permissionsLevel: PropTypes.string,
@@ -125,7 +126,7 @@ export default function FileViewHeader({ file, storeReferencesKeys }) {
         <button
           className="btn btn-success"
           onClick={refreshFile}
-          disabled={refreshing}
+          disabled={refreshing || !editable}
         >
           <Icon type="refresh" spin={refreshing} fw />
           <span>{refreshing ? t('refreshing') + '...' : t('refresh')}</span>

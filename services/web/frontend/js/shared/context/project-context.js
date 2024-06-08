@@ -27,6 +27,8 @@ export const projectShape = {
     zotero: PropTypes.bool,
   }),
   publicAccessLevel: PropTypes.string,
+  editable: PropTypes.bool,
+  contentLockedAt: PropTypes.string,
   tokens: PropTypes.shape({
     readOnly: PropTypes.string,
     readAndWrite: PropTypes.string,
@@ -70,6 +72,7 @@ const projectFallback = {
   _id: window.project_id,
   name: '',
   features: {},
+  editable: false,
 }
 
 export function ProjectProvider({ children }) {
@@ -83,6 +86,8 @@ export function ProjectProvider({ children }) {
     invites,
     features,
     publicAccessLevel,
+    contentLockedAt,
+    editable,
     tokens,
     owner,
     imageName,
@@ -99,6 +104,8 @@ export function ProjectProvider({ children }) {
       invites,
       features,
       publicAccessLevel,
+      contentLockedAt,
+      editable,
       tokens,
       owner,
       imageName,
@@ -113,6 +120,8 @@ export function ProjectProvider({ children }) {
     invites,
     features,
     publicAccessLevel,
+    contentLockedAt,
+    editable,
     tokens,
     owner,
     imageName,

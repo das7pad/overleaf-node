@@ -2,6 +2,7 @@ import { useTranslation } from 'react-i18next'
 import getMeta from '../../../utils/meta'
 import ActionsCopyProject from './actions-copy-project'
 import ActionsWordCount from './actions-word-count'
+import ActionsContentLock from './actions-content-lock'
 
 export default function ActionsMenu() {
   const { t } = useTranslation()
@@ -20,6 +21,9 @@ export default function ActionsMenu() {
         </li>
         <li>
           <ActionsWordCount />
+        </li>
+        <li>
+          <ActionsContentLock />
         </li>
       </ul>
     </>

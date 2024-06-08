@@ -93,6 +93,7 @@ export function EditorProviders({
       compiler: 'pdflatex',
       imageName: 'texlive-full:2023.1',
       version: 42,
+      editable: true,
       ...projectOverride,
     },
     ui,

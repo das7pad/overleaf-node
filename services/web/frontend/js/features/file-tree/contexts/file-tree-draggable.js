@@ -19,6 +19,7 @@ import { useFileTreeActionable } from './file-tree-actionable'
 import { useFileTreeData } from '../../../shared/context/file-tree-data-context'
 import { useFileTreeSelectable } from '../contexts/file-tree-selectable'
 import { useEditorContext } from '../../../shared/context/editor-context'
+import { useProjectContext } from '../../../shared/context/project-context'
 
 // HACK ALERT
 // DnD binds drag and drop events on window and stop propagation if the dragged
@@ -82,6 +83,7 @@ export function useDraggable(draggedEntityId) {
   const { t } = useTranslation()
 
   const { permissionsLevel } = useEditorContext(editorContextPropTypes)
+  const { editable } = useProjectContext()
   const { fileTreeData } = useFileTreeData()
   const { selectedEntityIds } = useFileTreeSelectable()
 
@@ -103,7 +105,7 @@ export function useDraggable(draggedEntityId) {
     collect: monitor => ({
       isDragging: !!monitor.isDragging(),
     }),
-    canDrag: () => permissionsLevel !== 'readOnly' && isDraggable,
+    canDrag: () => editable && permissionsLevel !== 'readOnly' && isDraggable,
   })
 
   // remove the automatic preview as we're using a custom preview via

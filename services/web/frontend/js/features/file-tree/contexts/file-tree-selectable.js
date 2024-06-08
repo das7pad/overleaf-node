@@ -76,9 +76,11 @@ function fileTreeSelectableReadOnlyReducer(selectedEntityIds, action) {
 }
 
 export function FileTreeSelectableProvider({ onSelect, children }) {
-  const { _id: projectId, rootDocId } = useProjectContext(
-    projectContextPropTypes
-  )
+  const {
+    _id: projectId,
+    rootDocId,
+    editable,
+  } = useProjectContext(projectContextPropTypes)
   const { permissionsLevel } = useEditorContext(editorContextPropTypes)
 
   const [initialSelectedEntityId] = usePersistedState(
@@ -89,7 +91,7 @@ export function FileTreeSelectableProvider({ onSelect, children }) {
   const { fileTreeData, setSelectedEntities } = useFileTreeData()
 
   const [selectedEntityIds, dispatch] = useReducer(
-    permissionsLevel === 'readOnly'
+    permissionsLevel === 'readOnly' || !editable
       ? fileTreeSelectableReadOnlyReducer
       : fileTreeSelectableReadWriteReducer,
     null,
@@ -208,6 +210,7 @@ FileTreeSelectableProvider.propTypes = {
 const projectContextPropTypes = {
   _id: PropTypes.string.isRequired,
   rootDocId: PropTypes.string,
+  editable: PropTypes.boolean,
 }
 
 const editorContextPropTypes = {

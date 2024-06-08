@@ -22,7 +22,7 @@ export default function SettingsDocument() {
 
   const { permissionsLevel } = useEditorContext()
 
-  const { rootDocId } = useProjectContext()
+  const { rootDocId, editable } = useProjectContext()
   const [docs] = useScopeValue<Doc[] | undefined>('docs')
 
   const validDocsOptions = useMemo(() => {
@@ -48,6 +48,7 @@ export default function SettingsDocument() {
       options={validDocsOptions}
       label={t('main_document')}
       name="rootDoc_id"
+      disabled={!editable}
     />
   )
 }

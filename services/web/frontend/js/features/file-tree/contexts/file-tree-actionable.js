@@ -121,13 +121,15 @@ function fileTreeActionableReducer(state, action) {
 }
 
 export function FileTreeActionableProvider({ children }) {
-  const { _id: projectId } = useProjectContext(projectContextPropTypes)
+  const { _id: projectId, editable } = useProjectContext(
+    projectContextPropTypes
+  )
   const { permissionsLevel } = useEditorContext(editorContextPropTypes)
   const ide = useIdeContext()
   const socket = ide.socket
 
   const [state, dispatch] = useReducer(
-    permissionsLevel === 'readOnly'
+    permissionsLevel === 'readOnly' || !editable
       ? fileTreeActionableReadOnlyReducer
       : fileTreeActionableReducer,
     defaultState
@@ -402,6 +404,7 @@ FileTreeActionableProvider.propTypes = {
 
 const projectContextPropTypes = {
   _id: PropTypes.string.isRequired,
+  editable: PropTypes.boolean,
 }
 
 const editorContextPropTypes = {

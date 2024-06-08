@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next'
 import getMeta from '../../../../utils/meta'
 import SettingsMenuSelect from './settings-menu-select'
 import type { Optgroup } from './settings-menu-select'
+import { useProjectContext } from '../../../../shared/context/project-context'
 
 type Language = {
   name: string
@@ -11,6 +12,7 @@ type Language = {
 
 export default function SettingsSpellCheckLanguage() {
   const { t } = useTranslation()
+  const { editable } = useProjectContext()
   const languages = getMeta('ol-languages') as Language[] | undefined
 
   const optgroup: Optgroup = useMemo(
@@ -31,6 +33,7 @@ export default function SettingsSpellCheckLanguage() {
       optgroup={optgroup}
       label={t('spell_check')}
       name="spellCheckLanguage"
+      disabled={!editable}
     />
   )
 }

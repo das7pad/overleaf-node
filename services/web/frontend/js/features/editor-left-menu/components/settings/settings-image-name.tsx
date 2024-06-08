@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next'
 import getMeta from '../../../../utils/meta'
 import SettingsMenuSelect from './settings-menu-select'
 import type { Option } from './settings-menu-select'
+import { useProjectContext } from '../../../../shared/context/project-context'
 
 /* eslint-disable react/no-unused-prop-types */
 type AllowedImageName = {
@@ -13,6 +14,7 @@ type AllowedImageName = {
 
 export default function SettingsImageName() {
   const { t } = useTranslation()
+  const { editable } = useProjectContext()
   const allowedImageNames = getMeta('ol-allowedImageNames') as
     | AllowedImageName[]
     | undefined
@@ -35,6 +37,7 @@ export default function SettingsImageName() {
       options={options}
       label={t('tex_live_version')}
       name="imageName"
+      disabled={!editable}
     />
   )
 }

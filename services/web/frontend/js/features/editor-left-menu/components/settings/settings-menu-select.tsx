@@ -16,6 +16,7 @@ type SettingsMenuSelectProps = {
   options: Array<Option>
   optgroup?: Optgroup
   loading?: boolean
+  disabled?: boolean
 }
 
 export default function SettingsMenuSelect({
@@ -24,6 +25,7 @@ export default function SettingsMenuSelect({
   options,
   optgroup,
   loading,
+  disabled,
 }: SettingsMenuSelectProps) {
   return (
     <div className="form-group left-menu-setting">
@@ -33,7 +35,7 @@ export default function SettingsMenuSelect({
           <i className="fa fa-fw fa-spin fa-refresh" />
         </p>
       ) : (
-        <select name={name} className="form-control">
+        <select name={name} className="form-control" disabled={disabled}>
           {options.map(option => (
             <option
               key={`${name}-${option.value}`}

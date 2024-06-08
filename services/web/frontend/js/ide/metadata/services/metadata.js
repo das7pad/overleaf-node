@@ -89,7 +89,10 @@ export default App.factory('metadata', function (ide) {
     })
 
   metadata.scheduleLoadDocMetaFromServer = function (docId) {
-    if (ide.$scope.permissionsLevel === 'readOnly') {
+    if (
+      ide.$scope.permissionsLevel === 'readOnly' ||
+      !ide.$scope.project.editable
+    ) {
       // The POST request is blocked for users without write permission.
       // The user will not be able to consume the meta data for edits anyways.
       return

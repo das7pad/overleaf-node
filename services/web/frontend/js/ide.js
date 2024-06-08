@@ -34,6 +34,7 @@ import './ide/clone/index'
 import './ide/file-view/index'
 import './ide/hotkeys/index'
 import './ide/wordcount/index'
+import './features/content-lock-modal/controllers/content-lock-modal-controller'
 import './ide/directives/layout'
 import './ide/directives/validFile'
 import './ide/directives/verticalResizablePanes'
@@ -199,7 +200,7 @@ If the project has been renamed please look in your project list for a new proje
 `
         )
       }
-      if (permissionsLevel === 'readOnly') return
+      if (permissionsLevel === 'readOnly' || !$scope.project.editable) return
       ide.metadataManager.loadProjectMetaFromServer()
     })
 

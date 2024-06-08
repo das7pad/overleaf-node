@@ -7,11 +7,14 @@ import { useEditorContext } from '../../../shared/context/editor-context'
 import { useFileTreeMainContext } from '../contexts/file-tree-main'
 
 import FileTreeItemMenuItems from './file-tree-item/file-tree-item-menu-items'
+import { useProjectContext } from '../../../shared/context/project-context'
 
 function FileTreeContextMenu() {
   const { permissionsLevel } = useEditorContext(editorContextPropTypes)
+  const { editable } = useProjectContext()
   const { contextMenuCoords, setContextMenuCoords } = useFileTreeMainContext()
 
+  if (!editable) return null
   if (permissionsLevel === 'readOnly' || !contextMenuCoords) return null
 
   function close() {

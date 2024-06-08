@@ -22,28 +22,33 @@ export default PermissionsManager = class PermissionsManager {
       admin: false,
       comment: false,
     }
-    this.$scope.$watch('permissionsLevel', permissionsLevel => {
-      if (permissionsLevel != null) {
-        if (permissionsLevel === 'readOnly') {
-          this.$scope.permissions.read = true
-          this.$scope.permissions.write = false
-          this.$scope.permissions.admin = false
-          this.$scope.permissions.comment = true
-        } else if (permissionsLevel === 'readAndWrite') {
-          this.$scope.permissions.read = true
-          this.$scope.permissions.write = true
-          this.$scope.permissions.comment = true
-        } else if (permissionsLevel === 'owner') {
-          this.$scope.permissions.read = true
-          this.$scope.permissions.write = true
-          this.$scope.permissions.admin = true
-          this.$scope.permissions.comment = true
-        }
+    this.$scope.$watch('permissionsLevel', permissionsLevel =>
+      refreshPermissions(permissionsLevel, $scope.project.editable)
+    )
+    this.$scope.$watch('project.editable', editable =>
+      refreshPermissions($scope.permissionsLevel, editable)
+    )
+
+    function refreshPermissions(permissionsLevel, editable) {
+      if (permissionsLevel === 'readOnly') {
+        $scope.permissions.read = true
+        $scope.permissions.write = false
+        $scope.permissions.admin = false
+        $scope.permissions.comment = editable
+      } else if (permissionsLevel === 'readAndWrite') {
+        $scope.permissions.read = true
+        $scope.permissions.write = editable
+        $scope.permissions.comment = editable
+      } else if (permissionsLevel === 'owner') {
+        $scope.permissions.read = true
+        $scope.permissions.write = editable
+        $scope.permissions.admin = true
+        $scope.permissions.comment = editable
       }
 
-      if (this.$scope.anonymous) {
-        return (this.$scope.permissions.comment = false)
+      if ($scope.anonymous) {
+        $scope.permissions.comment = false
       }
-    })
+    }
   }
 }

@@ -7,11 +7,13 @@ import Icon from '../../../shared/components/icon'
 
 import { useEditorContext } from '../../../shared/context/editor-context'
 import { useFileTreeActionable } from '../contexts/file-tree-actionable'
+import { useProjectContext } from '../../../shared/context/project-context'
 
 function FileTreeToolbar() {
   const { permissionsLevel } = useEditorContext(editorContextPropTypes)
+  const { editable } = useProjectContext()
 
-  if (permissionsLevel === 'readOnly') return null
+  if (permissionsLevel === 'readOnly' || !editable) return null
 
   return (
     <div className="toolbar toolbar-filetree">

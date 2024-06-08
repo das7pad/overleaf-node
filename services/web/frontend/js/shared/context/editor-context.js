@@ -12,6 +12,7 @@ import { useIdeContext } from './ide-context'
 import { useProjectContext } from './project-context'
 import { useDetachContext } from './detach-context'
 import { FetchError, postJSON } from '../../infrastructure/fetch-json'
+import { clearProjectJWT } from '../../infrastructure/jwt-fetch-json'
 
 export const EditorContext = createContext()
 
@@ -86,6 +87,8 @@ export function EditorProvider({ children }) {
   const [loading] = useScopeValue('state.loading')
   const [projectName, setProjectName] = useScopeValue('project.name')
   const [permissionsLevel] = useScopeValue('permissionsLevel')
+  const [, setContentLockedAt] = useScopeValue('project.contentLockedAt')
+  const [, setEditable] = useScopeValue('project.editable')
   const [showSymbolPalette] = useScopeValue('editor.showSymbolPalette')
   const [toggleSymbolPalette] = useScopeValue('editor.toggleSymbolPalette')
   const [showGalileo] = useScopeValue('editor.showGalileo')
@@ -100,6 +103,19 @@ export function EditorProvider({ children }) {
         ide.socket.removeListener('projectNameUpdated', setProjectName)
     }
   }, [ide?.socket, setProjectName])
+
+  useEffect(() => {
+    const fn = async ({ contentLockedAt, editable }) => {
+      setContentLockedAt(contentLockedAt)
+      setEditable(editable)
+      clearProjectJWT()
+      ide.connectionManager.reconnectImmediately()
+    }
+    if (ide?.socket) {
+      ide.socket.on('projectEditableUpdated', fn)
+      return () => ide.socket.removeListener('projectEditableUpdated', fn)
+    }
+  }, [ide.socket, ide.connectionManager, setContentLockedAt, setEditable])
 
   const renameProject = useCallback(
     newName => {
