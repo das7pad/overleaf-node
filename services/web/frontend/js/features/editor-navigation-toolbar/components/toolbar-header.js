@@ -12,6 +12,7 @@ import ProjectNameEditableLabel from './project-name-editable-label'
 import TrackChangesToggleButton from './track-changes-toggle-button'
 import HistoryToggleButton from './history-toggle-button'
 import ShareProjectButton from './share-project-button'
+import ContentLockedButton from './content-locked-button'
 
 const PublishButton = undefined
 
@@ -52,6 +53,7 @@ const ToolbarHeader = React.memo(function ToolbarHeader({
           <CobrandingLogo {...cobranding} />
         )}
         <BackToProjectsButton />
+        <ContentLockedButton />
       </div>
       {window.showUpgradePrompt && <UpgradePrompt />}
       <ProjectNameEditableLabel
