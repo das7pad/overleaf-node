@@ -105,9 +105,6 @@ type ProjectListProviderProps = {
 
 export function ProjectListProvider({ children }: ProjectListProviderProps) {
   const prefetchedProjectsBlob = getMeta('ol-prefetchedProjectsBlob')
-  const [loadedProjects, setLoadedProjects] = useState<Project[]>(
-    prefetchedProjectsBlob?.projects ?? []
-  )
   const [visibleProjects, setVisibleProjects] = useState<Project[]>([])
   const [maxVisibleProjects, setMaxVisibleProjects] =
     useState(MAX_PROJECT_PER_PAGE)
@@ -123,6 +120,9 @@ export function ProjectListProvider({ children }: ProjectListProviderProps) {
     by: 'lastUpdated',
     order: 'desc',
   })
+  const [loadedProjects, setLoadedProjects] = useState<Project[]>(() =>
+    sortProjects(prefetchedProjectsBlob?.projects ?? [], sort)
+  )
   const [filter, setFilter] = usePersistedState<Filter>(
     'project-list-filter',
     'all'
