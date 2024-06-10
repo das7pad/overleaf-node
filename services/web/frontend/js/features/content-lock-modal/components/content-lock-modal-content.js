@@ -9,10 +9,12 @@ import {
   projectJWTPutJSON,
 } from '../../../infrastructure/jwt-fetch-json'
 import { captureException } from '../../../infrastructure/error-reporter'
+import { useEditorContext } from '../../../shared/context/editor-context'
 
 export default function ContentLockModalContent({ handleHide }) {
   const { t } = useTranslation()
 
+  const { permissionsLevel } = useEditorContext()
   const { _id: projectId, contentLockedAt } = useProjectContext()
 
   const [pending, setPending] = useState(false)
@@ -50,23 +52,24 @@ export default function ContentLockModalContent({ handleHide }) {
       </Modal.Body>
 
       <Modal.Footer>
-        {contentLockedAt ? (
-          <Button
-            bsStyle="danger"
-            disabled={pending}
-            onClick={() => toggle(false)}
-          >
-            {pending ? <>{t('unlocking_content')}…</> : t('unlock_content')}
-          </Button>
-        ) : (
-          <Button
-            bsStyle="danger"
-            disabled={pending}
-            onClick={() => toggle(true)}
-          >
-            {pending ? <>{t('locking_content')}…</> : t('lock_content')}
-          </Button>
-        )}
+        {permissionsLevel === 'owner' &&
+          (contentLockedAt ? (
+            <Button
+              bsStyle="danger"
+              disabled={pending}
+              onClick={() => toggle(false)}
+            >
+              {pending ? <>{t('unlocking_content')}…</> : t('unlock_content')}
+            </Button>
+          ) : (
+            <Button
+              bsStyle="danger"
+              disabled={pending}
+              onClick={() => toggle(true)}
+            >
+              {pending ? <>{t('locking_content')}…</> : t('lock_content')}
+            </Button>
+          ))}
         <Button onClick={handleHide}>{t('close')}</Button>
       </Modal.Footer>
     </>
