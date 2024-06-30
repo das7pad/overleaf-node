@@ -64,6 +64,7 @@ export default App.directive('layout', ($parse, $compile, ide) => ({
           east: {
             size: scope.$eval(attrs.initialSizeEast),
             initClosed: scope.$eval(attrs.initClosedEast),
+            initHidden: scope.$eval(attrs.initHiddenEast),
           },
           west: {
             size: scope.$eval(attrs.initialSizeWest),
@@ -253,6 +254,8 @@ ng-click=\"handleClick()\">\
             if (value != null && value !== oldValue) {
               if (value) {
                 layout.open('east')
+              } else if (options.east.initHidden) {
+                layout.hide('east')
               } else {
                 layout.close('east')
               }
